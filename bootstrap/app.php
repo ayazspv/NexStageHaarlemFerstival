@@ -15,8 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->group('web', [
-            //StartSession::class,  // 🔥 This is required to fix the error
-            //VerifyCsrfToken::class,
+            StartSession::class,
+            VerifyCsrfToken::class,
             HandleInertiaRequests::class,
         ]);
     })
