@@ -6,7 +6,7 @@ import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
 
 <template>
     <AdminAppLayout title="Admin">
-
+        <h1>Admin panel</h1>
     </AdminAppLayout>
 </template>
 

@@ -44,7 +44,7 @@ const navItems = [
           </div>
         </li>
       </ul>
-      <a href="/Logout" class="logout">
+      <a href="/admin/logout" class="logout">
         <div class="logout">
           <i class='bx bx-exit' id="logout">
           </i>

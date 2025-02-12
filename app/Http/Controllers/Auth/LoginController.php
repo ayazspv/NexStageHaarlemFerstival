@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-class LoginController extends Controller
+class LoginController
 {
     public function show()
     {
@@ -26,7 +26,6 @@ class LoginController extends Controller
 
             Inertia::share('user', Auth::user());
             Inertia::share('isAdmin', false);
-
             return redirect()->intended('/');
         }
 
