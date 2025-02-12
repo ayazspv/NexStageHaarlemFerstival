@@ -4,44 +4,56 @@
 <template>
     <div class="navbar-container">
         <div class="navbar-options">
-            <a href="/">Home</a>
-            <a href="/Gallery">Gallery</a>
-            <a href="/Services">Services</a>
-            <a href="/About">About</a>
+            <div class="navbar-option">
 
-            <div class="book">
-                <a href="/Book">Book Now</a>
             </div>
-
-            <a class="employee" href="/Login">
-                <i class='bx bx-user bx-sm'></i>
-            </a>
+            <div class="navbar-option">
+                <a href="/">Home</a>
+            </div>
+            <div class="navbar-option float-right">
+                <a class="employee" href="/Login">
+                    <i class="bx bx-user"></i>
+                </a>
+            </div>
         </div>
     </div>
 </template>
 
 <style scoped>
+/* Importing Google Fonts and Boxicons */
+@import "https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap";
+@import "https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css";
+
 .navbar-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center; /* Center content horizontally */
     top: 0;
     width: 100%;
     height: 70px;
     background-color: #fff;
-
-    border-bottom: solid 1px rgba(204,204,204,255);
+    border-bottom: solid 1px rgba(204, 204, 204, 255);
     text-decoration: none;
 }
 
 .navbar-options {
     display: flex;
-    flex-wrap: wrap;
     flex-direction: row;
-    justify-content: center;
+    justify-content: space-between; /* Ensures equal spacing */
     width: 100%;
     gap: 10px;
+    height: 100%;
+    align-items: center;
 }
+
+.navbar-option {
+    flex: 1; /* Each item takes equal width */
+    max-width: calc(100% / 3); /* 1/3 of the navbar width */
+    text-align: center; /* Centers text inside */
+    border: 1px solid red; /* Debugging */
+}
+
 
 .book {
     width: 100px;
