@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\EventController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminPanelController;
@@ -25,4 +26,5 @@ Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('adm
 // ✅ Protect admin routes with auth + admin middleware
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminPanelController::class, 'show'])->name('admin.dashboard');
+    Route::get('/events', [EventController::class, 'show'])->name('admin.events');
 });

@@ -3,57 +3,52 @@ import { ref, computed } from 'vue';
 
 const isOpen = ref(false);
 
+// Toggle Sidebar
 const toggleSidebar = () => {
-  isOpen.value = !isOpen.value;
+    isOpen.value = !isOpen.value;
 };
 
+// Compute menu icon based on sidebar state
 const menuIcon = computed(() => (isOpen.value ? 'bx-menu-alt-right' : 'bx-menu'));
 
+// Sidebar Menu Items
 const navItems = [
-  { name: 'Dashboard', icon: 'bx-grid-alt' },
-  { name: `Employees`, icon: 'bx-user' },
+    { name: 'Dashboard', icon: 'bx bxs-dashboard', link: '/admin/dashboard' },
+    { name: 'Events', icon: 'bx bxs-calendar', link: '/admin/events' },
+    { name: 'Users', icon: 'bx bxs-user-detail', link: '/admin/users' },
+    { name: 'Invoices', icon: 'bx bxs-receipt', link: '/admin/invoices' },
+    { name: 'Administrator', icon: 'bx bxs-cog', link: '/admin/administrator' },
 ];
 </script>
 
 <template>
-  <nav id="dashboard">
-    <div :class="['sidebar', { open: isOpen }]">
-      <div class="logo-details">
-        <!-- Icon and logo name -->
-        <div class="logo_name">Hair Salon</div>
-        <!-- Menu button to toggle sidebar -->
-        <i :class="['bx', menuIcon]" @click="toggleSidebar" id="btn"></i>
-      </div>
-      <ul :class="['nav-list', { scroll: isOpen }]">
-        <li key="Dahboard">
-          <a href="/Dashboard">
-            <i class="bx bx-grid-alt"></i>
-            <span class="links_name">Dashboard</span>
-          </a>
-          <span class="tooltip">Dashboard</span>
-          <div>
-          </div>
-        </li>
-        <li key="Employees">
-          <a href="/Employees">
-            <i class="bx bx-user"></i>
-            <span class="links_name">Employees</span>
-          </a>
-          <span class="tooltip">Employees</span>
-          <div>
-          </div>
-        </li>
-      </ul>
-      <a href="/admin/logout" class="logout">
-        <div class="logout">
-          <i class='bx bx-exit' id="logout">
-          </i>
-        </div>
-      </a>
-    </div>
-  </nav>
-</template>
+    <nav id="dashboard">
+        <div :class="['sidebar', { open: isOpen }]">
+            <div class="logo-details">
+                <div class="logo_name">Visit Haarlem</div>
+                <i :class="['bx', menuIcon]" @click="toggleSidebar" id="btn"></i>
+            </div>
 
+            <!-- Sidebar Navigation List -->
+            <ul :class="['nav-list', { scroll: isOpen }]">
+                <li v-for="item in navItems" :key="item.name">
+                    <a :href="item.link">
+                        <i :class="item.icon"></i>
+                        <span class="links_name">{{ item.name }}</span>
+                    </a>
+                    <span class="tooltip">{{ item.name }}</span>
+                </li>
+            </ul>
+
+            <!-- Logout Button -->
+            <a href="/logout" class="logout">
+                <div class="logout">
+                    <i class="bx bx-log-out" id="logout"></i>
+                </div>
+            </a>
+        </div>
+    </nav>
+</template>
 <style scoped>
 /* Importing Google Fonts and Boxicons */
 @import "https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap";

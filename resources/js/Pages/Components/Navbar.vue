@@ -8,12 +8,20 @@
 
             </div>
             <div class="navbar-option">
-                <a href="/">Home</a>
+                <input style="border: 1px solid black; width: 50%;">
             </div>
-            <div class="navbar-option float-right">
-                <a class="employee" href="/Login">
-                    <i class="bx bx-user"></i>
-                </a>
+            <div class="navbar-option">
+                <div class="navbar-suboption">
+                    <a href="/login">
+                        <i class="bx bx-user"></i>
+                    </a>
+                    <a href="/cart">
+                        <i class="bx bx-cart"></i>
+                    </a>
+                    <a href="/favorites">
+                        <i class="bx bx-heart"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -40,35 +48,48 @@
 .navbar-options {
     display: flex;
     flex-direction: row;
-    justify-content: space-between; /* Ensures equal spacing */
+    justify-content: space-between; /* Spread items evenly */
+    align-items: center; /* Align items vertically */
     width: 100%;
-    gap: 10px;
-    height: 100%;
-    align-items: center;
+    padding: 0 20px; /* Add padding for spacing */
 }
 
 .navbar-option {
     flex: 1; /* Each item takes equal width */
-    max-width: calc(100% / 3); /* 1/3 of the navbar width */
     text-align: center; /* Centers text inside */
-    border: 1px solid red; /* Debugging */
+    display: flex;
+    justify-content: center; /* Ensures content is centered */
+    align-items: center; /* Align items vertically */
+    min-height: 70px; /* Matches navbar height */
 }
 
-
-.book {
-    width: 100px;
-    height: 25px;
-    background: #2565c7;
-    border-radius: 10px;
-    text-align: center;
+/* Ensure last item is aligned to the right */
+.navbar-option:last-child {
+    justify-content: flex-end; /* Push the icon to the right */
 }
 
-.book a {
-    color: #fff !important;
+/* Fix icon scaling */
+.navbar-option i {
+    font-size: 24px; /* Set a fixed size */
+    line-height: 1;
+    display: inline-block; /* Prevents stretching */
+    color: black!important;
 }
 
-.employee {
-    position: absolute;
+/* Fix the link styling */
+.navbar-option a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%; /* Ensures the link doesn't stretch */
+    height: 100%;
+}
+
+.navbar-suboption {
+    display: flex;
+    flex-direction: row;
+    gap: 25px;
     margin-left: 90%;
 }
 </style>
