@@ -1,10 +1,13 @@
 <script setup="ts">
+import AppLayout from "@/Pages/Layouts/AppLayout.vue";
 </script>
 
 <template>
-    <div class="container mt-5">
-        <h1 class="text-primary">Hello World</h1>
-    </div>
+    <AppLayout title="Home">
+        <div class="container-fluid">
+            <h1>Hello World!</h1>
+        </div>
+    </AppLayout>
 </template>
 
 <style scoped>
