@@ -1,14 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminPanelController;
 use Inertia\Inertia;
-use App\Http\Controllers\HomeController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/event/{id}', [HomeController::class, 'show'])->name('event.show');
 
 // ✅ Fix: Define a global login route
 Route::get('/login', function () {
