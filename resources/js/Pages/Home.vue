@@ -22,41 +22,73 @@ import AppLayout from "@/Pages/Layouts/AppLayout.vue";
                 <h2 class="text-center mb-4">Festivals</h2>
                 <div class="row g-4">
                     <div class="col-12 col-md-6">
-                        <div class="card festival-card">
-                            <img src="/path-to-image-1" class="card-img-top" alt="Festival 1">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">Jazz Festival</h5>
+                        <div class="festival-wrapper">
+                            <div class="card festival-card mb-3">
+                                <img src="/path-to-image-1" class="card-img-top" alt="Festival 1">
+                            </div>
+                            <h5 class="text-center mb-3">Jazz Festival</h5>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
+                                </button>
+                                <button class="btn btn-outline-primary">
+                                    <i class="fas fa-heart"></i> Wishlist
+                                </button>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
-                        <div class="card festival-card">
-                            <img src="/path-to-image-2" class="card-img-top" alt="Festival 2">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">Food Festival</h5>
+                        <div class="festival-wrapper">
+                            <div class="card festival-card mb-3">
+                                <img src="/path-to-image-2" class="card-img-top" alt="Festival 2">
+                            </div>
+                            <h5 class="text-center mb-3">Food Festival</h5>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
+                                </button>
+                                <button class="btn btn-outline-primary">
+                                    <i class="fas fa-heart"></i> Wishlist
+                                </button>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
-                        <div class="card festival-card">
-                            <img src="/path-to-image-3" class="card-img-top" alt="Festival 3">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">Dance Festival</h5>
+                        <div class="festival-wrapper">
+                            <div class="card festival-card mb-3">
+                                <img src="/path-to-image-3" class="card-img-top" alt="Festival 3">
+                            </div>
+                            <h5 class="text-center mb-3">Dance Festival</h5>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
+                                </button>
+                                <button class="btn btn-outline-primary">
+                                    <i class="fas fa-heart"></i> Wishlist
+                                </button>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
-                        <div class="card festival-card">
-                            <img src="/path-to-image-4" class="card-img-top" alt="Festival 4">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">Historic Festival</h5>
+                        <div class="festival-wrapper">
+                            <div class="card festival-card mb-3">
+                                <img src="/path-to-image-4" class="card-img-top" alt="Festival 4">
+                            </div>
+                            <h5 class="text-center mb-3">Historic Festival</h5>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
+                                </button>
+                                <button class="btn btn-outline-primary">
+                                    <i class="fas fa-heart"></i> Wishlist
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Locations Section -->
+            <!-- Locations(Map) Section -->
             <section class="mb-5">
                 <h2 class="text-center mb-4">Locations</h2>
                 <div class="map-container">
@@ -71,9 +103,15 @@ import AppLayout from "@/Pages/Layouts/AppLayout.vue";
 </template>
 
 <style scoped>
+.festival-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .festival-card {
     transition: transform 0.3s ease;
-    height: 100%;
+    width: 100%;
 }
 
 .festival-card:hover {
