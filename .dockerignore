@@ -1,0 +1,3 @@
+storage/logs/laravel.log
+deploy_docker.bat
+unix_deploy_docker.sh
