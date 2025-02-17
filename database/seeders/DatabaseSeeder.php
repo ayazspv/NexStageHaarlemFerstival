@@ -6,6 +6,7 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Festival;
 
 class DatabaseSeeder extends Seeder
 {
@@ -35,5 +36,34 @@ class DatabaseSeeder extends Seeder
             'phoneNumber' => '9876543210',
             'role' => 'user',
         ]);
+
+        // Festivals details
+        $festivals = [
+            [
+                'name' => 'Jazz Festival',
+                /*'description' => 'Experience the best jazz music in Haarlem',*/
+                'image_path' => 'festivals/jazz.jpg'
+            ],
+            [
+                'name' => 'Food Festival',
+                /*'description' => 'Taste the finest cuisine Haarlem has to offer',*/
+                'image_path' => 'festivals/food.jpg'
+            ],
+            [
+                'name' => 'Dance Festival',
+                /*'description' => 'Dance the night away in Haarlem',*/
+                'image_path' => 'festivals/dance.jpg'
+            ],
+            [
+                'name' => 'Historic Festival',
+                /*'description' => 'Discover Haarlem\'s rich history',*/
+                'image_path' => 'festivals/historic.jpg'
+            ]
+        ];
+
+        // Populate festivals table
+        foreach ($festivals as $festival) {
+            Festival::create($festival);
+        }
     }
 }

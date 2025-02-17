@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Festival;
 use Inertia\Inertia;
 
 class HomeController
 {
     public function index()
     {
-        return Inertia::render('Home');
+        $festivals = Festival::all();
+        
+        return Inertia::render('Home', [
+            'festivals' => $festivals
+        ]);
     }
 }

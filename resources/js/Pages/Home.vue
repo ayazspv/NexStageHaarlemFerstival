@@ -1,5 +1,12 @@
-<script setup="ts">
+<script setup>
 import AppLayout from "@/Pages/Layouts/AppLayout.vue";
+
+defineProps({
+    festivals: {
+        type: Array,
+        default: () => []
+    }
+});
 </script>
 
 <template>
@@ -21,60 +28,16 @@ import AppLayout from "@/Pages/Layouts/AppLayout.vue";
             <section class="mb-5">
                 <h2 class="text-center mb-4">Festivals</h2>
                 <div class="row g-4">
-                    <div class="col-12 col-md-6">
+                    <div v-for="festival in festivals" 
+                         :key="festival.id" 
+                         class="col-12 col-md-6">
                         <div class="festival-wrapper">
                             <div class="card festival-card mb-3">
-                                <img src="/path-to-image-1" class="card-img-top" alt="Festival 1">
+                                <img :src="festival.image_path" 
+                                     :alt="festival.name" 
+                                     class="card-img-top">
                             </div>
-                            <h5 class="text-center mb-3">Jazz Festival</h5>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-primary">
-                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
-                                </button>
-                                <button class="btn btn-outline-primary">
-                                    <i class="fas fa-heart"></i> Wishlist
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <div class="festival-wrapper">
-                            <div class="card festival-card mb-3">
-                                <img src="/path-to-image-2" class="card-img-top" alt="Festival 2">
-                            </div>
-                            <h5 class="text-center mb-3">Food Festival</h5>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-primary">
-                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
-                                </button>
-                                <button class="btn btn-outline-primary">
-                                    <i class="fas fa-heart"></i> Wishlist
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <div class="festival-wrapper">
-                            <div class="card festival-card mb-3">
-                                <img src="/path-to-image-3" class="card-img-top" alt="Festival 3">
-                            </div>
-                            <h5 class="text-center mb-3">Dance Festival</h5>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-primary">
-                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
-                                </button>
-                                <button class="btn btn-outline-primary">
-                                    <i class="fas fa-heart"></i> Wishlist
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <div class="festival-wrapper">
-                            <div class="card festival-card mb-3">
-                                <img src="/path-to-image-4" class="card-img-top" alt="Festival 4">
-                            </div>
-                            <h5 class="text-center mb-3">Historic Festival</h5>
+                            <h5 class="text-center mb-3">{{ festival.name }}</h5>
                             <div class="d-flex justify-content-center gap-2">
                                 <button class="btn btn-primary">
                                     <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
