@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { Link } from '@inertiajs/vue3';
 
 const isOpen = ref(false);
 
@@ -32,10 +33,10 @@ const navItems = [
             <!-- Sidebar Navigation List -->
             <ul :class="['nav-list', { scroll: isOpen }]">
                 <li v-for="item in navItems" :key="item.name">
-                    <a :href="item.link">
+                    <Link :href="item.link">
                         <i :class="item.icon"></i>
                         <span class="links_name">{{ item.name }}</span>
-                    </a>
+                    </Link>
                     <span class="tooltip">{{ item.name }}</span>
                 </li>
             </ul>

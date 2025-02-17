@@ -3,7 +3,7 @@
 
 <template>
     <footer class="sticky-footer">
-        <p>Made with &hearts; by NexStage</p>
+        <p>Made by NexStage Productions&copy;</p>
     </footer>
 </template>
 

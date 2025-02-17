@@ -1,2 +1,4 @@
 *
 !.gitignore
+/public/storage
+/storage/*.key
