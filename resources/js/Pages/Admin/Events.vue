@@ -1,79 +1,191 @@
 <script setup lang="ts">
-
-import {Editor, EditorContent} from "@tiptap/vue-3";
 import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
-import {useForm} from "@inertiajs/vue3";
-import {ref} from "vue";
-import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
+import { useForm, Link, router } from '@inertiajs/vue3';
+import { ref } from "vue";
+
+interface Festival {
+    id: number;
+    name: string;
+    // description: string,
+    image_path: string;
+}
+
+defineProps<{
+    festivals: Festival[];
+}>();
+
+const showCreateForm = ref(false);
+const showEditForm = ref(false);
+const editingFestival = ref<Festival | null>(null);
 
 const form = useForm({
-    name: "",
-    description: "",
-    link: "",
-    image: "",
+    name: '',
+    // description: '',
+    image: null as File | null
 });
 
-// TipTap WYSIWYG Editor
-const editor = ref(
-    new Editor({
-        extensions: [StarterKit, Image],
-        content: "",
-        onUpdate: ({ editor }) => {
-            form.description = editor.getHTML();
-        },
-    })
-);
-
-// Image Upload Function
-const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-        form.image = reader.result;
-        editor.value.chain().focus().setImage({ src: reader.result }).run();
-    };
-    reader.readAsDataURL(file);
+const resetForm = () => {
+    form.reset();
+    showCreateForm.value = false;
+    showEditForm.value = false;
+    editingFestival.value = null;
 };
 
-// Submit Event Data
-const submitEvent = () => {
-    form.post("/admin/events", {
-        onSuccess: () => {
-            alert("Event added successfully!");
-            form.reset();
-            editor.value.commands.setContent(""); // Clear editor
-        },
-    });
+const submit = () => {
+    if (showEditForm.value && editingFestival.value) {
+        form.post(`/admin/festivals/${editingFestival.value.id}`, {
+            preserveScroll: true,
+            onSuccess: () => resetForm()
+        });
+    } else {
+        form.post('/admin/festivals', {
+            preserveScroll: true,
+            onSuccess: () => resetForm()
+        });
+    }
+};
+
+const editFestival = (festival: Festival) => {
+    editingFestival.value = festival;
+    form.name = festival.name;
+    // form.description = festival.description;
+    showEditForm.value = true;
+    showCreateForm.value = false;
+};
+
+const deleteFestival = (id: number) => {
+    if (confirm('Are you sure you want to delete this festival?')) {
+        router.delete(`/admin/festivals/${id}`);
+    }
 };
 </script>
 
 <template>
-    <AdminAppLayout title="Admin">
-        <div class="container">
-            <h1>Manage Haarlem Festival Events</h1>
+    <AdminAppLayout :title="'Manage Events'">
+        <div class="container-fluid p-4">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Manage Events</h2>
+                <button v-if="!showCreateForm" 
+                        @click="showCreateForm = true"
+                        class="btn btn-primary">
+                    Add New Festival
+                </button>
+            </div>
 
-            <label>Name:</label>
-            <input v-model="form.name" type="text" class="form-control" />
+            <!-- Create/Edit Form -->
+            <div v-if="showCreateForm || showEditForm" class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        {{ showEditForm ? 'Edit Festival' : 'Create New Festival' }}
+                    </h3>
 
-            <label>Event Link:</label>
-            <input v-model="form.link" type="text" class="form-control" />
+                    <form @submit.prevent="submit">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input v-model="form.name" 
+                                   type="text" 
+                                   class="form-control" 
+                                   :class="{ 'is-invalid': form.errors.name }"
+                                   id="name">
+                            <div class="invalid-feedback">{{ form.errors.name }}</div>
+                        </div>
 
-            <label>Event Image:</label>
-            <input type="file" class="form-control" @change="handleImageUpload" />
+                        <!-- Commented out description textarea
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea v-model="form.description" 
+                                    class="form-control"
+                                    :class="{ 'is-invalid': form.errors.description }"
+                                    id="description" 
+                                    rows="3"></textarea>
+                            <div class="invalid-feedback">{{ form.errors.description }}</div>
+                        </div>
+                        -->
 
-            <label>Description:</label>
-            <EditorContent :editor="editor" class="editor" />
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Festival Image</label>
+                            <input type="file" 
+                                   class="form-control"
+                                   :class="{ 'is-invalid': form.errors.image }"
+                                   @input="(e) => {
+                                       const target = e.target as HTMLInputElement;
+                                       if (target.files) {
+                                           form.image = target.files[0];
+                                       }
+                                   }"
+                                   id="image">
+                            <div class="invalid-feedback">{{ form.errors.image }}</div>
+                            <img v-if="editingFestival?.image_path" 
+                                 :src="`/storage/${editingFestival.image_path}`"
+                                 class="mt-2 img-thumbnail"
+                                 style="height: 100px"
+                                 alt="Current image">
+                        </div>
 
-            <button @click="submitEvent" class="btn btn-primary mt-3">
-                Save Event
-            </button>
+                        <div class="d-flex gap-2">
+                            <button type="submit" 
+                                    class="btn btn-primary"
+                                    :disabled="form.processing">
+                                {{ showEditForm ? 'Update Festival' : 'Create Festival' }}
+                            </button>
+                            <button type="button" 
+                                    @click="resetForm"
+                                    class="btn btn-secondary">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Festivals List -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <!-- <th>Description</th> -->
+                                    <th>Image</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="festival in festivals" :key="festival.id">
+                                    <td>{{ festival.name }}</td>
+                                    <!-- <td>{{ festival.description }}</td> -->
+                                    <td>
+                                        <img :src="`/storage/${festival.image_path}`" 
+                                             :alt="festival.name"
+                                             class="img-thumbnail"
+                                             style="height: 50px">
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button @click="editFestival(festival)"
+                                                    class="btn btn-sm btn-info me-2">
+                                                Edit
+                                            </button>
+                                            <button @click="deleteFestival(festival.id)"
+                                                    class="btn btn-sm btn-danger">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </AdminAppLayout>
 </template>
 
 <style scoped>
-
+.card {
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
 </style>

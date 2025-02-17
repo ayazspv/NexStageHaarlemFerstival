@@ -5,7 +5,10 @@
     <div class="navbar-container">
         <div class="navbar-options">
             <div class="navbar-option">
-
+                <!-- Logo here -->
+                <a href="/" class="logo-link">
+                    <img src="/path-to-logo.png" alt="Logo" class="navbar-logo">
+                </a>
             </div>
             <div class="navbar-option">
                 <input style="border: 1px solid black; width: 50%;">
@@ -91,5 +94,23 @@
     flex-direction: row;
     gap: 25px;
     margin-left: 90%;
+}
+
+/* Styles for the logo */
+.logo-link {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    border: solid 1px rgba(204, 204, 204, 255); /* Delete when image of the logo is uploaded */
+}
+
+.navbar-logo {
+    height: 50px; /* Adjust this value based on logo size */
+    width: auto;
+    object-fit: contain;
+}
+
+.navbar-option:first-child {
+    justify-content: flex-start; /* Aligns the logo to the left */
 }
 </style>
