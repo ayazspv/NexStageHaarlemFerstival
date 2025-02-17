@@ -65,7 +65,7 @@ const navItems = [
 }
 
 .sidebar.open {
-  width: 220px; /* Expanded sidebar width */
+  width: 220px;
 }
 
 /* Logo details within the sidebar */
@@ -77,7 +77,7 @@ const navItems = [
 }
 
 .sidebar .logo-details .icon {
-  opacity: 0; /* Hidden by default, shows when sidebar is expanded */
+  opacity: 0;
   transition: opacity 0.5s ease;
 }
 
