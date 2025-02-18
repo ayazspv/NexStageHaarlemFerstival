@@ -11,3 +11,13 @@ export type User = {
     email: string,
     Role: role
 }
+
+export type Festival = {
+    id: number,
+    name: string,
+    description: string | null,
+    image: string,
+    content: string[] | null,
+    date?: string,
+    link?: string,
+}
