@@ -27,11 +27,20 @@ Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('adm
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminPanelController::class, 'show'])->name('admin.dashboard');
     Route::get('/events', [FestivalController::class, 'index'])->name('admin.events');
-    Route::post('/events', [EventController::class, 'store'])->name('admin.events.store');
-    Route::put('/events/{event}', [EventController::class, 'update'])->name('admin.events.update');
-    Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('admin.events.destroy');
+
+//    Route::post('/events', [EventController::class, 'store'])->name('admin.events.store');
+//    Route::put('/events/{event}', [EventController::class, 'update'])->name('admin.events.update');
+//    Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('admin.events.destroy');
+
     Route::post('/festivals', [FestivalController::class, 'store'])->name('admin.festivals.store');
     Route::post('/festivals/{festival}', [FestivalController::class, 'update'])->name('admin.festivals.update');
     Route::delete('/festivals/{festival}', [FestivalController::class, 'destroy'])->name('admin.festivals.destroy');
     Route::resource('festivals', FestivalController::class);
+
+    Route::get('/festivals/cms/manage/{festival}', [FestivalController::class, 'cmsManage'])->name('admin.festivals.manage');
+    Route::patch('/festivals/cms/{festival}', [FestivalController::class, 'cmsUpdate'])
+        ->name('admin.events.update');
+
+    Route::patch('/festivals/cms/{festival}/remove-content', [FestivalController::class, 'cmsRemoveContent'])
+        ->name('admin.events.removeContent');
 });

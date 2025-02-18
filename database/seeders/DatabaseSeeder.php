@@ -41,22 +41,22 @@ class DatabaseSeeder extends Seeder
         $festivals = [
             [
                 'name' => 'Jazz Festival',
-                /*'description' => 'Experience the best jazz music in Haarlem',*/
+                'description' => 'Experience the best jazz music in Haarlem',
                 'image_path' => 'festivals/jazz.jpg'
             ],
             [
                 'name' => 'Food Festival',
-                /*'description' => 'Taste the finest cuisine Haarlem has to offer',*/
+                'description' => 'Taste the finest cuisine Haarlem has to offer',
                 'image_path' => 'festivals/food.jpg'
             ],
             [
                 'name' => 'Dance Festival',
-                /*'description' => 'Dance the night away in Haarlem',*/
+                'description' => 'Dance the night away in Haarlem',
                 'image_path' => 'festivals/dance.jpg'
             ],
             [
                 'name' => 'Historic Festival',
-                /*'description' => 'Discover Haarlem\'s rich history',*/
+                'description' => 'Discover Haarlem\'s rich history',
                 'image_path' => 'festivals/historic.jpg'
             ]
         ];
