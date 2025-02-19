@@ -28,13 +28,13 @@ defineProps({
             <section class="mb-5">
                 <h2 class="text-center mb-4">Festivals</h2>
                 <div class="row g-4">
-                    <div v-for="festival in festivals" 
-                         :key="festival.id" 
+                    <div v-for="festival in festivals"
+                         :key="festival.id"
                          class="col-12 col-md-6">
                         <div class="festival-wrapper">
                             <div class="card festival-card mb-3">
-                                <img :src="festival.image_path" 
-                                     :alt="festival.name" 
+                                <img :src="`/storage/${editingFestival.image_path}`"
+                                     :alt="festival.name"
                                      class="card-img-top">
                             </div>
                             <h5 class="text-center mb-3">{{ festival.name }}</h5>
