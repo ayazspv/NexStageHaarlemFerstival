@@ -33,7 +33,7 @@ defineProps({
                          class="col-12 col-md-6">
                         <div class="festival-wrapper">
                             <div class="card festival-card mb-3">
-                                <img :src="`/storage/${editingFestival.image_path}`"
+                                <img :src="`/storage/${festival.image_path}`"
                                      :alt="festival.name"
                                      class="card-img-top">
                             </div>
