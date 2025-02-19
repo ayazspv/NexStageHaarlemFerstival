@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminPanelController;
 use App\Http\Controllers\Admin\FestivalController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -38,4 +39,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     Route::patch('/festivals/cms/{festival}/remove-content', [CMSController::class, 'cmsRemoveContent'])
         ->name('admin.events.removeContent');
+
+    Route::get('/users', [UserController::class, 'index'])->name('admin.users');
+    Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 });
