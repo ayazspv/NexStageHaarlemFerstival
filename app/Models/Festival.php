@@ -13,18 +13,22 @@ class Festival extends Model
         'name',
         'description',
         'image_path',
-        'content',
         'date',
         'link',
     ];
 
     protected $casts = [
-        'content' => 'array',  // expects content to be stored as a JSON array (e.g. [content1, content2, ...])
-        'date'    => 'datetime',
+        'date' => 'datetime',
     ];
 
     public function getImageAttribute()
     {
         return $this->image_path;
+    }
+
+    // Relationship to CMS pages
+    public function cmsPages()
+    {
+        return $this->hasMany(CMS::class);
     }
 }
