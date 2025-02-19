@@ -18,6 +18,7 @@ defineProps<{
 }>();
 
 const showEditForm = ref(false);
+const showCreateForm = ref(false); 
 const editingUser = ref<User | null>(null);
 
 const form = useForm({
@@ -38,17 +39,17 @@ const editUser = (user: User) => {
     form.email = user.email;
     form.phoneNumber = user.phoneNumber || '';
     form.role = user.role;
-    form.password = ''; // Clear password field
+    form.password = ''; 
     showEditForm.value = true;
 };
 
 const resetForm = () => {
     form.reset();
     showEditForm.value = false;
+    showCreateForm.value = false;
     editingUser.value = null;
 };
 
-// Add CSRF token handling
 const page = usePage();
 const csrfToken = page.props.csrf_token as string;
 
@@ -60,7 +61,16 @@ const submit = () => {
             },
             preserveScroll: true,
             onSuccess: () => resetForm(),
-            _method: 'PUT' // This is important for Laravel to recognize it as a PUT request
+            _method: 'PUT' 
+        });
+    } else {
+        // New user creation
+        form.post('/admin/users', {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken
+            },
+            preserveScroll: true,
+            onSuccess: () => resetForm()
         });
     }
 };
@@ -79,11 +89,23 @@ const deleteUser = (id: number) => {
 <template>
     <AdminAppLayout :title="'Manage Users'">
         <div class="container-fluid p-4">
-            <!-- Edit Form -->
-            <div v-if="showEditForm" class="card mb-4">
-                <div class="card-body">
-                    <h3 class="card-title mb-4">Edit User</h3>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Manage Users</h2>
+                <button v-if="!showEditForm && !showCreateForm"
+                        @click="showCreateForm = true"
+                        class="btn btn-primary">
+                    Add New User
+                </button>
+            </div>
 
+            <!-- Form card to handle both edit and create -->
+            <div v-if="showEditForm || showCreateForm" class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">
+                        {{ showEditForm ? 'Edit User' : 'Create New User' }}
+                    </h3>
+
+                    <!-- Rest of the form -->
                     <form @submit.prevent="submit">
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -163,7 +185,7 @@ const deleteUser = (id: number) => {
                             <button type="submit" 
                                     class="btn btn-primary"
                                     :disabled="form.processing">
-                                Update User
+                                {{ showEditForm ? 'Update User' : 'Create User' }}
                             </button>
                             <button type="button" 
                                     @click="resetForm"
