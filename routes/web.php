@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminPanelController;
 use App\Http\Controllers\Admin\FestivalController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -49,4 +50,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Update subpage (from editor).
     Route::patch('/festivals/cms/edit-subpage/{festival}/{cms}', [CMSController::class, 'cmsUpdateSubpage'])
         ->name('admin.festivals.subpage.update');
+
+    Route::get('/users', [UserController::class, 'index'])->name('admin.users');
+    Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
 });

@@ -19,11 +19,6 @@ class FestivalController
         ]);
     }
 
-    public function create(): Response
-    {
-        return Inertia::render('Admin/Festivals/Create');
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
