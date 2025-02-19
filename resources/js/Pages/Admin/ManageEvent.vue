@@ -186,12 +186,7 @@ const submitCms = () => {
             </button>
 
             <!-- Render each CMS Editor Panel -->
-            <div v-for="(box, index) in cmsBoxes" :key="index" class="cms-box mt-4">
-                <!-- Remove button for each panel -->
-                <button @click="removeCmsBox(index)" class="btn btn-danger btn-sm mb-2">
-                    Remove This Content Box
-                </button>
-
+            <div v-for="(box, index) in cmsBoxes" :key="index" class="cms-box mt-4 mb-5">
                 <!-- Toolbar for this CMS panel -->
                 <div v-if="box.editor" class="editor-toolbar">
                     <button @click="box.editor.chain().focus().toggleBold().run()" :class="{ 'is-active': box.editor.isActive('bold') }">
@@ -225,6 +220,14 @@ const submitCms = () => {
 
                 <!-- The TipTap Editor Content -->
                 <EditorContent :editor="box.editor as Editor" class="editor" />
+                <div class="mt-3 float-end">
+                    <button @click="removeCmsBox(index)" class="btn btn-primary btn-md mr-4">
+                        Add a Subpage
+                    </button>
+                    <button @click="removeCmsBox(index)" class="btn delete-btn btn-md">
+                        Remove This Content Box
+                    </button>
+                </div>
             </div>
 
             <!-- Save/Update Button -->
@@ -236,6 +239,10 @@ const submitCms = () => {
 </template>
 
 <style scoped>
+.delete-btn {
+    background-color: red;
+    color: white;
+}
 .container {
     margin: 20px;
 }
