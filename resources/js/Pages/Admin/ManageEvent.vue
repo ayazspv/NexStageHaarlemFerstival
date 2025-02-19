@@ -1,49 +1,62 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
-import {useForm, router, usePage} from "@inertiajs/vue3";
-import { Editor, EditorContent } from "@tiptap/vue-3";
-import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
-import TextStyle from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
-import Heading from "@tiptap/extension-heading";
-import ListItem from "@tiptap/extension-list-item";
-import Dropcursor from "@tiptap/extension-dropcursor";
-import Paragraph from "@tiptap/extension-paragraph";
-import Document from "@tiptap/extension-document";
-import Text from "@tiptap/extension-text";
-import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
-import {Festival} from "../../../models";
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
+import { Editor, EditorContent } from '@tiptap/vue-3';
+import StarterKit from '@tiptap/starter-kit';
+import Image from '@tiptap/extension-image';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import Heading from '@tiptap/extension-heading';
+import ListItem from '@tiptap/extension-list-item';
+import Dropcursor from '@tiptap/extension-dropcursor';
+import Paragraph from '@tiptap/extension-paragraph';
+import Document from '@tiptap/extension-document';
+import Text from '@tiptap/extension-text';
+import AdminAppLayout from '../Layouts/AdminAppLayout.vue';
+import { Festival } from '../../../models';
+import { Inertia } from '@inertiajs/inertia';
 
+interface CmsPage {
+    id?: number;
+    title: string;
+    content: string
+    parent_id?: number | null;
+    subpages?: CmsPage[];
+}
 
 const props = defineProps<{
     festival: Festival;
-    cmsContents: string[];
+    cmsPages: CmsPage[];
 }>();
 
+// Get CSRF token.
 const page = usePage();
-const csrfToken = page.props.csrf_token as string || "";
+const csrfToken = (page.props.csrf_token as string) || '';
 
-const form = useForm({
-    id: props.festival.id,
-    name: props.festival.name,
-    date: props.festival.date || "",
-    link: props.festival.link || "",
-    description: props.festival.description || "",
-    images: [] as File[],
-    contents: [] as string[],
-});
-
+// Define a type for each editor box on the Manage page.
 type CmsBox = {
+    id?: number;
     editor: Editor;
     content: string;
     isSaved: boolean;
+    title: string;
+    parent_id: number | null;
+    creatingSubpage?: boolean;
+    subpages?: CmsPage[];
 };
 
 const cmsBoxes = ref<CmsBox[]>([]);
 
-const createCmsBox = (initialContent: string = "", isSaved: boolean = false) => {
-    const newEditor = new Editor({
+// Function to create an editor box for a top-level CMS record.
+const createCmsBox = (
+    initialContent: string = '',
+    isSaved: boolean = false,
+    initialTitle: string = '',
+    id?: number,
+    parent_id: number | null = null,
+    subpages: CmsPage[] = []
+) => {
+    const editor = new Editor({
         extensions: [
             StarterKit,
             Document,
@@ -64,25 +77,39 @@ const createCmsBox = (initialContent: string = "", isSaved: boolean = false) => 
       <p>Drag images around inside the editor.</p>
     `,
         onUpdate: ({ editor }) => {
-            const box = cmsBoxes.value.find((box) => box.editor === editor as Editor);
+            const box = cmsBoxes.value.find((b) => b.editor === editor as Editor);
             if (box) {
                 box.content = editor.getHTML();
             }
         },
     });
+
     cmsBoxes.value.push({
-        editor: newEditor,
-        content: newEditor.getHTML(),
+        id: id,
+        editor,
+        content: editor.getHTML(),
         isSaved,
+        title: initialTitle,
+        parent_id: parent_id,
+        subpages: subpages,
     });
 };
 
-// On mount, load the saved content panels from the festival.
-// cmsContents is passed in from the controller (cmsManage).
+// On mount, load only top-level pages (those with parent_id === null).
 onMounted(() => {
-    if (props.cmsContents && Array.isArray(props.cmsContents) && props.cmsContents.length > 0) {
-        props.cmsContents.forEach((content: string) => {
-            createCmsBox(content, true);
+    if (props.cmsPages && props.cmsPages.length > 0) {
+        props.cmsPages.forEach((cms) => {
+            const initialContent = Array.isArray(cms.content) ? cms.content[0] : cms.content;
+            if (cms.parent_id === null) {
+                createCmsBox(
+                    initialContent,
+                    true,
+                    cms.title,
+                    cms.id,
+                    cms.parent_id ?? null,
+                    cms.subpages || []
+                );
+            }
         });
     } else {
         createCmsBox();
@@ -95,51 +122,49 @@ onBeforeUnmount(() => {
     });
 });
 
+// Add a new top-level CMS box.
 const addNewBox = () => {
     createCmsBox();
 };
 
-// Function to remove a CMS panel.
-// If the panel was already saved in the DB, send a patch request to remove it.
+// Remove a CMS box.
 const removeCmsBox = (index: number) => {
     const box = cmsBoxes.value[index];
-
-    if (box.isSaved) {
-        router.patch(`/admin/festivals/cms/${props.festival.id}/remove-content`, { index }, {
-            headers: {
-                "X-CSRF-TOKEN": csrfToken,
-            },
-            onSuccess: () => {
-                box.editor.destroy();
-                cmsBoxes.value.splice(index, 1);
-            },
-            onError: () => {
-                alert("Failed to remove content from the database.");
-            },
-        });
+    if (box.isSaved && box.id) {
+        Inertia.patch(
+            `/admin/festivals/cms/${props.festival.id}/remove-content`,
+            { cms_id: box.id },
+            {
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                onSuccess: () => {
+                    box.editor.destroy();
+                    cmsBoxes.value.splice(index, 1);
+                },
+                onError: () => {
+                    alert('Failed to remove content from the database.');
+                },
+            }
+        );
     } else {
         box.editor.destroy();
         cmsBoxes.value.splice(index, 1);
-        console.log("CMS boxes after removal:", cmsBoxes.value);
     }
 };
 
-// Function to add an image from URL into the last CMS panel.
+// Helper function to insert an image into the last editor.
 const addImage = () => {
-    const url = window.prompt("Enter image URL");
+    const url = window.prompt('Enter image URL');
     if (url && cmsBoxes.value.length > 0) {
         const lastBox = cmsBoxes.value[cmsBoxes.value.length - 1];
         lastBox.editor.chain().focus().setImage({ src: url }).run();
     }
 };
 
-
+// Handle image file uploads.
 const handleImageUpload = (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
-
-    form.images.push(input.files[0]);
-
+    const file = input.files[0];
     const reader = new FileReader();
     reader.onload = () => {
         const result = reader.result as string;
@@ -148,22 +173,53 @@ const handleImageUpload = (event: Event) => {
             lastBox.editor.chain().focus().setImage({ src: result }).run();
         }
     };
-    reader.readAsDataURL(input.files[0]);
+    reader.readAsDataURL(file);
 };
 
-// When submitting, gather content from all panels and update the festival via cmsUpdate.
-const submitCms = () => {
-    form.contents = cmsBoxes.value.map((box) => box.content);
+// When clicking "Add a Subpage":
+// If this top-level page already has a subpage, show "Edit a Subpage" instead.
+// Double requests needs to be fixed
+const addOrEditSubpage = (box: CmsBox) => {
+    if (!box.isSaved || !box.id) {
+        alert('You must save this page before adding a subpage.');
+        return;
+    }
 
-    form.patch(`/admin/festivals/cms/${props.festival.id}`, {
-        headers: {
-            "X-CSRF-TOKEN": csrfToken,
-        },
-        onSuccess: () => {
-            alert("Content updated successfully!");
+    const child = props.cmsPages.find(x => x.parent_id === box.id);
+    if (child) {
+        if (!child?.id) {
+            alert('Subpage record not found.');
+            return;
+        }
+        const url = `/admin/festivals/cms/edit-subpage/${props.festival.id}/${child.id}`;
+        Inertia.visit(url);
+    } else {
+
+        if (box.creatingSubpage) return;
+        box.creatingSubpage = true;
+        const url = `/admin/festivals/cms/create-subpage/${props.festival.id}/${box.id}`;
+        Inertia.visit(url);
+    }
+};
+
+const submitCms = () => {
+    const pages = cmsBoxes.value.map((box) => ({
+        id: box.id || null,
+        title: box.title,
+        content: box.content,
+        parent_id: null,
+    }));
+    useForm({ pages }).patch(`/admin/festivals/cms/${props.festival.id}`, {
+        headers: { 'X-CSRF-TOKEN': csrfToken },
+        onSuccess: () => alert('Content updated successfully!'),
+        onError: (errors) => {
+            console.error('Error updating CMS:', errors);
+            alert('Failed to update CMS content. Check the console for details.');
         },
     });
 };
+
+console.log(cmsBoxes);
 </script>
 
 <template>
@@ -171,78 +227,74 @@ const submitCms = () => {
         <div class="container">
             <h1>Manage Content for {{ props.festival.name }}</h1>
 
-            <!-- Optional: Display the festival's current image -->
+            <!-- Festival image -->
             <div v-if="props.festival.image" class="mb-3">
-                <img :src="`/storage/${props.festival.image}`" alt="Festival Image" class="img-thumbnail" style="height: 100px">
+                <img :src="`/storage/${props.festival.image}`" alt="Festival Image" class="img-thumbnail" style="height: 100px" />
             </div>
 
-            <!-- File Upload for inserting an image into the CMS editor -->
+            <!-- Image Upload -->
             <label class="form-label">Upload Image:</label>
             <input type="file" class="form-control" @change="handleImageUpload" />
 
-            <!-- Button to add a new CMS content box -->
-            <button @click="addNewBox" class="btn btn-primary mt-4">
+            <!-- Button to add a new CMS box -->
+            <button type="button" @click="addNewBox" class="btn btn-primary mt-4">
                 Add New Content Box
             </button>
 
-            <!-- Render each CMS Editor Panel -->
+            <!-- Loop over and render each CMS box -->
             <div v-for="(box, index) in cmsBoxes" :key="index" class="cms-box mt-4 mb-5">
-                <!-- Toolbar for this CMS panel -->
+                <!-- Title input: change this to show an actual path -->
+                <p><strong>Displayed as:</strong> {{ box.title }}</p>
+                <input type="text" v-model="box.title" placeholder="Enter page title" class="form-control mb-2" required />
+
+                <!-- Editor toolbar -->
                 <div v-if="box.editor" class="editor-toolbar">
-                    <button @click="box.editor.chain().focus().toggleBold().run()" :class="{ 'is-active': box.editor.isActive('bold') }">
-                        Bold
-                    </button>
-                    <button @click="box.editor.chain().focus().toggleItalic().run()" :class="{ 'is-active': box.editor.isActive('italic') }">
-                        Italic
-                    </button>
-                    <button @click="box.editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'is-active': box.editor.isActive('heading', { level: 1 }) }">
-                        H1
-                    </button>
-                    <button @click="box.editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'is-active': box.editor.isActive('heading', { level: 2 }) }">
-                        H2
-                    </button>
-                    <button @click="box.editor.chain().focus().toggleBulletList().run()" :class="{ 'is-active': box.editor.isActive('bulletList') }">
-                        Bullet List
-                    </button>
-                    <button @click="box.editor.chain().focus().toggleOrderedList().run()" :class="{ 'is-active': box.editor.isActive('orderedList') }">
-                        Ordered List
-                    </button>
-                    <button @click="box.editor.chain().focus().toggleBlockquote().run()" :class="{ 'is-active': box.editor.isActive('blockquote') }">
-                        Blockquote
-                    </button>
-                    <button @click="box.editor.chain().focus().toggleCodeBlock().run()" :class="{ 'is-active': box.editor.isActive('codeBlock') }">
-                        Code Block
-                    </button>
-                    <button @click="addImage">
-                        Add Image from URL
-                    </button>
+                    <button type="button" @click="box.editor.chain().focus().toggleBold().run()" :class="{ 'is-active': box.editor.isActive('bold') }">Bold</button>
+                    <button type="button" @click="box.editor.chain().focus().toggleItalic().run()" :class="{ 'is-active': box.editor.isActive('italic') }">Italic</button>
+                    <button type="button" @click="box.editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'is-active': box.editor.isActive('heading', { level: 1 }) }">H1</button>
+                    <button type="button" @click="box.editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'is-active': box.editor.isActive('heading', { level: 2 }) }">H2</button>
+                    <button type="button" @click="box.editor.chain().focus().toggleBulletList().run()" :class="{ 'is-active': box.editor.isActive('bulletList') }">Bullet List</button>
+                    <button type="button" @click="box.editor.chain().focus().toggleOrderedList().run()" :class="{ 'is-active': box.editor.isActive('orderedList') }">Ordered List</button>
+                    <button type="button" @click="box.editor.chain().focus().toggleBlockquote().run()" :class="{ 'is-active': box.editor.isActive('blockquote') }">Blockquote</button>
+                    <button type="button" @click="box.editor.chain().focus().toggleCodeBlock().run()" :class="{ 'is-active': box.editor.isActive('codeBlock') }">Code Block</button>
+                    <button type="button" @click="addImage">Add Image from URL</button>
                 </div>
 
-                <!-- The TipTap Editor Content -->
+                <!-- The editor content -->
                 <EditorContent :editor="box.editor as Editor" class="editor" />
+
+                <!-- Action buttons -->
                 <div class="mt-3 float-end">
-                    <button @click="removeCmsBox(index)" class="btn btn-primary btn-md mr-4">
-                        Add a Subpage
+                    <!-- Show "Edit Subpage" if one exists; otherwise show "Add a Subpage" -->
+                    <button type="button"
+                            v-if="box.isSaved && box.id"
+                            @click="addOrEditSubpage(box as CmsBox)"
+                            class="btn btn-secondary btn-md mr-4">
+                        <template v-if="props.cmsPages.some(x => x.parent_id === box.id)">
+                            Edit a Subpage
+                        </template>
+                        <template v-else>
+                            Add a Subpage
+                        </template>
                     </button>
-                    <button @click="removeCmsBox(index)" class="btn delete-btn btn-md">
+                    <button type="button" @click="removeCmsBox(index)" class="btn delete-btn btn-md">
                         Remove This Content Box
                     </button>
                 </div>
             </div>
 
             <!-- Save/Update Button -->
-            <button @click="submitCms" class="btn btn-primary mt-3">
-                Save changes
-            </button>
+            <div class="d-flex row save-container">
+                <button type="button" @click="submitCms" class="btn btn-primary mt-3">
+                    Save changes
+                </button>
+                <small>*Save changes to add a subpage</small>
+            </div>
         </div>
     </AdminAppLayout>
 </template>
 
 <style scoped>
-.delete-btn {
-    background-color: red;
-    color: white;
-}
 .container {
     margin: 20px;
 }
@@ -271,15 +323,6 @@ const submitCms = () => {
     padding: 10px;
     background: white;
 }
-img {
-    display: block;
-    height: auto;
-    margin: 1.5rem 0;
-    max-width: 100%;
-}
-.ProseMirror-selectednode {
-    outline: 3px solid #aaa;
-}
 .cms-box {
     margin-bottom: 2rem;
     border: 1px solid #eee;
@@ -287,9 +330,11 @@ img {
     border-radius: 4px;
     position: relative;
 }
-.cms-box button.btn-danger {
-    position: absolute;
-    top: 5px;
-    right: 5px;
+.delete-btn {
+    background-color: red;
+    color: white;
+}
+.save-container {
+    width: 125px;
 }
 </style>

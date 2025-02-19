@@ -35,7 +35,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/festivals/cms/manage/{festival}', [CMSController::class, 'cmsManage'])->name('admin.festivals.manage');
     Route::patch('/festivals/cms/{festival}', [CMSController::class, 'cmsUpdate'])
         ->name('admin.events.update');
-
     Route::patch('/festivals/cms/{festival}/remove-content', [CMSController::class, 'cmsRemoveContent'])
         ->name('admin.events.removeContent');
+
+    // New route to create a subpage (will create a new CMS record and redirect)
+    Route::get('/festivals/cms/create-subpage/{festival}/{parent}', [CMSController::class, 'createSubpage'])
+        ->name('admin.festivals.subpage.create');
+
+    // Show subpage editor.
+    Route::get('/festivals/cms/edit-subpage/{festival}/{cms}', [CMSController::class, 'editSubpage'])
+        ->name('admin.festivals.subpage.edit');
+
+    // Update subpage (from editor).
+    Route::patch('/festivals/cms/edit-subpage/{festival}/{cms}', [CMSController::class, 'cmsUpdateSubpage'])
+        ->name('admin.festivals.subpage.update');
 });
