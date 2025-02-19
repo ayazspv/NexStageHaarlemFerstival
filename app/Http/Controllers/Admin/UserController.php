@@ -44,6 +44,25 @@ class UserController
         return redirect()->back();
     }
 
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'firstName' => 'required|string|max:255',
+            'lastName' => 'required|string|max:255',
+            'username' => 'required|string|unique:users,username',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'phoneNumber' => 'nullable|string|max:20',
+            'role' => 'required|in:admin,user'
+        ]);
+
+        $validated['password'] = Hash::make($validated['password']);
+
+        User::create($validated);
+
+        return redirect()->back();
+    }
+
     public function destroy($id): RedirectResponse
     {
         $user = User::findOrFail($id);
