@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
-import { useForm, Link, router } from '@inertiajs/vue3';
+import {useForm, Link, router, usePage} from '@inertiajs/vue3';
 import { ref } from "vue";
 import { Festival } from "../../../models";
 
 defineProps<{
     festivals: Festival[];
 }>();
+
+const page = usePage();
+const csrfToken = page.props.csrf_token as string || "";
 
 const showCreateForm = ref(false);
 const showEditForm = ref(false);
@@ -28,11 +31,17 @@ const resetForm = () => {
 const submit = () => {
     if (showEditForm.value && editingFestival.value) {
         form.post(`/admin/festivals/${editingFestival.value.id}`, {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+            },
             preserveScroll: true,
             onSuccess: () => resetForm()
         });
     } else {
         form.post('/admin/festivals', {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+            },
             preserveScroll: true,
             onSuccess: () => resetForm()
         });
@@ -49,7 +58,11 @@ const editFestival = (festival: Festival) => {
 
 const deleteFestival = (id: number) => {
     if (confirm('Are you sure you want to delete this festival?')) {
-        router.delete(`/admin/festivals/${id}`);
+        router.delete(`/admin/festivals/${id}`, {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+            }
+        });
     }
 };
 

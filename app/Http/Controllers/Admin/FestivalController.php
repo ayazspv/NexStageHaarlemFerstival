@@ -50,8 +50,10 @@ class FestivalController
         ]);
     }
 
-    public function update(Request $request, Festival $festival): RedirectResponse
+    public function update(Request $request, $id): RedirectResponse
     {
+        $festival = Festival::findOrFail($id);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             // 'description' => 'required|string',
@@ -68,8 +70,10 @@ class FestivalController
         return redirect()->back();
     }
 
-    public function destroy(Festival $festival): RedirectResponse
+    public function destroy($id): RedirectResponse
     {
+        $festival = Festival::findOrFail($id);
+
         Storage::disk('public')->delete($festival->image_path);
         $festival->delete();
 
