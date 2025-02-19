@@ -47,11 +47,8 @@ class UserController
     public function destroy($id): RedirectResponse
     {
         $user = User::findOrFail($id);
-        
-        if ($user->id !== auth()->id()) {
-            $user->delete();
-        }
-        
+
+        $user->delete();
         return redirect()->back();
     }
 }

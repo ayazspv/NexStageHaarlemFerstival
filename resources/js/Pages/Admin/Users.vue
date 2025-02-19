@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
-import { useForm } from '@inertiajs/vue3';
+import { useForm, router, usePage } from '@inertiajs/vue3';
 import { ref } from "vue";
 
 interface User {
@@ -48,18 +48,30 @@ const resetForm = () => {
     editingUser.value = null;
 };
 
+// Add CSRF token handling
+const page = usePage();
+const csrfToken = page.props.csrf_token as string;
+
 const submit = () => {
     if (editingUser.value) {
-        form.put(`/admin/users/${editingUser.value.id}`, {
+        form.post(`/admin/users/${editingUser.value.id}`, {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken
+            },
             preserveScroll: true,
-            onSuccess: () => resetForm()
+            onSuccess: () => resetForm(),
+            _method: 'PUT' // This is important for Laravel to recognize it as a PUT request
         });
     }
 };
 
 const deleteUser = (id: number) => {
     if (confirm('Are you sure you want to delete this user?')) {
-        router.delete(`/admin/users/${id}`);
+        router.delete(`/admin/users/${id}`, {
+            headers: {
+                "X-CSRF-TOKEN": csrfToken
+            }
+        });
     }
 };
 </script>
