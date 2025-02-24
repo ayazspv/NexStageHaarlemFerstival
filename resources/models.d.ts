@@ -17,7 +17,17 @@ export type Festival = {
     name: string,
     description: string | null,
     image: string,
-    content: string[] | null,
     date?: string,
     link?: string,
+}
+
+export type CMS = {
+    id: number,
+    festival_id: number,
+    parent_id: number | null,
+    title: string,
+    content: string[] | null,
+    link: string,
+    image_path: string | null,
+    order: number[],
 }
