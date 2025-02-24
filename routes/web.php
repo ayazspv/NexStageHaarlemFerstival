@@ -8,21 +8,29 @@ use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminPanelController;
 use App\Http\Controllers\Admin\FestivalController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\LoginController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Change that to just login later for customers
-Route::get('/login', function () {
+/* Route::get('/login', function () {
     return redirect('/admin/login');
-})->name('login');
+})->name('login'); */
 
 Route::get('/admin/', function () {
     return redirect('/admin/dashboard');
 });
 
-Route::get('/admin/login', [AdminLoginController::class, 'show'])->name('admin.login');
+
+//Login routing for admins
+/*Route::get('/admin/login', [AdminLoginController::class, 'show'])->name('admin.login');
 Route::post('/admin/login', [AdminLoginController::class, 'login']);
-Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
+Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');*/
+
+//Login routing for normal users
+Route::get('/login', [LoginController::class, 'show'])->name('loadLogin');
+Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminPanelController::class, 'show'])->name('admin.dashboard');
