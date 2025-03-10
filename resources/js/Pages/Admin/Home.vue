@@ -1,72 +1,173 @@
-<script setup>
-import { ref } from "vue";
-import { useForm, router } from "@inertiajs/vue3";
-import { Editor, EditorContent } from "@tiptap/vue-3";
-import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
-import AdminAppLayout from "@/Pages/Layouts/AdminAppLayout.vue";
+<script setup lang="ts">
+import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
+import { ref } from 'vue';
 
-// Initialize form
-const form = useForm({
-    name: "",
-    description: "",
-    link: "",
-    image: "",
-});
-
-// TipTap WYSIWYG Editor
-const editor = ref(
-    new Editor({
-        extensions: [StarterKit, Image],
-        content: "",
-        onUpdate: ({ editor }) => {
-            form.description = editor.getHTML();
-        },
-    })
-);
-
-// Image Upload Function
-const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-        form.image = reader.result;
-        editor.value.chain().focus().setImage({ src: reader.result }).run();
+interface DashboardProps {
+    stats: {
+        events: {
+            total: number;
+            latest: Array<{
+                id: number;
+                name: string;
+                created_at: string;
+            }>;
+        };
+        employees: {
+            total: number;
+            admins: number;
+            latest: Array<{
+                id: number;
+                firstName: string;
+                lastName: string;
+                role: string;
+                created_at: string;
+            }>;
+        };
+        tickets: {
+            placeholder: boolean;
+        };
     };
-    reader.readAsDataURL(file);
-};
+}
 
-// Submit Event Data
-const submitEvent = () => {
-    form.post("/admin/events", {
-        onSuccess: () => {
-            alert("Event added successfully!");
-            form.reset();
-            editor.value.commands.setContent(""); // Clear editor
-        },
-    });
-};
+defineProps<DashboardProps>();
 </script>
 
 <template>
     <AdminAppLayout title="Dashboard">
-        <div class="container-fluid">
-            <h1>Admin dashboard</h1>
+        <div class="container-fluid p-4">
+            <h1 class="mb-4">Dashboard</h1>
+            
+            <div class="row">
+                <!-- Events Column -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Events</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="stats-box mb-4">
+                                <h3 class="text-primary">{{ stats.events.total }}</h3>
+                                <p class="text-muted">Total Events</p>
+                            </div>
+                            
+                            <h6 class="card-subtitle mb-3">Latest Events</h6>
+                            <div class="latest-items">
+                                <div v-for="event in stats.events.latest" 
+                                     :key="event.id" 
+                                     class="latest-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{ event.name }}</span>
+                                        <small class="text-muted">
+                                            {{ new Date(event.created_at).toLocaleDateString() }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employees Column -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">Employees</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <div class="stats-box">
+                                        <h3 class="text-success">{{ stats.employees.total }}</h3>
+                                        <p class="text-muted">Total Employees</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stats-box">
+                                        <h3 class="text-success">{{ stats.employees.admins }}</h3>
+                                        <p class="text-muted">Admins</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h6 class="card-subtitle mb-3">Latest Registrations</h6>
+                            <div class="latest-items">
+                                <div v-for="employee in stats.employees.latest" 
+                                     :key="employee.id" 
+                                     class="latest-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{ employee.firstName }} {{ employee.lastName }}</span>
+                                        <span class="badge" 
+                                              :class="employee.role === 'admin' ? 'bg-success' : 'bg-secondary'">
+                                            {{ employee.role }}
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ new Date(employee.created_at).toLocaleDateString() }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tickets Column (Placeholder) -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">Tickets</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="placeholder-content">
+                                <i class="fas fa-ticket-alt fa-4x text-info mb-3"></i>
+                                <h4>Coming Soon</h4>
+                                <p class="text-muted">
+                                    Ticket management features will be available in future updates.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </AdminAppLayout>
 </template>
 
 <style scoped>
-.container {
-    max-width: 600px;
-    margin: auto;
-    padding: 20px;
+.stats-box {
+    text-align: center;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
 }
-.editor {
-    border: 1px solid #ccc;
-    min-height: 200px;
-    padding: 10px;
+
+.stats-box h3 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.latest-items {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.latest-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid #eee;
+}
+
+.latest-item:last-child {
+    border-bottom: none;
+}
+
+.placeholder-content {
+    padding: 2rem;
+}
+
+.card {
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    border-bottom: none;
 }
 </style>
