@@ -5,8 +5,7 @@ namespace App\Models;
 class Ticket
 {
     protected $fillable = [
-        'title',
-        'description',
+        'ticket_id',
         'user_id',
         'event_id',
         'qr_code',
