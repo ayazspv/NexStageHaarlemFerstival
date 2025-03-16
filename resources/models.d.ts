@@ -12,22 +12,23 @@ export type User = {
     Role: role
 }
 
-export type Festival = {
-    id: number,
-    name: string,
-    description: string | null,
-    image: string,
-    date?: string,
-    link?: string,
-}
-
 export type CMS = {
-    id: number,
-    festival_id: number,
-    parent_id: number | null,
-    title: string,
-    content: string[] | null,
-    link: string,
-    image_path: string | null,
-    order: number[],
-}
+    id: number;
+    festival_id: number;
+    parent_id: number | null;
+    title: string;
+    content: string | null; // single string value from the CMS 'content' field
+    link: string;
+    image_path: string | null;
+    order: number; // single numeric value
+};
+
+export type Festival = {
+    id: number;
+    name: string;
+    description: string | null;
+    image: string; // using the accessor from Laravel (getImageAttribute)
+    date?: string;
+    link?: string;
+    cmsPages?: CMS[]; // include related CMS pages
+};

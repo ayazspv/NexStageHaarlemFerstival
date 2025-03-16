@@ -15,6 +15,7 @@ import Text from '@tiptap/extension-text';
 import AdminAppLayout from '../Layouts/AdminAppLayout.vue';
 import { Festival } from '../../../models';
 import { Inertia } from '@inertiajs/inertia';
+import axios from 'axios';
 
 interface CmsPage {
     id?: number;
@@ -179,30 +180,49 @@ const handleImageUpload = (event: Event) => {
 // When clicking "Add a Subpage":
 // If this top-level page already has a subpage, show "Edit a Subpage" instead.
 // Double requests needs to be fixed
-const addOrEditSubpage = (box: CmsBox) => {
+
+const addOrEditSubpage = async (box: CmsBox) => {
     if (!box.isSaved || !box.id) {
         alert('You must save this page before adding a subpage.');
         return;
     }
 
-    const child = props.cmsPages.find(x => x.parent_id === box.id);
-    if (child) {
-        if (!child?.id) {
-            alert('Subpage record not found.');
-            return;
-        }
-        const url = `/admin/festivals/cms/edit-subpage/${props.festival.id}/${child.id}`;
-        Inertia.visit(url);
-    } else {
+    // If a subpage already exists, redirect to edit it.
+    const existingSubpage = props.cmsPages.find(x => x.parent_id === box.id);
+    if (existingSubpage) {
+        Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${existingSubpage.id}`);
+        return;
+    }
 
-        if (box.creatingSubpage) return;
-        box.creatingSubpage = true;
-        const url = `/admin/festivals/cms/create-subpage/${props.festival.id}/${box.id}`;
-        Inertia.visit(url);
+    if (box.creatingSubpage) return;
+    box.creatingSubpage = true;
+
+    try {
+        // Make an Axios GET request to create the subpage
+        const { data } = await axios.get(
+            `/admin/festivals/cms/create-subpage/${props.festival.id}/${box.id}`
+        );
+
+        if (data.success && data.subpageId) {
+            // Manually redirect to the subpage editor
+            Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${data.subpageId}`);
+        } else {
+            alert('Failed to create subpage. No subpageId returned.');
+            box.creatingSubpage = false;
+        }
+    } catch (error) {
+        console.error('Error creating subpage:', error);
+        alert('Failed to create subpage. Check console for details.');
+        box.creatingSubpage = false;
     }
 };
 
 const submitCms = () => {
+    if (cmsBoxes.value.some(box => !box.title || box.title.trim() === '')) {
+        alert('Title cannot be empty.');
+        return;
+    }
+
     const pages = cmsBoxes.value.map((box) => ({
         id: box.id || null,
         title: box.title,
@@ -211,15 +231,23 @@ const submitCms = () => {
     }));
     useForm({ pages }).patch(`/admin/festivals/cms/${props.festival.id}`, {
         headers: { 'X-CSRF-TOKEN': csrfToken },
-        onSuccess: () => alert('Content updated successfully!'),
+        onSuccess: () => {
+            alert('Content updated successfully!');
+            location.reload();
+        },
         onError: (errors) => {
-            console.error('Error updating CMS:', errors);
-            alert('Failed to update CMS content. Check the console for details.');
+            if (typeof errors === 'object') {
+                const messages = Object.values(errors)
+                    .flat()
+                    .join('\n');
+
+                alert(`Failed to update CMS content:\n${messages}`);
+            } else {
+                alert(`Failed to update CMS content:\n${errors}`);
+            }
         },
     });
 };
-
-console.log(cmsBoxes);
 </script>
 
 <template>
@@ -245,7 +273,7 @@ console.log(cmsBoxes);
             <div v-for="(box, index) in cmsBoxes" :key="index" class="cms-box mt-4 mb-5">
                 <!-- Title input: change this to show an actual path -->
                 <p><strong>Displayed as:</strong> {{ box.title }}</p>
-                <input type="text" v-model="box.title" placeholder="Enter page title" class="form-control mb-2" required />
+                <input type="text" v-model="box.title" placeholder="Enter page title" class="form-control mb-2" required/>
 
                 <!-- Editor toolbar -->
                 <div v-if="box.editor" class="editor-toolbar">
@@ -261,7 +289,7 @@ console.log(cmsBoxes);
                 </div>
 
                 <!-- The editor content -->
-                <EditorContent :editor="box.editor as Editor" class="editor" />
+                <EditorContent :editor="box.editor as Editor" class="editor"/>
 
                 <!-- Action buttons -->
                 <div class="mt-3 float-end">
