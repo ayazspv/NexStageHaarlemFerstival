@@ -3,11 +3,16 @@
 use App\Http\Controllers\Admin\CMSController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\HomeController;
+use App\Models\CMS;
+use App\Models\Festival;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminPanelController;
 use App\Http\Controllers\Admin\FestivalController;
 use App\Http\Controllers\Admin\UserController;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -56,3 +61,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
 });
+
+// SLUGS
+if (Schema::hasTable('festivals')) {
+    $festivals = Festival::all();
+
+    foreach ($festivals as $festival) {
+        // Convert festival name to URL-friendly slug
+        $slug = Str::slug($festival->name, '-');
+
+        Route::get("festivals/{$slug}", function () use ($festival) {
+            $cmsPages = CMS::where('festival_id', $festival->id)->get();
+
+            return Inertia::render('Components/FestivalPage', [
+                'festival' => $festival->toArray(),
+                'cmsPages' => $cmsPages->toArray(),
+            ]);
+        })->name("festivals.{$festival->id}");
+    }
+}

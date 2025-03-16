@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Nette\Schema\ValidationException;
 
 class CMSController
 {
@@ -27,13 +28,17 @@ class CMSController
     // Update main CMS content
     public function cmsUpdate(Request $request, $festivalId)
     {
-        $validated = $request->validate([
-            'pages' => 'required|array',
-            'pages.*.id' => 'nullable|exists:cms,id',
-            'pages.*.title' => 'required|string',
-            'pages.*.content' => 'required|string',
-            'pages.*.parent_id' => 'nullable|exists:cms,id',
-        ]);
+        try {
+            $validated = $request->validate([
+                'pages' => 'required|array',
+                'pages.*.id' => 'nullable',
+                'pages.*.title' => 'required|string',
+                'pages.*.content' => 'required|string',
+                'pages.*.parent_id' => 'nullable|exists:cms,id',
+            ]);
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->getMessage());
+        }
 
         foreach ($validated['pages'] as $pageData) {
             if (!empty($pageData['id'])) {
@@ -44,16 +49,16 @@ class CMSController
                         'festival_id' => $festivalId,
                         'title'       => $pageData['title'],
                         'content'     => $pageData['content'],
-                        'parent_id'   => $pageData['parent_id'] ?? null, // Ensure parent_id is included
+                        'parent_id'   => $pageData['parent_id'] ?? null,
                     ]);
                 }
             } else {
-                // Create a new record only if it doesn't already exist
+                // Create a new record
                 CMS::create([
                     'festival_id' => $festivalId,
                     'title'       => $pageData['title'],
                     'content'     => $pageData['content'],
-                    'parent_id'   => $pageData['parent_id'] ?? null, // Ensure parent_id is included
+                    'parent_id'   => $pageData['parent_id'] ?? null,
                 ]);
             }
         }
@@ -80,22 +85,22 @@ class CMSController
     }
 
     // New: Create a subpage and redirect to the EditSubpage view.
-    public function createSubpage($festivalId, $parentId): RedirectResponse
+    public function createSubpage($festivalId, $parentId)
     {
         $festival = Festival::findOrFail($festivalId);
         $parent = CMS::findOrFail($parentId);
 
-        // Create a new subpage record with the correct parent_id
         $subpage = CMS::create([
             'festival_id' => $festival->id,
             'parent_id'   => $parent->id,
-            'title'       => 'New Subpage', // Default title
-            'content'     => '',            // Empty content
+            'title'       => 'New Subpage',
+            'content'     => '',
         ]);
 
-        return redirect()->route('admin.festivals.subpage.edit', [
-            'festival' => $festival->id,
-            'cms'      => $subpage->id,
+        // Return JSON instead of a redirect
+        return response()->json([
+            'success'    => true,
+            'subpageId'  => $subpage->id,
         ]);
     }
 
