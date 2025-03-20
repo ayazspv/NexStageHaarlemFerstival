@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { useForm, router, usePage } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { Editor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -13,14 +13,18 @@ import Paragraph from '@tiptap/extension-paragraph';
 import Document from '@tiptap/extension-document';
 import Text from '@tiptap/extension-text';
 import AdminAppLayout from '../Layouts/AdminAppLayout.vue';
+import SubpageTree from '../Components/SubpageTree.vue';
 import { Festival } from '../../../models';
 import { Inertia } from '@inertiajs/inertia';
+import axios from 'axios';
 
 interface CmsPage {
     id?: number;
     title: string;
     content: string;
     parent_id?: number | null;
+    // "children" comes from the server (via with('children'))
+    children?: CmsPage[];
 }
 
 const props = defineProps<{
@@ -31,7 +35,10 @@ const props = defineProps<{
 const page = usePage();
 const csrfToken = (page.props.csrf_token as string) || '';
 
-// Define a type for each editor box.
+/*
+  For the EditSubpage view, we create an editor box for the current page (props.parentPage).
+  This box is used to update the page content.
+*/
 type CmsBox = {
     id?: number;
     editor: Editor;
@@ -43,7 +50,6 @@ type CmsBox = {
 
 const cmsBox = ref<CmsBox | null>(null);
 
-// Create a new CMS box (for an existing page or a new one).
 const createCmsBox = (
     initialContent: string = '',
     isSaved: boolean = false,
@@ -79,16 +85,15 @@ const createCmsBox = (
     });
 
     cmsBox.value = {
-        id: id,
+        id,
         editor,
         content: editor.getHTML(),
         isSaved,
         title: initialTitle,
-        parent_id: parent_id,
+        parent_id,
     };
 };
 
-// When mounted, load the saved CMS page (if any).
 onMounted(() => {
     if (props.parentPage) {
         createCmsBox(
@@ -103,14 +108,12 @@ onMounted(() => {
     }
 });
 
-// Clean up editors on unmount.
 onBeforeUnmount(() => {
     if (cmsBox.value) {
         cmsBox.value.editor.destroy();
     }
 });
 
-// Insert an image by URL into the editor.
 const addImage = () => {
     const url = window.prompt('Enter image URL');
     if (url && cmsBox.value) {
@@ -118,12 +121,10 @@ const addImage = () => {
     }
 };
 
-// Handle image file uploads.
 const handleImageUpload = (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-
     const reader = new FileReader();
     reader.onload = () => {
         const result = reader.result as string;
@@ -134,7 +135,6 @@ const handleImageUpload = (event: Event) => {
     reader.readAsDataURL(file);
 };
 
-// On submission, gather all page data and send it to your update route.
 const submitCms = () => {
     if (!cmsBox.value) return;
 
@@ -156,14 +156,51 @@ const submitCms = () => {
         },
     });
 };
+
+/*
+  addOrEditSubpage:
+  - First, check that the current page is saved.
+  - Then check if props.parentPage.children exists and has at least one child.
+      • If yes, redirect to the edit view for that subpage.
+  - Otherwise, call the API to create a new subpage.
+*/
+const addOrEditSubpage = async (box: CmsBox) => {
+    if (!box.isSaved || !box.id) {
+        alert('You must save this page before adding a subpage.');
+        return;
+    }
+
+    if (props.parentPage.children && props.parentPage.children.length > 0) {
+        // If there is already a subpage, redirect to its editor.
+        Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${props.parentPage.children[0].id}`);
+        return;
+    }
+
+    try {
+        const { data } = await axios.get(`/admin/festivals/cms/create-subpage/${props.festival.id}/${box.id}`);
+        if (data.success && data.subpageId) {
+            // In a real app you might update local state or re-fetch data.
+            Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${data.subpageId}`);
+        } else {
+            alert('Failed to create subpage. No subpageId returned.');
+        }
+    } catch (error) {
+        console.error('Error creating subpage:', error);
+        alert('Failed to create subpage. Check console for details.');
+    }
+};
+
+const manageSubpage = (subpage: CmsPage) => {
+    Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${subpage.id}`);
+};
 </script>
 
 <template>
-    <AdminAppLayout title="Manage Content">
+    <AdminAppLayout title="Manage Subpage">
         <div class="container">
             <h1>Manage Subpage for {{ props.festival.name }}</h1>
 
-            <!-- Festival image (if exists) -->
+            <!-- Festival image -->
             <div v-if="props.festival.image" class="mb-3">
                 <img
                     :src="`/storage/${props.festival.image}`"
@@ -177,9 +214,8 @@ const submitCms = () => {
             <label class="form-label">Upload Image:</label>
             <input type="file" class="form-control" @change="handleImageUpload" />
 
-            <!-- Loop over and render each CMS box -->
+            <!-- Editor for current page -->
             <div v-if="cmsBox" class="cms-box mt-4 mb-5">
-                <!-- Title input -->
                 <input
                     type="text"
                     v-model="cmsBox.title"
@@ -188,50 +224,54 @@ const submitCms = () => {
                     required
                 />
 
-                <!-- Editor toolbar -->
                 <div class="editor-toolbar">
                     <button @click="cmsBox.editor.chain().focus().toggleBold().run()"
                             :class="{ 'is-active': cmsBox.editor.isActive('bold') }">
                         Bold
-                    </button>
-                    <button @click="cmsBox.editor.chain().focus().toggleItalic().run()"
-                            :class="{ 'is-active': cmsBox.editor.isActive('italic') }">
-                        Italic
-                    </button>
-                    <button @click="cmsBox.editor.chain().focus().toggleHeading({ level: 1 }).run()"
-                            :class="{ 'is-active': cmsBox.editor.isActive('heading', { level: 1 }) }">
-                        H1
-                    </button>
-                    <button @click="cmsBox.editor.chain().focus().toggleHeading({ level: 2 }).run()"
-                            :class="{ 'is-active': cmsBox.editor.isActive('heading', { level: 2 }) }">
-                        H2
-                    </button>
-                    <button @click="cmsBox.editor.chain().focus().toggleBulletList().run()"
-                            :class="{ 'is-active': cmsBox.editor.isActive('bulletList') }">
-                        Bullet List
-                    </button>
-                    <button @click="cmsBox.editor.chain().focus().toggleOrderedList().run()"
-                            :class="{ 'is-active': cmsBox.editor.isActive('orderedList') }">
-                        Ordered List
-                    </button>
-                    <button @click="cmsBox.editor.chain().focus().toggleBlockquote().run()"
-                            :class="{ 'is-active': cmsBox.editor.isActive('blockquote') }">
-                        Blockquote
-                    </button>
-                    <button @click="cmsBox.editor.chain().focus().toggleCodeBlock().run()"
-                            :class="{ 'is-active': cmsBox.editor.isActive('codeBlock') }">
-                        Code Block
                     </button>
                     <button @click="addImage">
                         Add Image from URL
                     </button>
                 </div>
 
-                <!-- The TipTap editor content -->
                 <EditorContent :editor="cmsBox.editor as Editor" class="editor" />
+
+                <div class="mt-3 float-end">
+                    <button
+                        type="button"
+                        v-if="cmsBox.isSaved && cmsBox.id"
+                        @click="addOrEditSubpage(cmsBox as CmsBox)"
+                        class="btn btn-secondary btn-md mr-4"
+                    >
+            <span v-if="props.parentPage.children && props.parentPage.children.length > 0">
+              Edit Subpage
+            </span>
+                        <span v-else>
+              Add Subpage
+            </span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Save/Update Button -->
+            <!-- Recursive Subpages Section -->
+            <div class="subpages-section">
+                <h2>Subpages</h2>
+                <div v-if="props.parentPage.children && props.parentPage.children.length">
+                    <SubpageTree
+                        v-for="child in props.parentPage.children"
+                        :key="child.id"
+                        :subpage="child"
+                        @manageSubpage="manageSubpage"
+                    />
+                </div>
+                <div v-else>
+                    <p>No subpages yet.</p>
+                    <button @click="manageSubpage(props.parentPage)" class="btn btn-secondary">
+                        Add a Subpage
+                    </button>
+                </div>
+            </div>
+
             <button @click="submitCms" class="btn btn-primary mt-3">
                 Save changes
             </button>
@@ -275,8 +315,9 @@ const submitCms = () => {
     border-radius: 4px;
     position: relative;
 }
-.delete-btn {
-    background-color: red;
-    color: white;
+.subpages-section {
+    margin-top: 2rem;
+    padding: 1rem;
+    border-top: 1px solid #ddd;
 }
 </style>

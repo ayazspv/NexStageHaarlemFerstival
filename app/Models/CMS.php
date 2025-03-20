@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class CMS extends Model
 {
-    // Explicitly define the table name
     protected $table = 'cms';
 
     protected $fillable = [
@@ -36,5 +35,10 @@ class CMS extends Model
     public function parent()
     {
         return $this->belongsTo(CMS::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_id')->with('children');
     }
 }

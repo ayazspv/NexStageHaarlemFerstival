@@ -51,7 +51,6 @@ function navigateToDashboard() {
                 </a>
             </div>
             <div class="navbar-option">
-                <input style="border: 1px solid black; width: 50%;">
             </div>
             <div class="navbar-option">
                 <div class="navbar-suboption">
@@ -171,7 +170,7 @@ function navigateToDashboard() {
     height: 100%;
     display: flex;
     align-items: center;
-    border: solid 1px rgba(204, 204, 204, 255);
+    /*border: solid 1px rgba(204, 204, 204, 255);*/
     /* Delete when image of the logo is uploaded */
 }
 
