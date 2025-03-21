@@ -15,8 +15,7 @@ import Text from '@tiptap/extension-text';
 import AdminAppLayout from '../Layouts/AdminAppLayout.vue';
 import { Festival } from '../../../models';
 import { Inertia } from '@inertiajs/inertia';
-import axios from 'axios';
-import SubpageTree from "@/Pages/Components/SubpageTree.vue";
+import SubpageTree from "../Components/SubpageTree.vue";
 
 // Define your interface for a CMS page
 interface CmsPage {
