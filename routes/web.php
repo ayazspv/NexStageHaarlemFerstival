@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\CMSController;
 use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\SlugsController;
+use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
 use App\Models\CMS;
 use App\Models\Festival;
@@ -53,21 +55,29 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+
+    // Styles
+    Route::post('/styles', [StyleController::class, 'store'])->name('admin.styles.store');
+
+
 });
 
-if (Schema::hasTable('festivals')) {
+Route::get('/api/styles', [StyleController::class, 'index'])
+    ->name('styles.index');
+
+Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
+    ->where('path', '.*')
+    ->name('festivals.show');
+
+/*if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();
 
     foreach ($festivals as $festival) {
         $slug = Str::slug($festival->name, '-');
 
-        Route::get("festivals/{$slug}", function () use ($festival) {
-            $cmsPages = CMS::where('festival_id', $festival->id)->get();
 
-            return Inertia::render('Components/FestivalPage', [
-                'festival' => $festival->toArray(),
-                'cmsPages' => $cmsPages->toArray(),
-            ]);
-        })->name("festivals.{$festival->id}");
+        Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
+            ->where('path', '.*')
+            ->name('festivals.show');
     }
-}
+}*/
