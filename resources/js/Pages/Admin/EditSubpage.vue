@@ -23,7 +23,7 @@ interface CmsPage {
     title: string;
     content: string;
     parent_id?: number | null;
-    // "children" comes from the server (via with('children'))
+    // This is populated recursively from the server (or by adding new subpages)
     children?: CmsPage[];
 }
 
@@ -36,8 +36,8 @@ const page = usePage();
 const csrfToken = (page.props.csrf_token as string) || '';
 
 /*
-  For the EditSubpage view, we create an editor box for the current page (props.parentPage).
-  This box is used to update the page content.
+  A single “CMS box” represents the current page being edited.
+  This code initializes a Tiptap editor for that page.
 */
 type CmsBox = {
     id?: number;
@@ -72,7 +72,7 @@ const createCmsBox = (
         ],
         content: initialContent || `
       <h2>Welcome to the Event Editor</h2>
-      <p>You can format text using <strong>bold</strong>, <em>italic</em>, or <u>underline</u>.</p>
+      <p>You can format text using <strong>bold</strong>, <em>italic</em> or <u>underline</u>.</p>
       <p>Click "Add Image" to insert an image.</p>
       <img src="https://placehold.co/600x400" />
       <p>Drag images around inside the editor.</p>
@@ -95,6 +95,7 @@ const createCmsBox = (
 };
 
 onMounted(() => {
+    // Initialize the editor with the page content coming from the server.
     if (props.parentPage) {
         createCmsBox(
             props.parentPage.content,
@@ -142,7 +143,8 @@ const submitCms = () => {
         id: cmsBox.value.id || null,
         title: cmsBox.value.title,
         content: cmsBox.value.content,
-        parent_id: props.parentPage.id,
+        // The parent_id of this page remains unchanged.
+        parent_id: props.parentPage.parent_id,
     };
 
     useForm(pageData).patch(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${cmsBox.value.id}`, {
@@ -158,28 +160,33 @@ const submitCms = () => {
 };
 
 /*
-  addOrEditSubpage:
-  - First, check that the current page is saved.
-  - Then check if props.parentPage.children exists and has at least one child.
-      • If yes, redirect to the edit view for that subpage.
-  - Otherwise, call the API to create a new subpage.
+  createSubpage:
+  Always create a new subpage for the current page.
+  The API will return the new subpage id.
 */
-const addOrEditSubpage = async (box: CmsBox) => {
-    if (!box.isSaved || !box.id) {
+const createSubpage = async () => {
+    if (!cmsBox.value || !cmsBox.value.isSaved || !cmsBox.value.id) {
         alert('You must save this page before adding a subpage.');
         return;
     }
 
-    if (props.parentPage.children && props.parentPage.children.length > 0) {
-        // If there is already a subpage, redirect to its editor.
-        Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${props.parentPage.children[0].id}`);
-        return;
-    }
-
     try {
-        const { data } = await axios.get(`/admin/festivals/cms/create-subpage/${props.festival.id}/${box.id}`);
+        const { data } = await axios.get(
+            `/admin/festivals/cms/create-subpage/${props.festival.id}/${cmsBox.value.id}`
+        );
         if (data.success && data.subpageId) {
-            // In a real app you might update local state or re-fetch data.
+            // Update the local children array so the UI can reflect the new subpage immediately.
+            if (!props.parentPage.children) {
+                props.parentPage.children = [];
+            }
+            props.parentPage.children.push({
+                id: data.subpageId,
+                title: 'New Subpage',
+                content: '',
+                parent_id: cmsBox.value.id,
+                children: [],
+            });
+            // Redirect to the subpage editor.
             Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${data.subpageId}`);
         } else {
             alert('Failed to create subpage. No subpageId returned.');
@@ -190,6 +197,10 @@ const addOrEditSubpage = async (box: CmsBox) => {
     }
 };
 
+/*
+  manageSubpage:
+  Redirects to the subpage editor for an existing subpage.
+*/
 const manageSubpage = (subpage: CmsPage) => {
     Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${subpage.id}`);
 };
@@ -199,6 +210,23 @@ const manageSubpage = (subpage: CmsPage) => {
     <AdminAppLayout title="Manage Subpage">
         <div class="container">
             <h1>Manage Subpage for {{ props.festival.name }}</h1>
+
+            <!-- Recursive Subpages Section -->
+            <div class="subpages-section">
+                <h2>Subpages</h2>
+                <div v-if="props.parentPage.children && props.parentPage.children.length">
+                    <SubpageTree
+                        v-for="child in props.parentPage.children"
+                        :key="child.id"
+                        :subpage="child"
+                        :festival-id="props.festival.id"
+                        @manageSubpage="manageSubpage"
+                    />
+                </div>
+                <button @click="createSubpage" class="btn btn-secondary mt-3">
+                    Add Subpage
+                </button>
+            </div>
 
             <!-- Festival image -->
             <div v-if="props.festival.image" class="mb-3">
@@ -225,8 +253,10 @@ const manageSubpage = (subpage: CmsPage) => {
                 />
 
                 <div class="editor-toolbar">
-                    <button @click="cmsBox.editor.chain().focus().toggleBold().run()"
-                            :class="{ 'is-active': cmsBox.editor.isActive('bold') }">
+                    <button
+                        @click="cmsBox.editor.chain().focus().toggleBold().run()"
+                        :class="{ 'is-active': cmsBox.editor.isActive('bold') }"
+                    >
                         Bold
                     </button>
                     <button @click="addImage">
@@ -234,40 +264,16 @@ const manageSubpage = (subpage: CmsPage) => {
                     </button>
                 </div>
 
-                <EditorContent :editor="cmsBox.editor as Editor" class="editor" />
+                <EditorContent :editor="cmsBox.editor" class="editor" />
 
                 <div class="mt-3 float-end">
                     <button
                         type="button"
                         v-if="cmsBox.isSaved && cmsBox.id"
-                        @click="addOrEditSubpage(cmsBox as CmsBox)"
+                        @click="createSubpage"
                         class="btn btn-secondary btn-md mr-4"
                     >
-            <span v-if="props.parentPage.children && props.parentPage.children.length > 0">
-              Edit Subpage
-            </span>
-                        <span v-else>
-              Add Subpage
-            </span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Recursive Subpages Section -->
-            <div class="subpages-section">
-                <h2>Subpages</h2>
-                <div v-if="props.parentPage.children && props.parentPage.children.length">
-                    <SubpageTree
-                        v-for="child in props.parentPage.children"
-                        :key="child.id"
-                        :subpage="child"
-                        @manageSubpage="manageSubpage"
-                    />
-                </div>
-                <div v-else>
-                    <p>No subpages yet.</p>
-                    <button @click="manageSubpage(props.parentPage)" class="btn btn-secondary">
-                        Add a Subpage
+                        Add New Subpage
                     </button>
                 </div>
             </div>

@@ -15,12 +15,7 @@ const props = defineProps<{ subpage: CmsPage }>();
         <div class="subpage-item">
             <span class="subpage-title">{{ props.subpage.title }}</span>
             <button @click="$emit('manageSubpage', props.subpage)">
-                <template v-if="props.subpage.children && props.subpage.children.length">
-                    Edit Subpage
-                </template>
-                <template v-else>
-                    Add Subpage
-                </template>
+                Edit Subpage
             </button>
         </div>
         <div class="subpage-children" v-if="props.subpage.children && props.subpage.children.length">

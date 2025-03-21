@@ -16,6 +16,7 @@ import AdminAppLayout from '../Layouts/AdminAppLayout.vue';
 import { Festival } from '../../../models';
 import { Inertia } from '@inertiajs/inertia';
 import axios from 'axios';
+import SubpageTree from "@/Pages/Components/SubpageTree.vue";
 
 interface CmsPage {
     id?: number;
@@ -105,14 +106,14 @@ onMounted(() => {
         props.cmsPages.forEach((cms) => {
             const initialContent = Array.isArray(cms.content) ? cms.content[0] : cms.content;
             if (cms.parent_id === null) {
-                // Notice we use cms.children from the server and map it to our local subpages.
+                // Map the server's "children" to our local subpages.
                 createCmsBox(
                     initialContent,
                     true,
                     cms.title,
                     cms.id,
                     cms.parent_id ?? null,
-                    cms.children || [] // Use the server’s "children" property here.
+                    cms.children || []
                 );
             }
         });
@@ -182,8 +183,8 @@ const handleImageUpload = (event: Event) => {
 };
 
 // When clicking "Add or Edit Subpage":
-// - If a subpage exists (local subpages array or found in props), we redirect to edit that subpage.
-// - Otherwise, we create a new subpage.
+// - If a subpage exists, redirect to its editor.
+// - Otherwise, create a new subpage.
 const addOrEditSubpage = async (box: CmsBox) => {
     console.log("Current box subpages:", box.subpages);
     if (!box.isSaved || !box.id) {
@@ -191,13 +192,11 @@ const addOrEditSubpage = async (box: CmsBox) => {
         return;
     }
 
-    // Check for existing subpages in both local state (box.subpages) and in props (in case it wasn't mapped)
     const existingSubpage =
         (box.subpages && box.subpages.length > 0 && box.subpages[0]) ||
         props.cmsPages.find((p) => p.parent_id === box.id);
 
     if (existingSubpage) {
-        // Redirect to the subpage editor using the subpage's id.
         Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${existingSubpage.id}`);
         return;
     }
@@ -211,7 +210,6 @@ const addOrEditSubpage = async (box: CmsBox) => {
         );
 
         if (data.success && data.subpageId) {
-            // Update local state immediately: add the new subpage to box.subpages.
             if (!box.subpages) box.subpages = [];
             box.subpages.push({
                 id: data.subpageId,
@@ -229,6 +227,11 @@ const addOrEditSubpage = async (box: CmsBox) => {
         alert('Failed to create subpage. Check console for details.');
         box.creatingSubpage = false;
     }
+};
+
+// This function handles redirecting to a subpage's editor.
+const manageSubpage = (subpage: CmsPage) => {
+    Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${subpage.id}`);
 };
 
 const submitCms = () => {
@@ -302,25 +305,35 @@ const submitCms = () => {
                 </div>
 
                 <!-- The editor content -->
-                <EditorContent :editor="box.editor as Editor" class="editor"/>
+                <EditorContent :editor="box.editor" class="editor"/>
 
                 <!-- Action buttons -->
                 <div class="mt-3 float-end">
-                    <!-- Show "Edit a Subpage" if subpages exist; otherwise show "Add a Subpage" -->
                     <button type="button"
                             v-if="box.isSaved && box.id"
                             @click="addOrEditSubpage(box as CmsBox)"
                             class="btn btn-secondary btn-md mr-4">
-            <span v-if="box.subpages && box.subpages.length > 0">
-              Edit a Subpage
-            </span>
+                        <span v-if="box.subpages && box.subpages.length > 0">
+                          Edit a Subpage
+                        </span>
                         <span v-else>
-              Add a Subpage
-            </span>
+                          Add a Subpage
+                        </span>
                     </button>
                     <button type="button" @click="removeCmsBox(index)" class="btn delete-btn btn-md">
                         Remove This Content Box
                     </button>
+                </div>
+
+                <!-- Display the SubpageTree for nested subpages -->
+                <div v-if="box.subpages && box.subpages.length" class="subpage-tree-container mt-3">
+                    <SubpageTree
+                        v-for="sub in box.subpages"
+                        :key="sub.id"
+                        :subpage="sub"
+                        :festival-id="props.festival.id"
+                        @manageSubpage="manageSubpage"
+                    />
                 </div>
             </div>
 
@@ -377,5 +390,11 @@ const submitCms = () => {
 }
 .save-container {
     width: 125px;
+}
+.subpage-tree-container {
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
 }
 </style>
