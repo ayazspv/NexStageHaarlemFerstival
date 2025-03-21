@@ -43,9 +43,7 @@ type CmsBox = {
     content: string;
     isSaved: boolean;
     title: string;
-    // All boxes created here will share the same parent (props.parentPage.id)
     parent_id: number | null;
-    // Optionally, a box may have its own nested subpages
     subpages?: CmsPage[];
 };
 
@@ -57,7 +55,6 @@ const createCmsBox = (
     isSaved: boolean = false,
     initialTitle: string = '',
     id?: number,
-    // By default, assign the parent page’s id as the parent_id.
     parent_id: number | null = props.parentPage.id,
     subpages: CmsPage[] = []
 ) => {
@@ -107,7 +104,6 @@ onMounted(() => {
             createCmsBox(initialContent, true, child.title, child.id, props.parentPage.id, child.children || []);
         });
     }
-    // Optionally, if no subpages exist, you might choose to start with one blank box.
     // else {
     //   createCmsBox();
     // }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CMSController;
 use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\SlugsController;
 use App\Http\Controllers\HomeController;
 use App\Models\CMS;
 use App\Models\Festival;
@@ -55,19 +56,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
 });
 
-if (Schema::hasTable('festivals')) {
+
+Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
+    ->where('path', '.*')
+    ->name('festivals.show');
+
+/*if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();
 
     foreach ($festivals as $festival) {
         $slug = Str::slug($festival->name, '-');
 
-        Route::get("festivals/{$slug}", function () use ($festival) {
-            $cmsPages = CMS::where('festival_id', $festival->id)->get();
 
-            return Inertia::render('Components/FestivalPage', [
-                'festival' => $festival->toArray(),
-                'cmsPages' => $cmsPages->toArray(),
-            ]);
-        })->name("festivals.{$festival->id}");
+        Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
+            ->where('path', '.*')
+            ->name('festivals.show');
     }
-}
+}*/
