@@ -8,12 +8,16 @@ interface CmsPage {
 }
 
 const props = defineProps<{ subpage: CmsPage }>();
+
+const parseTitle = (title: string) => {
+    return title == undefined ? '' : `/${title.replace(/[^a-z0-9_]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}`
+}
 </script>
 
 <template>
     <div class="subpage-tree">
         <div class="subpage-item">
-            <span class="subpage-title">{{ props.subpage.title }}</span>
+            <span class="subpage-title">{{ parseTitle(props.subpage.title) }}</span>
             <button @click="$emit('manageSubpage', props.subpage)">
                 Edit Subpage
             </button>

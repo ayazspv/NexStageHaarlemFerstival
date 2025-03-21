@@ -18,13 +18,15 @@ import { Inertia } from '@inertiajs/inertia';
 import axios from 'axios';
 import SubpageTree from "@/Pages/Components/SubpageTree.vue";
 
+// Define your interface for a CMS page
 interface CmsPage {
     id?: number;
     title: string;
     content: string;
     parent_id?: number | null;
-    // Although your server returns "children", we’ll store it locally as subpages.
+    // The server may return "children"; we store them locally as "subpages" or children
     subpages?: CmsPage[];
+    children?: CmsPage[]; // In case your backend uses "children"
 }
 
 const props = defineProps<{
@@ -32,11 +34,11 @@ const props = defineProps<{
     cmsPages: CmsPage[];
 }>();
 
-// Get CSRF token.
+// We retrieve the CSRF token
 const page = usePage();
 const csrfToken = (page.props.csrf_token as string) || '';
 
-// Define a type for each editor box.
+// Each editor box represents one top-level page in the ManageEvent view.
 type CmsBox = {
     id?: number;
     editor: Editor;
@@ -45,20 +47,18 @@ type CmsBox = {
     title: string;
     parent_id: number | null;
     creatingSubpage?: boolean;
-    // Local array of subpages (mapped from the server's "children")
-    subpages?: CmsPage[];
+    subpages?: CmsPage[]; // local subpages array
 };
 
 const cmsBoxes = ref<CmsBox[]>([]);
 
-// Function to create an editor box for a top-level CMS record.
+// Create an editor box for a top-level CMS page
 const createCmsBox = (
     initialContent: string = '',
     isSaved: boolean = false,
     initialTitle: string = '',
     id?: number,
     parent_id: number | null = null,
-    // Map the server's children to our local "subpages" property.
     subpages: CmsPage[] = []
 ) => {
     const editor = new Editor({
@@ -96,44 +96,49 @@ const createCmsBox = (
         isSaved,
         title: initialTitle,
         parent_id,
-        subpages, // store the subpages from the server
+        subpages
     });
 };
 
-// On mount, load only top-level pages (those with parent_id === null).
+// On mount, we load all top-level pages (parent_id === null) into separate editor boxes
 onMounted(() => {
     if (props.cmsPages && props.cmsPages.length > 0) {
         props.cmsPages.forEach((cms) => {
+            // In case content is an array, pick the first string
             const initialContent = Array.isArray(cms.content) ? cms.content[0] : cms.content;
+
+            // If it's top-level, create a box
             if (cms.parent_id === null) {
-                // Map the server's "children" to our local subpages.
                 createCmsBox(
                     initialContent,
                     true,
                     cms.title,
                     cms.id,
                     cms.parent_id ?? null,
-                    cms.children || []
+                    // Some backends store children in "children", others in "subpages"
+                    cms.children || cms.subpages || []
                 );
             }
         });
     } else {
+        // If no top-level pages exist, start with one empty editor box
         createCmsBox();
     }
 });
 
+// Destroy editors on unmount
 onBeforeUnmount(() => {
     cmsBoxes.value.forEach((box) => {
         box.editor.destroy();
     });
 });
 
-// Add a new top-level CMS box.
+// Add a new top-level CMS box
 const addNewBox = () => {
     createCmsBox();
 };
 
-// Remove a CMS box.
+// Remove a CMS box
 const removeCmsBox = (index: number) => {
     const box = cmsBoxes.value[index];
     if (box.isSaved && box.id) {
@@ -157,7 +162,7 @@ const removeCmsBox = (index: number) => {
     }
 };
 
-// Helper function to insert an image into the last editor.
+// Insert an image into the last editor box
 const addImage = () => {
     const url = window.prompt('Enter image URL');
     if (url && cmsBoxes.value.length > 0) {
@@ -166,7 +171,7 @@ const addImage = () => {
     }
 };
 
-// Handle image file uploads.
+// Handle image file uploads
 const handleImageUpload = (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
@@ -182,58 +187,21 @@ const handleImageUpload = (event: Event) => {
     reader.readAsDataURL(file);
 };
 
-// When clicking "Add or Edit Subpage":
-// - If a subpage exists, redirect to its editor.
-// - Otherwise, create a new subpage.
-const addOrEditSubpage = async (box: CmsBox) => {
-    console.log("Current box subpages:", box.subpages);
+// Clicking "Add or Edit Subpage" navigates to EditSubpage.vue for that box
+const addOrEditSubpage = (box: CmsBox) => {
     if (!box.isSaved || !box.id) {
         alert('You must save this page before adding a subpage.');
         return;
     }
-
-    const existingSubpage =
-        (box.subpages && box.subpages.length > 0 && box.subpages[0]) ||
-        props.cmsPages.find((p) => p.parent_id === box.id);
-
-    if (existingSubpage) {
-        Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${existingSubpage.id}`);
-        return;
-    }
-
-    if (box.creatingSubpage) return;
-    box.creatingSubpage = true;
-
-    try {
-        const { data } = await axios.get(
-            `/admin/festivals/cms/create-subpage/${props.festival.id}/${box.id}`
-        );
-
-        if (data.success && data.subpageId) {
-            if (!box.subpages) box.subpages = [];
-            box.subpages.push({
-                id: data.subpageId,
-                title: 'New Subpage',
-                content: '',
-                parent_id: box.id,
-            });
-            Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${data.subpageId}`);
-        } else {
-            alert('Failed to create subpage. No subpageId returned.');
-            box.creatingSubpage = false;
-        }
-    } catch (error) {
-        console.error('Error creating subpage:', error);
-        alert('Failed to create subpage. Check console for details.');
-        box.creatingSubpage = false;
-    }
+    Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${box.id}`);
 };
 
-// This function handles redirecting to a subpage's editor.
+// Manage an existing sub-subpage (passed in from SubpageTree)
 const manageSubpage = (subpage: CmsPage) => {
     Inertia.visit(`/admin/festivals/cms/edit-subpage/${props.festival.id}/${subpage.id}`);
 };
 
+// Save all top-level pages
 const submitCms = () => {
     if (cmsBoxes.value.some(box => !box.title || box.title.trim() === '')) {
         alert('Title cannot be empty.');
@@ -246,6 +214,7 @@ const submitCms = () => {
         content: box.content,
         parent_id: null,
     }));
+
     useForm({ pages }).patch(`/admin/festivals/cms/${props.festival.id}`, {
         headers: { 'X-CSRF-TOKEN': csrfToken },
         onSuccess: () => {
@@ -254,9 +223,7 @@ const submitCms = () => {
         },
         onError: (errors) => {
             if (typeof errors === 'object') {
-                const messages = Object.values(errors)
-                    .flat()
-                    .join('\n');
+                const messages = Object.values(errors).flat().join('\n');
                 alert(`Failed to update CMS content:\n${messages}`);
             } else {
                 alert(`Failed to update CMS content:\n${errors}`);
@@ -264,6 +231,17 @@ const submitCms = () => {
         },
     });
 };
+
+const urlFriendly = (title: string) => {
+    return '/' + title
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '-'); // convert spaces to dashes
+}
+
+const parseDirectory = (title: string) => {
+    return `${urlFriendly(props.festival.name)}${urlFriendly(title)}`;
+}
 </script>
 
 <template>
@@ -271,25 +249,54 @@ const submitCms = () => {
         <div class="container">
             <h1>Manage Content for {{ props.festival.name }}</h1>
 
-            <!-- Festival image -->
-            <div v-if="props.festival.image" class="mb-3">
-                <img :src="`/storage/${props.festival.image}`" alt="Festival Image" class="img-thumbnail" style="height: 100px" />
+            <!-- 1) DISPLAY THE FULL SUBPAGE TREE AT THE TOP -->
+            <div v-if="props.cmsPages && props.cmsPages.length" class="subpage-tree-container mb-4">
+                <h5>{{urlFriendly(props.festival.name)}}</h5>
+                <div
+                    v-for="page in props.cmsPages"
+                    :key="page.id"
+                    class="mt-2"
+                >
+                    <SubpageTree
+                        :subpage="page"
+                        @manageSubpage="manageSubpage"
+                    />
+                </div>
             </div>
 
-            <!-- Image Upload -->
+            <!-- 2) FESTIVAL IMAGE -->
+            <div v-if="props.festival.image" class="mb-3">
+                <img
+                    :src="`/storage/${props.festival.image}`"
+                    alt="Festival Image"
+                    class="img-thumbnail"
+                    style="height: 100px"
+                />
+            </div>
+
+            <!-- 3) IMAGE UPLOAD -->
             <label class="form-label">Upload Image:</label>
             <input type="file" class="form-control" @change="handleImageUpload" />
 
-            <!-- Button to add a new CMS box -->
+            <!-- 4) ADD NEW TOP-LEVEL CONTENT BOX -->
             <button type="button" @click="addNewBox" class="btn btn-primary mt-4">
                 Add New Content Box
             </button>
 
-            <!-- Loop over and render each CMS box -->
-            <div v-for="(box, index) in cmsBoxes" :key="index" class="cms-box mt-4 mb-5">
-                <!-- Title input -->
-                <p><strong>Displayed as:</strong> {{ box.title }}</p>
-                <input type="text" v-model="box.title" placeholder="Enter page title" class="form-control mb-2" required/>
+            <!-- 5) RENDER EACH CMS BOX -->
+            <div
+                v-for="(box, index) in cmsBoxes"
+                :key="index"
+                class="cms-box mt-4 mb-5"
+            >
+                <p>Path: <strong>{{ parseDirectory(box.title) }}</strong></p>
+                <input
+                    type="text"
+                    v-model="box.title"
+                    placeholder="Enter page title"
+                    class="form-control mb-2"
+                    required
+                />
 
                 <!-- Editor toolbar -->
                 <div v-if="box.editor" class="editor-toolbar">
@@ -304,40 +311,35 @@ const submitCms = () => {
                     <button type="button" @click="addImage">Add Image from URL</button>
                 </div>
 
-                <!-- The editor content -->
-                <EditorContent :editor="box.editor" class="editor"/>
+                <!-- Editor content -->
+                <EditorContent :editor="box.editor as Editor" class="editor" />
 
                 <!-- Action buttons -->
                 <div class="mt-3 float-end">
-                    <button type="button"
-                            v-if="box.isSaved && box.id"
-                            @click="addOrEditSubpage(box as CmsBox)"
-                            class="btn btn-secondary btn-md mr-4">
+                    <button
+                        type="button"
+                        v-if="box.isSaved && box.id"
+                        @click="addOrEditSubpage(box as CmsBox)"
+                        class="btn btn-secondary btn-md mr-4"
+                    >
                         <span v-if="box.subpages && box.subpages.length > 0">
-                          Edit a Subpage
+                            Edit a Subpage
                         </span>
                         <span v-else>
-                          Add a Subpage
+                            Add a Subpage
                         </span>
                     </button>
-                    <button type="button" @click="removeCmsBox(index)" class="btn delete-btn btn-md">
+                    <button
+                        type="button"
+                        @click="removeCmsBox(index)"
+                        class="btn delete-btn btn-md"
+                    >
                         Remove This Content Box
                     </button>
                 </div>
-
-                <!-- Display the SubpageTree for nested subpages -->
-                <div v-if="box.subpages && box.subpages.length" class="subpage-tree-container mt-3">
-                    <SubpageTree
-                        v-for="sub in box.subpages"
-                        :key="sub.id"
-                        :subpage="sub"
-                        :festival-id="props.festival.id"
-                        @manageSubpage="manageSubpage"
-                    />
-                </div>
             </div>
 
-            <!-- Save/Update Button -->
+            <!-- 6) SAVE/UPDATE BUTTON -->
             <div class="d-flex row save-container">
                 <button type="button" @click="submitCms" class="btn btn-primary mt-3">
                     Save changes
