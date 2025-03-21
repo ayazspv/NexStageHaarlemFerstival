@@ -17,22 +17,10 @@ use App\Http\Controllers\LoginController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Change that to just login later for customers
-/* Route::get('/login', function () {
-    return redirect('/admin/login');
-})->name('login'); */
-
 Route::get('/admin/', function () {
     return redirect('/admin/dashboard');
 });
 
-
-//Login routing for admins
-/*Route::get('/admin/login', [AdminLoginController::class, 'show'])->name('admin.login');
-Route::post('/admin/login', [AdminLoginController::class, 'login']);
-Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');*/
-
-//Login routing for normal users
 Route::get('/login', [LoginController::class, 'show'])->name('loadLogin');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -52,15 +40,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::patch('/festivals/cms/{festival}/remove-content', [CMSController::class, 'cmsRemoveContent'])
         ->name('admin.events.removeContent');
 
-    // New route to create a subpage (will create a new CMS record and redirect)
     Route::get('/festivals/cms/create-subpage/{festival}/{parent}', [CMSController::class, 'createSubpage'])
         ->name('admin.festivals.subpage.create');
 
-    // Show subpage editor.
     Route::get('/festivals/cms/edit-subpage/{festival}/{cms}', [CMSController::class, 'editSubpage'])
         ->name('admin.festivals.subpage.edit');
 
-    // Update subpage (from editor).
     Route::patch('/festivals/cms/edit-subpage/{festival}/{cms}', [CMSController::class, 'cmsUpdateSubpage'])
         ->name('admin.festivals.subpage.update');
 
@@ -70,12 +55,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
 });
 
-// SLUGS
 if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();
 
     foreach ($festivals as $festival) {
-        // Convert festival name to URL-friendly slug
         $slug = Str::slug($festival->name, '-');
 
         Route::get("festivals/{$slug}", function () use ($festival) {

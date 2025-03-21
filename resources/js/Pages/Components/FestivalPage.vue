@@ -16,7 +16,7 @@ const props = defineProps<{
             <h1>{{ festival.name }}</h1>
             <div v-if="cmsPages && cmsPages.length">
                 <div v-for="(page, index) in cmsPages" :key="index">
-                    <div v-html="page.content"></div>
+                    <div v-if="!page.parent_id" v-html="page.content"></div>
                 </div>
             </div>
             <div v-else>

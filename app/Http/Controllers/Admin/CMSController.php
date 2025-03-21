@@ -16,7 +16,10 @@ class CMSController
     {
         $festival = Festival::findOrFail($festivalId);
 
-        $cmsPages = $festival->cmsPages()->get();
+        $cmsPages = $festival->cmsPages()
+            ->whereNull('parent_id')
+            ->with('children')
+            ->get();
 
         return Inertia::render('Admin/ManageEvent', [
             'festival' => $festival,
@@ -24,8 +27,6 @@ class CMSController
         ]);
     }
 
-
-    // Update main CMS content
     public function cmsUpdate(Request $request, $festivalId)
     {
         try {
@@ -42,7 +43,6 @@ class CMSController
 
         foreach ($validated['pages'] as $pageData) {
             if (!empty($pageData['id'])) {
-                // Update existing record
                 $cms = CMS::find($pageData['id']);
                 if ($cms) {
                     $cms->update([
@@ -53,7 +53,6 @@ class CMSController
                     ]);
                 }
             } else {
-                // Create a new record
                 CMS::create([
                     'festival_id' => $festivalId,
                     'title'       => $pageData['title'],
@@ -66,9 +65,6 @@ class CMSController
         return redirect()->back()->with('success', 'CMS content updated successfully!');
     }
 
-
-
-    // Remove CMS content
     public function cmsRemoveContent(Request $request, $festivalId)
     {
         $validated = $request->validate([
@@ -84,7 +80,6 @@ class CMSController
         return redirect()->back()->withErrors(['error' => 'CMS content not found.']);
     }
 
-    // New: Create a subpage and redirect to the EditSubpage view.
     public function createSubpage($festivalId, $parentId)
     {
         $festival = Festival::findOrFail($festivalId);
@@ -97,15 +92,12 @@ class CMSController
             'content'     => '',
         ]);
 
-        // Return JSON instead of a redirect
         return response()->json([
             'success'    => true,
             'subpageId'  => $subpage->id,
         ]);
     }
 
-
-    // New: Render the EditSubpage view.
     public function editSubpage($festivalId, $cmsId): Response
     {
         $festival = Festival::findOrFail($festivalId);
@@ -115,13 +107,14 @@ class CMSController
             abort(404);
         }
 
+        $parentPage->load('children');
+
         return Inertia::render('Admin/EditSubpage', [
             'festival'   => $festival,
             'parentPage' => $parentPage,
         ]);
     }
 
-    // Update the subpage content (save changes from the EditSubpage view).
     public function cmsUpdateSubpage(Request $request, $festivalId, $cmsId): RedirectResponse
     {
         $festival = Festival::findOrFail($festivalId);
