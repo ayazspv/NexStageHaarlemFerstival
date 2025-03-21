@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CMSController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\SlugsController;
+use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
 use App\Models\CMS;
 use App\Models\Festival;
@@ -54,8 +55,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+
+    // Styles
+    Route::post('/styles', [StyleController::class, 'store'])->name('admin.styles.store');
+
+
 });
 
+Route::get('/api/styles', [StyleController::class, 'index'])
+    ->name('styles.index');
 
 Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->where('path', '.*')
