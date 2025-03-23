@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import AppLayout from "@/Pages/Layouts/AppLayout.vue";
 
 defineProps({
@@ -7,6 +7,10 @@ defineProps({
         default: () => []
     }
 });
+
+const parseToUrl = (title: string) => {
+    return title.trim().toLowerCase().replace(/\s+/g, '-');
+};
 </script>
 
 <template>
@@ -31,22 +35,24 @@ defineProps({
                     <div v-for="festival in festivals"
                          :key="festival.id"
                          class="col-12 col-md-6">
-                        <div class="festival-wrapper">
-                            <div class="card festival-card mb-3">
-                                <img :src="`/storage/${festival.image_path}`"
-                                     :alt="festival.name"
-                                     class="card-img-top">
+                        <a :href="`/festivals/${parseToUrl(festival.name)}`">
+                            <div class="festival-wrapper">
+                                <div class="card festival-card mb-3">
+                                    <img :src="`/storage/${festival.image_path}`"
+                                         :alt="festival.name"
+                                         class="card-img-top">
+                                </div>
+                                <h5 class="text-center mb-3">{{ festival.name }}</h5>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn btn-primary">
+                                        <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
+                                    </button>
+                                    <button class="btn btn-outline-primary">
+                                        <i class="fas fa-heart"></i> Wishlist
+                                    </button>
+                                </div>
                             </div>
-                            <h5 class="text-center mb-3">{{ festival.name }}</h5>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-primary">
-                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
-                                </button>
-                                <button class="btn btn-outline-primary">
-                                    <i class="fas fa-heart"></i> Wishlist
-                                </button>
-                            </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </section>
