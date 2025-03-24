@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppLayout from "@/Pages/Layouts/AppLayout.vue";
+import { cart, fetchCartItems, addToCart, updateCartItem } from '../composables/cart';
 
 defineProps({
     festivals: {
@@ -11,6 +12,8 @@ defineProps({
 const parseToUrl = (title: string) => {
     return title.trim().toLowerCase().replace(/\s+/g, '-');
 };
+
+fetchCartItems(); 
 </script>
 
 <template>
@@ -35,25 +38,45 @@ const parseToUrl = (title: string) => {
                     <div v-for="festival in festivals"
                          :key="festival.id"
                          class="col-12 col-md-6">
-                        <a :href="`/festivals/${parseToUrl(festival.name)}`">
-                            <div class="festival-wrapper">
+                        <div class="festival-wrapper">
+                            <a :href="`/festivals/${parseToUrl(festival.name)}`">
                                 <div class="card festival-card mb-3">
                                     <img :src="`/storage/${festival.image_path}`"
                                          :alt="festival.name"
                                          class="card-img-top">
                                 </div>
-                                <h5 class="text-center mb-3">{{ festival.name }}</h5>
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button class="btn btn-primary">
-                                        <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
-                                    </button>
-                                    <button class="btn btn-outline-primary">
-                                        <i class="fas fa-heart"></i> Wishlist
-                                    </button>
-                                </div>
+                            </a>
+                            <h5 class="text-center mb-3">{{ festival.name }}</h5>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-primary" @click.prevent="addToCart(festival.id)">
+                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
+                                </button>
+                                <button class="btn btn-outline-primary">
+                                    <i class="fas fa-heart"></i> Wishlist
+                                </button>
                             </div>
-                        </a>
+                        </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- Cart Section -->
+            <section class="mb-5">
+                <h2 class="text-center mb-4">Cart</h2>
+                <div v-if="cart.length" class="cart-container p-3 border rounded">
+                    <div v-for="item in cart" :key="item.festival_id" class="cart-item d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5>{{ item.festival.name }}</h5>
+                            <p>Tickets: {{ item.quantity }}</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary" @click="updateCartItem(item.festival_id, item.quantity - 1)">-</button>
+                            <button class="btn btn-outline-secondary" @click="updateCartItem(item.festival_id, item.quantity + 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="text-center">
+                    <p>Your cart is empty.</p>
                 </div>
             </section>
 
@@ -103,6 +126,17 @@ const parseToUrl = (title: string) => {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.cart-container {
+    background: #f8f9fa;
+}
+
+.cart-item {
+    background: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .card-img-top {
