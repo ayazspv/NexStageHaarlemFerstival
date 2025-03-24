@@ -1,7 +1,8 @@
 <script setup lang="ts">
-
 import { router, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { cart, fetchCartItems, updateCartItem } from '../../composables/cart'; 
+import { wishlist, fetchWishlistItems, addToWishlist, removeFromWishlist } from '../../composables/wishlist';
 
 // Define TypeScript interface for User
 interface User {
@@ -30,7 +31,6 @@ function navigateToDashboard() {
             case 'user':
                 router.visit('/home'); // Redirect to the user dashboard
                 break;
-            // Add more roles as needed
             default:
                 router.visit('/default-dashboard'); // Fallback dashboard
                 break;
@@ -38,6 +38,22 @@ function navigateToDashboard() {
     }
 }
 
+// Popup menu visibility
+const isCartMenuVisible = ref(false);
+const isWishlistMenuVisible = ref(false);
+
+function toggleCartMenu() {
+    isCartMenuVisible.value = !isCartMenuVisible.value;
+    isWishlistMenuVisible.value = false;
+}
+
+function toggleWishlistMenu() {
+    isWishlistMenuVisible.value = !isWishlistMenuVisible.value;
+    isCartMenuVisible.value = false;
+}
+
+fetchCartItems(); 
+fetchWishlistItems();
 
 </script>
 
@@ -54,33 +70,52 @@ function navigateToDashboard() {
             </div>
             <div class="navbar-option">
                 <div class="navbar-suboption">
-                    <!-- <a href="/login">
-                        <i class="bx bx-user"></i>
-                    </a>
-                    Check if user is logged in -->
                     <template v-if="auth.user">
                         <span @click.prevent="navigateToDashboard" class="cursor-pointer underline">{{ auth.user.firstName }}</span>
-                        <a href="/cart">
-                            <i class="bx bx-cart"></i>
-                        </a>
-                        <a href="/favorites">
-                            <i class="bx bx-heart"></i>
-                        </a>
                         <button type="button" class="btn btn-outline-danger logoutBtn" @click.prevent="logout">Log Out</button>
                     </template>
                     <template v-else>
                         <a href="/login">
                             <i class="bx bx-user"></i>
                         </a>
-                        <a href="/cart">
-                            <i class="bx bx-cart"></i>
-                        </a>
-                        <a href="/favorites">
-                            <i class="bx bx-heart"></i>
-                        </a>
                     </template>
+                    <a href="/cart" @click.prevent="toggleCartMenu">
+                        <i class="bx bx-cart"></i>
+                    </a>
+                    <a href="/wishlist" @click.prevent="toggleWishlistMenu">
+                        <i class="bx bx-heart"></i>
+                    </a>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Cart Popup Menu -->
+    <div v-if="isCartMenuVisible" class="cart-popup-menu">
+        <div v-if="cart.length">
+            <div v-for="item in cart" :key="item.festival_id" class="cart-item">
+                <span>Festival ID: {{ item.festival_id }}</span>
+                <span>Quantity: {{ item.quantity }}</span>
+                <button @click="updateCartItem(item.festival_id, item.quantity - 1)">-</button>
+                <button @click="updateCartItem(item.festival_id, item.quantity + 1)">+</button>
+            </div>
+        </div>
+        <div v-else class="text-center">
+            <p>No tickets in cart.</p>
+        </div>
+    </div>
+
+    <!-- Wishlist Popup Menu -->
+    <div v-if="isWishlistMenuVisible" class="wishlist-popup-menu">
+        <div v-if="wishlist.length">
+            <div v-for="item in wishlist" :key="item.festival_id" class="wishlist-item">
+                <span>Festival ID: {{ item.festival_id }}</span>
+                <button @click="removeFromWishlist(item.festival_id)">Remove</button>
+            </div>
+            <a href="/wishlist" class="view-wishlist-btn">View Wishlist</a>
+        </div>
+        <div v-else class="text-center">
+            <p>No favorites in wishlist.</p>
         </div>
     </div>
 </template>
@@ -95,7 +130,6 @@ function navigateToDashboard() {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    /* Center content horizontally */
     top: 0;
     width: 100%;
     height: 70px;
@@ -108,52 +142,34 @@ function navigateToDashboard() {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    /* Spread items evenly */
     align-items: center;
-    /* Align items vertically */
     width: 100%;
     padding: 0 20px;
-    /* Add padding for spacing */
 }
 
 .navbar-option {
     flex: 1;
-    /* Each item takes equal width */
-    text-align: center;
-    /* Centers text inside */
     display: flex;
     justify-content: center;
-    /* Ensures content is centered */
     align-items: center;
-    /* Align items vertically */
     min-height: 70px;
-    /* Matches navbar height */
 }
 
-/* Ensure last item is aligned to the right */
 .navbar-option:last-child {
     justify-content: flex-end;
-    /* Push the icon to the right */
 }
 
-/* Fix icon scaling */
 .navbar-option i {
     font-size: 24px;
-    /* Set a fixed size */
-    line-height: 1;
-    display: inline-block;
-    /* Prevents stretching */
     color: black !important;
 }
 
-/* Fix the link styling */
 .navbar-option a {
     text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    /* Ensures the link doesn't stretch */
     height: 100%;
 }
 
@@ -161,31 +177,66 @@ function navigateToDashboard() {
     display: flex;
     flex-direction: row;
     gap: 25px;
-    /* margin-left: 90%; */
     align-items: center;
 }
 
-/* Styles for the logo */
-.logo-link {
-    height: 100%;
+.cart-popup-menu {
+    position: absolute;
+    top: 70px;  /* Adjust based on your navbar height */
+    right: 20px;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 250px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
     display: flex;
-    align-items: center;
-    /*border: solid 1px rgba(204, 204, 204, 255);*/
-    /* Delete when image of the logo is uploaded */
+    flex-direction: column;
 }
 
-.navbar-logo {
-    height: 50px;
-    /* Adjust this value based on logo size */
-    width: auto;
-    object-fit: contain;
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
 }
 
-.navbar-option:first-child {
-    justify-content: flex-start;
-    /* Aligns the logo to the left */
+.view-cart-btn {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    text-decoration: none;
 }
-.logoutBtn {
-    white-space: nowrap;
+
+.wishlist-popup-menu {
+    position: absolute;
+    top: 70px;  /* Adjust based on your navbar height */
+    right: 20px;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 250px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.wishlist-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.view-wishlist-btn {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    text-decoration: none;
 }
 </style>
