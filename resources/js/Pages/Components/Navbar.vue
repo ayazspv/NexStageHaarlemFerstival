@@ -2,6 +2,7 @@
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { cart, fetchCartItems, updateCartItem } from '../../composables/cart'; 
+import { wishlist, fetchWishlistItems, addToWishlist, removeFromWishlist } from '../../composables/wishlist';
 
 // Define TypeScript interface for User
 interface User {
@@ -39,16 +40,20 @@ function navigateToDashboard() {
 
 // Popup menu visibility
 const isCartMenuVisible = ref(false);
+const isWishlistMenuVisible = ref(false);
 
 function toggleCartMenu() {
     isCartMenuVisible.value = !isCartMenuVisible.value;
+    isWishlistMenuVisible.value = false;
+}
+
+function toggleWishlistMenu() {
+    isWishlistMenuVisible.value = !isWishlistMenuVisible.value;
+    isCartMenuVisible.value = false;
 }
 
 fetchCartItems(); 
-
-// Reactive computed property for cart items
-const cartItems = computed(() => cart.value);
-
+fetchWishlistItems();
 
 </script>
 
@@ -77,7 +82,7 @@ const cartItems = computed(() => cart.value);
                     <a href="/cart" @click.prevent="toggleCartMenu">
                         <i class="bx bx-cart"></i>
                     </a>
-                    <a href="/favorites">
+                    <a href="/wishlist" @click.prevent="toggleWishlistMenu">
                         <i class="bx bx-heart"></i>
                     </a>
                 </div>
@@ -87,13 +92,31 @@ const cartItems = computed(() => cart.value);
 
     <!-- Cart Popup Menu -->
     <div v-if="isCartMenuVisible" class="cart-popup-menu">
-        <div v-for="item in cartItems" :key="item.festival_id" class="cart-item">
-            <span>Festival ID: {{ item.festival_id }}</span>
-            <span>Quantity: {{ item.quantity }}</span>
-            <button @click="updateCartItem(item.festival_id, item.quantity - 1)">-</button>
-            <button @click="updateCartItem(item.festival_id, item.quantity + 1)">+</button>
+        <div v-if="cart.length">
+            <div v-for="item in cart" :key="item.festival_id" class="cart-item">
+                <span>Festival ID: {{ item.festival_id }}</span>
+                <span>Quantity: {{ item.quantity }}</span>
+                <button @click="updateCartItem(item.festival_id, item.quantity - 1)">-</button>
+                <button @click="updateCartItem(item.festival_id, item.quantity + 1)">+</button>
+            </div>
         </div>
-        <a href="/cart" class="view-cart-btn">View Cart</a>
+        <div v-else class="text-center">
+            <p>No tickets in cart.</p>
+        </div>
+    </div>
+
+    <!-- Wishlist Popup Menu -->
+    <div v-if="isWishlistMenuVisible" class="wishlist-popup-menu">
+        <div v-if="wishlist.length">
+            <div v-for="item in wishlist" :key="item.festival_id" class="wishlist-item">
+                <span>Festival ID: {{ item.festival_id }}</span>
+                <button @click="removeFromWishlist(item.festival_id)">Remove</button>
+            </div>
+            <a href="/wishlist" class="view-wishlist-btn">View Wishlist</a>
+        </div>
+        <div v-else class="text-center">
+            <p>No favorites in wishlist.</p>
+        </div>
     </div>
 </template>
 
@@ -178,6 +201,36 @@ const cartItems = computed(() => cart.value);
 }
 
 .view-cart-btn {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.wishlist-popup-menu {
+    position: absolute;
+    top: 70px;  /* Adjust based on your navbar height */
+    right: 20px;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 250px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.wishlist-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.view-wishlist-btn {
     margin-top: 10px;
     padding: 8px 12px;
     background-color: #007bff;

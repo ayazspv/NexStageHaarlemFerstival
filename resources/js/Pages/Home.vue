@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import AppLayout from "@/Pages/Layouts/AppLayout.vue";
+import AppLayout from "../Pages/Layouts/AppLayout.vue";
 import { cart, fetchCartItems, addToCart, updateCartItem } from '../composables/cart';
+import { wishlist, fetchWishlistItems, addToWishlist, removeFromWishlist } from '../composables/wishlist';
 
 defineProps({
     festivals: {
@@ -14,6 +15,7 @@ const parseToUrl = (title: string) => {
 };
 
 fetchCartItems(); 
+fetchWishlistItems();
 </script>
 
 <template>
@@ -51,7 +53,7 @@ fetchCartItems();
                                 <button class="btn btn-primary" @click.prevent="addToCart(festival.id)">
                                     <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
                                 </button>
-                                <button class="btn btn-outline-primary">
+                                <button class="btn btn-outline-primary" @click.prevent="addToWishlist(festival.id)">
                                     <i class="fas fa-heart"></i> Wishlist
                                 </button>
                             </div>
@@ -77,6 +79,22 @@ fetchCartItems();
                 </div>
                 <div v-else class="text-center">
                     <p>Your cart is empty.</p>
+                </div>
+            </section>
+
+            <!-- Wishlist Section -->
+            <section class="mb-5">
+                <h2 class="text-center mb-4">Wishlist</h2>
+                <div v-if="wishlist.length" class="wishlist-container p-3 border rounded">
+                    <div v-for="item in wishlist" :key="item.festival_id" class="wishlist-item d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5>{{ item.festival.name }}</h5>
+                        </div>
+                        <button class="btn btn-outline-danger" @click="removeFromWishlist(item.festival_id)">Remove</button>
+                    </div>
+                </div>
+                <div v-else class="text-center">
+                    <p>Your wishlist is empty.</p>
                 </div>
             </section>
 
@@ -142,5 +160,15 @@ fetchCartItems();
 .card-img-top {
     height: 200px;
     object-fit: cover;
+}
+
+.wishlist-container {
+    background: #f8f9fa;
+}
+
+.wishlist-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
 }
 </style>
