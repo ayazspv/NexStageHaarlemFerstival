@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CMSController;
 use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\GameCMSController;
 use App\Http\Controllers\Admin\SlugsController;
 use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
@@ -56,10 +57,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
 
-    // Styles
-    Route::post('/styles', [StyleController::class, 'store'])->name('admin.styles.store');
-
-
+    //GAMES
+    Route::put('/festivals/{festival}/game/{game}', [GameCMSController::class, 'updateGame'])
+        ->name('admin.festivals.game.update');
+    Route::post('/festivals/{festival}/game', [GameCMSController::class, 'storeGame'])
+        ->name('admin.festivals.game.store');
 });
 
 Route::get('/api/styles', [StyleController::class, 'index'])

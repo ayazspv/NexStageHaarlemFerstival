@@ -257,11 +257,6 @@ const saveStyleToDb = () => {
         <div class="festival-page">
             <h1>{{ festival.name }}</h1>
 
-            <!-- Manage Styles Button (admin only) -->
-            <button v-if="isAdmin" class="btn btn-secondary mb-3" @click="showStyleModal = true">
-                Manage styles
-            </button>
-
             <div v-if="cmsPages && cmsPages.length">
                 <div v-for="(page, index) in cmsPages" :key="index">
                     <div class="content-box">

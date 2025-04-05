@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Festival;
 use App\Models\CMS; // Ensure your CMS model has $table = 'cms';
+use App\Models\Game;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,6 +16,17 @@ class CMSController
     public function cmsManage($festivalId): Response
     {
         $festival = Festival::findOrFail($festivalId);
+
+        // GAME FESTIVAL
+        if ($festival->isGame) {
+            $games = Game::where('festival_id', $festival->id)->get();
+
+            return Inertia::render('Admin/Game/ManageGame', [
+                'festival' => $festival,
+                'games' => $games,
+            ]);
+        }
+
 
         $cmsPages = $festival->cmsPages()
             ->whereNull('parent_id')

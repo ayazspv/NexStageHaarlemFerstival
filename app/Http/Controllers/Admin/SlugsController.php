@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\CMS;
 use App\Models\Festival;
+use App\Models\Game;
 use App\Models\Style;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -34,6 +35,15 @@ class SlugsController
 
         if (!$festival) {
             abort(404);
+        }
+
+        if($festival->isGame) {
+            $games = Game::where('festival_id', $festival->id)->get();
+
+            return Inertia::render('Components/FestivalGamePage', [
+                'festival' => $festival,
+                'games' => $games,
+            ]);
         }
 
         $topPages = CMS::where('festival_id', $festival->id)

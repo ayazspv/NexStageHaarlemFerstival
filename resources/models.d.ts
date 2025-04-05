@@ -32,3 +32,15 @@ export type Festival = {
     link?: string;
     cmsPages?: CMS[]; // include related CMS pages
 };
+
+export type Game = {
+    id?: number;
+    question: string;
+    option1: string;
+    option2: string;
+    option3: string;
+    option4: string;
+    correct_option: number | null;
+    thumbnail?: File | null | string;
+    stamp?: File | null | string;
+}
