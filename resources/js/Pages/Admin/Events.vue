@@ -18,7 +18,8 @@ const editingFestival = ref<Festival | null>(null);
 const form = useForm({
     name: '',
     // description: '',
-    image: null as File | null
+    image: null as File | null,
+    isGame: false
 });
 
 const resetForm = () => {
@@ -52,6 +53,7 @@ const editFestival = (festival: Festival) => {
     editingFestival.value = festival;
     form.name = festival.name;
     // form.description = festival.description;
+    form.isGame = festival.isGame || false;
     showEditForm.value = true;
     showCreateForm.value = false;
 };
@@ -100,6 +102,14 @@ const manageEvent = (festivalId: number) => {
                                    :class="{ 'is-invalid': form.errors.name }"
                                    id="name">
                             <div class="invalid-feedback">{{ form.errors.name }}</div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" 
+                                   class="form-check-input" 
+                                   id="isGame" 
+                                   v-model="form.isGame">
+                            <label class="form-check-label" for="isGame">Is Game Festival</label>
                         </div>
 
                         <!-- Commented out description textarea
@@ -160,6 +170,7 @@ const manageEvent = (festivalId: number) => {
                                     <th>Name</th>
                                     <!-- <th>Description</th> -->
                                     <th>Image</th>
+                                    <th>Game</th> <!-- Add this column header -->
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -172,6 +183,11 @@ const manageEvent = (festivalId: number) => {
                                              :alt="festival.name"
                                              class="img-thumbnail"
                                              style="height: 50px">
+                                    </td>
+                                    <td>
+                                        <span class="badge" :class="festival.isGame ? 'bg-success' : 'bg-secondary'">
+                                            {{ festival.isGame ? 'Game' : 'Standard' }}
+                                        </span>
                                     </td>
                                     <td>
                                         <div class="btn-group gap-2">

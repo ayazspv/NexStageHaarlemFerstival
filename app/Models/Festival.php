@@ -15,10 +15,12 @@ class Festival extends Model
         'image_path',
         'date',
         'link',
+        'isGame',
     ];
 
     protected $casts = [
         'date' => 'datetime',
+        'isGame' => 'boolean',
     ];
 
     public function getImageAttribute()

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->json('content')->nullable();
             $table->dateTime('date')->nullable();
             $table->string('link')->nullable();
+            $table->boolean('isGame')->default(false);
             $table->timestamps();
         });
     }
