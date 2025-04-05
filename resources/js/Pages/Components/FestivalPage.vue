@@ -14,17 +14,9 @@ interface CmsPage {
     children?: CmsPage[];
 }
 
-interface CmsStyle {
-    id: number;
-    name: string;
-    content: string;
-    cms_id: number;
-}
-
 interface Props {
     festival: Festival;
     cmsPages: CmsPage[];
-    style?: CmsStyle;
     currentPageId?: number;
 }
 
@@ -168,39 +160,6 @@ const stopDrag = () => {
     isDragging = false;
 };
 
-onMounted(async () => {
-    window.addEventListener('mousemove', onDrag);
-    window.addEventListener('mouseup', stopDrag);
-
-    // Fetch saved styles from your API
-    await fetchSavedStyles();
-
-    if (props.style?.content) {
-        styleContent.value = props.style.content;
-        const styleTag = document.getElementById('cms-style') || document.createElement('style');
-        styleTag.id = 'cms-style';
-        styleTag.innerHTML = props.style.content;
-        document.head.appendChild(styleTag);
-    }
-    else if (savedStyles.value.length > 0) {
-        const firstStyle = savedStyles.value[0] as CmsStyle;
-        styleContent.value = firstStyle.content;
-        selectedSavedStyle.value = String(firstStyle.id);
-        selectedCmsId.value = firstStyle.cms_id;
-        const styleTag = document.getElementById('cms-style') || document.createElement('style');
-        styleTag.id = 'cms-style';
-        styleTag.innerHTML = firstStyle.content;
-        document.head.appendChild(styleTag);
-    }
-    else {
-        styleContent.value =
-            "/* .content-box contains the CMS content. Modifying it will result in changing the WYSIWYG style */" +
-            "\n.content-box {\n\n}" +
-            "\n.page-content {\n\n}" +
-            "\n.content-button {\n\n}";
-    }
-});
-
 onUnmounted(() => {
     window.removeEventListener('mousemove', onDrag);
     window.removeEventListener('mouseup', stopDrag);
@@ -225,16 +184,6 @@ const fetchSavedStyles = async () => {
     }
 };
 
-
-const loadSavedStyle = () => {
-    // Find the selected style by id
-    const found = savedStyles.value.find(s => String(s.id) === selectedSavedStyle.value);
-    if (found) {
-        styleContent.value = (found as CmsStyle).content;
-        styleName.value = (found as CmsStyle).name;
-        selectedCmsId.value = (found as CmsStyle).cms_id;
-    }
-};
 
 const saveStyleToDb = () => {
     const payload = {
@@ -294,17 +243,6 @@ const saveStyleToDb = () => {
                         <option v-for="page in cmsPages" :key="page.id" :value="page.id">{{ page.title }}</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="savedStyleSelect">Load Saved Style:</label>
-                    <select id="savedStyleSelect" v-model="selectedSavedStyle" class="form-control">
-                        <option value="">-- Select saved style --</option>
-                        <option v-for="style in savedStyles" :key="(style as CmsStyle).id" :value="(style as CmsStyle).id">{{ (style as CmsStyle).name }}</option>
-                    </select>
-                    <button class="btn btn-secondary mt-2" @click="loadSavedStyle" :disabled="!selectedSavedStyle">
-                        Load Selected Style
-                    </button>
-                </div>
-
                 <!-- IDE-like Textarea -->
                 <textarea
                     ref="editorRef"

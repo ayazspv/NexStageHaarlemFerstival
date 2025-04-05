@@ -16,6 +16,7 @@ return new class extends Migration
             // The content will store an array (encoded as JSON) of HTML strings.
             $table->json('content')->nullable();
             $table->timestamps();
+            $table->string('style_path')->nullable();
 
             $table->foreign('festival_id')
                 ->references('id')
