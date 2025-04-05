@@ -24,7 +24,8 @@ class FestivalController
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             // 'description' => 'required|string',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'isGame' => 'boolean',
         ]);
 
         $imagePath = $request->file('image')->store('festivals', 'public');
@@ -32,7 +33,8 @@ class FestivalController
         Festival::create([
             'name' => $validated['name'],
             // 'description' => $validated['description'],
-            'image_path' => $imagePath
+            'image_path' => $imagePath,
+            'isGame' => $request->has('isGame') ? $request->isGame : false,
         ]);
 
         return redirect()->back();
@@ -52,13 +54,16 @@ class FestivalController
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             // 'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'isGame' => 'boolean',
         ]);
 
         if ($request->hasFile('image')) {
             Storage::disk('public')->delete($festival->image_path);
             $validated['image_path'] = $request->file('image')->store('festivals', 'public');
         }
+
+        $validated['isGame'] = $request->has('isGame') ? $request->isGame : false;
 
         $festival->update($validated);
 
