@@ -37,6 +37,7 @@ export type Festival = {
     description?: string | null;
     image_path: string;
     date?: string;
+    time_slot?: string;
     link?: string;
     isGame?: boolean;
     ticket_amount: number; 

@@ -41,28 +41,32 @@ class DatabaseSeeder extends Seeder
         $festivals = [
             [
                 'name' => 'Jazz Festival',
-                'description' => 'Experience the best jazz music in Haarlem',
+                'description' => 'Experience the rhythm of Haarlem this summer with unforgettable live performances, vibrant city stages, and a celebration of music, art, and culture at the iconic Haarlem Jazz Festival.',
                 'image_path' => 'festivals/jazz.jpg',
                 'festivalType' => 0,
+                'time_slot' => '18:00 - 22:00',  
             ],
             [
                 'name' => 'Food Festival',
-                'description' => 'Taste the finest cuisine Haarlem has to offer',
+                'description' => 'Curious about the dining options available at Haarlem Culinary 2024? Explore the delectable offerings from a selection of renowned Haarlem restaurants this year. Indulge your palate in a culinary journey with these exquisite dining experiences.',
                 'image_path' => 'festivals/food.jpg',
                 'festivalType' => 1,
+                'time_slot' => '16:00 - 18:00',  
             ],
             [
-                'name' => 'Historic Festival',
-                'description' => 'Discover Haarlem\'s rich history',
+                'name' => 'A Stroll Through History',
+                'description' => 'A Stroll Through History is a tour within the Haarlem festival events, with 10 stops starting with the Church of St. Bavo ending at the Hof van Bakenes. The tour comes with English, Dutch or Chinese guide.',
                 'image_path' => 'festivals/historic.jpg',
                 'festivalType' => 2,
+                'time_slot' => '10:00 - 16:00',  
             ],
             [
                 'name' => 'Night@Teylers',
-                'description' => 'Night at the museum',
+                'description' => 'In the historic city of Haarlem, the brilliant Dr. Teyler created a museum filled with extraordinary treasures - sparkling minerals, fascinating machines, and beautiful works of art. Can you solve all the mysteries that Dr Teylers left?',
                 'image_path' => 'festivals/teyler.jpg',
                 'isGame' => true,
                 'festivalType' => 3,
+                'time_slot' => '10:00 - 17:00',
             ],
         ];
 

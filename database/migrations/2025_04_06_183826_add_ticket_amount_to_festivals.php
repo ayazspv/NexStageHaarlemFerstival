@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('festivals', function (Blueprint $table) {
-            $table->integer('ticket_amount')->default(0)->after('isGame');
+            // Only add the ticket_amount column if it doesn't exist
+            if (!Schema::hasColumn('festivals', 'ticket_amount')) {
+                $table->integer('ticket_amount')->default(0)->after('isGame');
+            }
         });
     }
 
