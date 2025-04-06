@@ -2,7 +2,7 @@
 import AppLayout from "../Pages/Layouts/AppLayout.vue";
 import { cart, fetchCartItems, addToCart } from '../composables/cart';
 import { wishlist, fetchWishlistItems, addToWishlist } from '../composables/wishlist';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Festival } from "../../models";
 
 const props = defineProps<{
@@ -39,6 +39,96 @@ const scheduleEvents = computed(() => {
             eventId: festival.id
         };
     });
+});
+
+// Map data for Haarlem festival locations
+const festivalLocations = [
+    {
+        name: "Patronaat",
+        description: "Music venue hosting the Jazz Festival",
+        coordinates: [52.383109847936645, 4.628657355268647],
+        festival: "Jazz Festival"
+    },
+    {
+        name: "Cafe de Roemer",
+        description: "Historic café participating in Food Festival",
+        coordinates: [52.379988207137316, 4.631883226433229],
+        festival: "Food Festival"
+    },
+    {
+        name: "Grote Markt",
+        description: "Central square and starting point for History Tours",
+        coordinates: [52.381519831037366, 4.635889046442159],
+        festival: "A Stroll Through History"
+    },
+    {
+        name: "Teylers Museum",
+        description: "Historic museum hosting the Night@Teylers events",
+        coordinates: [52.380952434284666, 4.640226658831318],
+        festival: "Night@Teylers"
+    },
+    {
+        name: "Ratatouille Food & Wine",
+        description: "Fine dining restaurant participating in Food Festival",
+        coordinates: [52.378819758004354, 4.637523655268481],
+        festival: "Food Festival"
+    }
+];
+
+// Map initialization function
+const initMap = () => {
+    // Check if we're in the browser environment
+    if (typeof window === 'undefined' || !document.getElementById('festival-map')) return;
+    
+    // Create map centered on Haarlem
+    const map = L.map('festival-map').setView([52.3810, 4.6375], 15);
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+    }).addTo(map);
+    
+    // Create festival-specific markers
+    festivalLocations.forEach(location => {
+        const festival = props.festivals.find(f => f.name === location.festival);
+        
+        // Default icon color if festival not found
+        let iconColor = 'blue';
+        
+        // Determine color based on festival type
+        if (festival) {
+            switch(festival.festivalType) {
+                case 0: iconColor = '#2196f3'; break; // Jazz
+                case 1: iconColor = '#ff9800'; break; // Food
+                case 2: iconColor = '#4caf50'; break; // History
+                case 3: iconColor = '#9c27b0'; break; // Night@Teylers
+                default: iconColor = '#2196f3';
+            }
+        }
+        
+        // Create custom icon
+        const icon = L.divIcon({
+            className: 'custom-map-marker',
+            html: `<div style="background-color: ${iconColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+        
+        // Create marker with popup
+        const marker = L.marker(location.coordinates, { icon }).addTo(map);
+        marker.bindPopup(`
+            <strong>${location.name}</strong>
+            <p>${location.description}</p>
+            <p>Festival: ${location.festival}</p>
+        `);
+    });
+};
+
+// Call the map initialization after component is mounted
+onMounted(() => {
+    // Timeout to ensure the DOM is ready
+    setTimeout(initMap, 100);
 });
 
 fetchCartItems(); 
@@ -151,13 +241,62 @@ fetchWishlistItems();
 
             <!-- Locations(Map) Section -->
             <section class="mb-5">
-                <h2 class="text-center mb-4">Locations</h2>
+                <h2 class="text-center mb-4">Festival Locations in Haarlem</h2>
                 <div class="map-container">
-                    <div class="map-placeholder border rounded">
-                        Map will be implemented here
+                    <div id="festival-map" class="border rounded"></div>
+                    <div class="festival-map-legend mt-3">
+                        <div class="row">
+                            <div v-for="(festival, index) in festivals" :key="festival.id" class="col-md-3 col-6 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="legend-marker" 
+                                         :class="`marker-type-${festival.festivalType}`"></div>
+                                    <span class="ms-2">{{ festival.name }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+/* Map styles */
+#festival-map {
+    height: 500px;
+    width: 100%;
+}
+
+.festival-map-legend {
+    background-color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.legend-marker {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 2px solid white;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.marker-type-0 {
+    background-color: #2196f3; /* Jazz */
+}
+
+.marker-type-1 {
+    background-color: #ff9800; /* Food */
+}
+
+.marker-type-2 {
+    background-color: #4caf50; /* History */
+}
+
+.marker-type-3 {
+    background-color: #9c27b0; /* Night@Teylers */
+}
+</style>

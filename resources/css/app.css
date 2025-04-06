@@ -239,6 +239,31 @@ a {
     font-weight: 500;
 }
 
+/* Map styling */
+.custom-map-marker {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.custom-map-marker div {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.leaflet-popup-content {
+    margin: 10px 12px;
+    line-height: 1.5;
+}
+
+.leaflet-popup-content p {
+    margin: 5px 0;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .schedule-event {
