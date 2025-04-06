@@ -17,14 +17,15 @@ class Festival extends Model
         'link',
         'isGame',
         'festivalType',
-        'ticket_amount', // Add this line
+        'ticket_amount',
+        'time_slot',
     ];
 
     protected $casts = [
         'date' => 'datetime',
         'isGame' => 'boolean',
         'festivalType' => 'integer',
-        'ticket_amount' => 'integer', // Add this line
+        'ticket_amount' => 'integer',
     ];
 
     public function getImageAttribute()

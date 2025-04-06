@@ -44,18 +44,21 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Experience the best jazz music in Haarlem',
                 'image_path' => 'festivals/jazz.jpg',
                 'festivalType' => 0,
+                'time_slot' => '18:00 - 22:00',  
             ],
             [
                 'name' => 'Food Festival',
                 'description' => 'Taste the finest cuisine Haarlem has to offer',
                 'image_path' => 'festivals/food.jpg',
                 'festivalType' => 1,
+                'time_slot' => '16:00 - 18:00',  
             ],
             [
-                'name' => 'Historic Festival',
+                'name' => 'A Stroll Through History',
                 'description' => 'Discover Haarlem\'s rich history',
                 'image_path' => 'festivals/historic.jpg',
                 'festivalType' => 2,
+                'time_slot' => '10:00 - 16:00',  
             ],
             [
                 'name' => 'Night@Teylers',
@@ -63,6 +66,7 @@ class DatabaseSeeder extends Seeder
                 'image_path' => 'festivals/teyler.jpg',
                 'isGame' => true,
                 'festivalType' => 3,
+                'time_slot' => '10:00 - 17:00',
             ],
         ];
 

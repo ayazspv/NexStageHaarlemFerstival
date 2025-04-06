@@ -2,53 +2,44 @@
 import AppLayout from "../Pages/Layouts/AppLayout.vue";
 import { cart, fetchCartItems, addToCart } from '../composables/cart';
 import { wishlist, fetchWishlistItems, addToWishlist } from '../composables/wishlist';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { Festival } from "../../models";
 
-const props = defineProps({
-    festivals: {
-        type: Array,
-        default: () => []
-    }
-});
+const props = defineProps<{
+    festivals: Festival[];
+}>();
 
 const parseToUrl = (title: string) => {
     return title.trim().toLowerCase().replace(/\s+/g, '-');
 };
 
-// Helper function to find festival ID by name
-const getEventId = (name: string) => {
-    const festival = props.festivals.find((f: any) => f.name === name);
-    return festival ? festival.id : null;
+// Helper function to find festival by name
+const findFestival = (name: string) => {
+    return props.festivals.find((f: Festival) => f.name === name);
 };
 
-// Schedule data to avoid repetition
+// Festival Type Classes by type ID instead of name
+const festivalTypeClassMap = {
+    0: 'jazz-event',     // Jazz
+    1: 'yummy-event',    // Food
+    2: 'history-event',  // History
+    3: 'teylers-event'   // Night@Teylers
+};
+
+// Schedule data using dynamic festival information
 const days = ['24', '25', '26', '27'];
-const scheduleEvents = [
-    { 
-        type: 'history-event',
-        time: '10:00 - 16:00', 
-        name: 'A Stroll Through History',
-        eventId: getEventId('A Stroll Through History')
-    },
-    { 
-        type: 'yummy-event',
-        time: '16:00 - 18:00', 
-        name: 'Yummy!',
-        eventId: getEventId('Food Festival')
-    },
-    { 
-        type: 'jazz-event',
-        time: '18:00 - 22:00', 
-        name: 'Haarlem Jazz',
-        eventId: getEventId('Jazz Festival')
-    },
-    { 
-        type: 'teylers-event',
-        time: '10:00 - 17:00', 
-        name: 'Magic@ Teyler',
-        eventId: getEventId('Night@Teylers')
-    }
-];
+
+const scheduleEvents = computed(() => {
+    return props.festivals.map(festival => {
+        const type = festivalTypeClassMap[festival.festivalType] || 'default-event';
+        return {
+            type,
+            time: festival.time_slot || '(Time not specified)',
+            name: festival.name,
+            eventId: festival.id
+        };
+    });
+});
 
 fetchCartItems(); 
 fetchWishlistItems();
