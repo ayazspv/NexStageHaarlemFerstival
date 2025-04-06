@@ -3,6 +3,14 @@ export enum Role {
     User
 }
 
+export enum FestivalType {
+    Jazz,
+    Yummy,
+    History,
+    NightAtTeylers,
+    Dance,
+}
+
 export type User = {
     id: number,
     firstName: string,
@@ -32,3 +40,31 @@ export type Festival = {
     link?: string;
     cmsPages?: CMS[]; // include related CMS pages
 };
+
+export type Game = {
+    id?: number;
+    question: string;
+    option1: string;
+    option2: string;
+    option3: string;
+    option4: string;
+    correct_option: number | null;
+    thumbnail?: File | null | string;
+    stamp?: File | null | string;
+}
+
+export interface JazzFestival {
+    id?: number;
+    festival_id: number;
+    band_name: string;
+    performance_datetime: string; // ISO date string
+    ticket_price: number;
+    band_description: string;
+    band_details: string;
+    band_image?: string;
+    second_image?: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+

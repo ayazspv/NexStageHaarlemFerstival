@@ -21,20 +21,24 @@ class FestivalController
 
     public function store(Request $request): RedirectResponse
     {
+        error_log($request);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            // 'description' => 'required|string',
+            'description' => 'required|string',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'isGame' => 'boolean',
+            'festivalType' => 'required|integer|max:4|min:0'
         ]);
 
         $imagePath = $request->file('image')->store('festivals', 'public');
 
         Festival::create([
             'name' => $validated['name'],
-            // 'description' => $validated['description'],
+            'description' => $validated['description'],
             'image_path' => $imagePath,
             'isGame' => $request->has('isGame') ? $request->isGame : false,
+            'festivalType' => $validated['festivalType']
         ]);
 
         return redirect()->back();

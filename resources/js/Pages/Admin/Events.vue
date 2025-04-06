@@ -2,9 +2,9 @@
 import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
 import {useForm, Link, router, usePage} from '@inertiajs/vue3';
 import { ref } from "vue";
-import { Festival } from "../../../models";
+import {Festival} from "../../../models";
 
-defineProps<{
+const props = defineProps<{
     festivals: Festival[];
 }>();
 
@@ -17,9 +17,10 @@ const editingFestival = ref<Festival | null>(null);
 
 const form = useForm({
     name: '',
-    // description: '',
+    description: '',
     image: null as File | null,
-    isGame: false
+    isGame: false,
+    festivalType: 0,
 });
 
 const resetForm = () => {
@@ -52,7 +53,7 @@ const submit = () => {
 const editFestival = (festival: Festival) => {
     editingFestival.value = festival;
     form.name = festival.name;
-    // form.description = festival.description;
+    form.description = festival.description;
     form.isGame = festival.isGame || false;
     showEditForm.value = true;
     showCreateForm.value = false;
@@ -71,6 +72,7 @@ const deleteFestival = (id: number) => {
 const manageEvent = (festivalId: number) => {
     router.get(`/admin/festivals/cms/manage/${festivalId}`);
 };
+
 </script>
 
 <template>
@@ -104,25 +106,33 @@ const manageEvent = (festivalId: number) => {
                             <div class="invalid-feedback">{{ form.errors.name }}</div>
                         </div>
 
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" 
-                                   class="form-check-input" 
-                                   id="isGame" 
-                                   v-model="form.isGame">
-                            <label class="form-check-label" for="isGame">Is Game Festival</label>
-                        </div>
-
-                        <!-- Commented out description textarea
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <textarea v-model="form.description"
-                                    class="form-control"
-                                    :class="{ 'is-invalid': form.errors.description }"
-                                    id="description"
-                                    rows="3"></textarea>
+                                      class="form-control"
+                                      :class="{ 'is-invalid': form.errors.description }"
+                                      id="description"
+                                      rows="3"></textarea>
                             <div class="invalid-feedback">{{ form.errors.description }}</div>
                         </div>
-                        -->
+
+                        <div class="mb-3 w-25">
+                            <label class="form-check-label">Festival type</label>
+                            <select v-model="form.festivalType" class="form-select" aria-label="Default select example">
+                                <option selected value="0">Jazz</option>
+                                <option value="1">Yummy</option>
+                                <option value="2">History</option>
+                                <option value="3">Night@Teylers</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   id="isGame"
+                                   v-model="form.isGame">
+                            <label class="form-check-label" for="isGame">Is Game Festival</label>
+                        </div>
 
                         <div class="mb-3">
                             <label for="image" class="form-label">Festival Image</label>

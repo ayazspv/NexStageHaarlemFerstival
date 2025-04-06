@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Admin\CMSController;
 use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\FestivalContentController;
+use App\Http\Controllers\Admin\GameCMSController;
+use App\Http\Controllers\Admin\JazzFestivalController;
 use App\Http\Controllers\Admin\SlugsController;
 use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
@@ -36,30 +39,24 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/festivals/{festival}', [FestivalController::class, 'destroy'])->name('admin.festivals.destroy');
     Route::resource('festivals', FestivalController::class);
 
-    Route::get('/festivals/cms/manage/{festival}', [CMSController::class, 'cmsManage'])->name('admin.festivals.manage');
-    Route::patch('/festivals/cms/{festival}', [CMSController::class, 'cmsUpdate'])
-        ->name('admin.events.update');
-    Route::patch('/festivals/cms/{festival}/remove-content', [CMSController::class, 'cmsRemoveContent'])
-        ->name('admin.events.removeContent');
-
-    Route::get('/festivals/cms/create-subpage/{festival}/{parent}', [CMSController::class, 'createSubpage'])
-        ->name('admin.festivals.subpage.create');
-
-    Route::get('/festivals/cms/edit-subpage/{festival}/{cms}', [CMSController::class, 'editSubpage'])
-        ->name('admin.festivals.subpage.edit');
-
-    Route::patch('/festivals/cms/edit-subpage/{festival}/{cms}', [CMSController::class, 'cmsUpdateSubpage'])
-        ->name('admin.festivals.subpage.update');
-
     Route::get('/users', [UserController::class, 'index'])->name('admin.users');
     Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
 
-    // Styles
-    Route::post('/styles', [StyleController::class, 'store'])->name('admin.styles.store');
+    //CMS
+    Route::get('/festivals/cms/manage/{festivalId}', [FestivalContentController::class, 'show'])->name('admin.festivals.show');
 
+    Route::prefix('festivals/{festival}')->group(function () {
+        Route::resource('jazz-festival', \App\Http\Controllers\Admin\JazzFestivalController::class)
+            ->names('admin.jazz-festival');
+    });
 
+    //GAMES
+    Route::put('/festivals/{festival}/game/{game}', [GameCMSController::class, 'updateGame'])
+        ->name('admin.festivals.game.update');
+    Route::post('/festivals/{festival}/game', [GameCMSController::class, 'storeGame'])
+        ->name('admin.festivals.game.store');
 });
 
 Route::get('/api/styles', [StyleController::class, 'index'])

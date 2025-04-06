@@ -16,11 +16,13 @@ class Festival extends Model
         'date',
         'link',
         'isGame',
+        'festivalType'
     ];
 
     protected $casts = [
         'date' => 'datetime',
         'isGame' => 'boolean',
+        'festivalType' => 'integer',
     ];
 
     public function getImageAttribute()
@@ -29,8 +31,8 @@ class Festival extends Model
     }
 
     // Relationship to CMS pages
-    public function cmsPages()
+/*    public function cmsPages()
     {
         return $this->hasMany(CMS::class);
-    }
+    }*/
 }
