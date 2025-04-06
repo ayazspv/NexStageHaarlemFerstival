@@ -35,7 +35,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/events', [FestivalController::class, 'index'])->name('admin.events');
 
     Route::post('/festivals', [FestivalController::class, 'store'])->name('admin.festivals.store');
-    Route::post('/festivals/{festival}', [FestivalController::class, 'update'])->name('admin.festivals.update');
+    Route::put('/festivals/{festival}', [FestivalController::class, 'update'])->name('admin.festivals.update');
     Route::delete('/festivals/{festival}', [FestivalController::class, 'destroy'])->name('admin.festivals.destroy');
     Route::resource('festivals', FestivalController::class);
 
