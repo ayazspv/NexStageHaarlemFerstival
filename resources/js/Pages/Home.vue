@@ -101,26 +101,48 @@ fetchWishlistItems();
             <!-- Festivals Section -->
             <section class="mb-5">
                 <h2 class="text-center mb-4">Festivals</h2>
-                <div class="row g-4">
-                    <div v-for="festival in festivals"
+                
+                <div class="festivals-container">
+                    <!-- Loop through festivals with alternating layout -->
+                    <div v-for="(festival, index) in festivals" 
                          :key="festival.id"
-                         class="col-12 col-md-6">
-                        <div class="festival-wrapper">
-                            <a :href="`/festivals/${parseToUrl(festival.name)}`">
-                                <div class="card festival-card mb-3">
-                                    <img :src="`/storage/${festival.image_path}`"
-                                         :alt="festival.name"
-                                         class="card-img-top">
-                                </div>
-                            </a>
-                            <h5 class="text-center mb-3">{{ festival.name }}</h5>
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-primary" @click.prevent="addToCart(festival.id)">
-                                    <i class="fas fa-ticket-alt me-2"></i>Buy Ticket
+                         class="festival-row"
+                         :class="{ 'flex-row-reverse': index % 2 !== 0 }">
+                        
+                        <!-- Festival Image -->
+                        <div class="festival-image-container">
+                            <img :src="`/storage/${festival.image_path}`"
+                                 :alt="festival.name"
+                                 class="festival-image">
+                        </div>
+                        
+                        <!-- Festival Content -->
+                        <div class="festival-content">
+                            <h3 class="festival-title">{{ festival.name }}</h3>
+                            <p class="festival-description">{{ festival.description || 'Join us for this amazing festival experience!' }}</p>
+                            
+                            <!-- Time slot information -->
+                            <div class="festival-time-slot mb-3">
+                                <i class="far fa-clock me-2"></i>
+                                <span>{{ festival.time_slot || 'Time not specified' }}</span>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="festival-actions">
+                                <a :href="`/festivals/${parseToUrl(festival.name)}`" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-info-circle me-1"></i> View Details
+                                </a>
+                                <button class="btn btn-primary me-2" @click.prevent="addToCart(festival.id)">
+                                    <i class="fas fa-ticket-alt me-1"></i> Buy Ticket
                                 </button>
-                                <button class="btn btn-outline-primary" @click.prevent="addToWishlist(festival.id)">
-                                    <i class="fas fa-heart"></i> Wishlist
+                                <button class="btn btn-outline-secondary" @click.prevent="addToWishlist(festival.id)">
+                                    <i class="fas fa-heart"></i>
                                 </button>
+                            </div>
+                            
+                            <!-- Availability Badge -->
+                            <div class="ticket-badge" v-if="festival.ticket_amount">
+                                {{ festival.ticket_amount }} tickets available
                             </div>
                         </div>
                     </div>

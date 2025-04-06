@@ -150,6 +150,95 @@ a {
     border-left: 4px solid #9c27b0;
 }
 
+/* Enhanced Festival Section Styling with consistent heights */
+.festivals-container {
+    margin-top: 2rem;
+}
+
+.festival-row {
+    display: flex;
+    margin-bottom: 3rem;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 300px; /* Fixed height for all festival rows */
+}
+
+.festival-row:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.festival-image-container {
+    flex: 0 0 45%;
+    overflow: hidden;
+    height: 100%; /* Full height of parent */
+}
+
+.festival-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* This ensures images maintain aspect ratio while filling container */
+    transition: transform 0.5s ease;
+}
+
+.festival-row:hover .festival-image {
+    transform: scale(1.05);
+}
+
+.festival-content {
+    flex: 1;
+    padding: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Full height */
+    overflow-y: auto; /* Allow scrolling if content is too long */
+}
+
+.festival-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #2565c7;
+}
+
+.festival-description {
+    margin-bottom: 1.5rem;
+    color: #555;
+    line-height: 1.6;
+    flex-grow: 1;
+    /* Set max height to prevent overflow issues */
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.festival-time-slot {
+    color: #666;
+    font-weight: 500;
+}
+
+.festival-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto; /* Push to bottom of container */
+}
+
+.ticket-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background-color: #28a745;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .schedule-event {
@@ -167,5 +256,24 @@ a {
         width: 100%;
         display: flex;
         justify-content: flex-end;
+    }
+
+    .festival-row {
+        flex-direction: column !important;
+        height: auto; /* Allow height to adapt on mobile */
+        max-height: none;
+    }
+    
+    .festival-image-container {
+        height: 200px;
+        flex: none;
+    }
+    
+    .festival-content {
+        padding: 1.5rem;
+    }
+    
+    .festival-description {
+        max-height: none; /* Remove max height on mobile */
     }
 }
