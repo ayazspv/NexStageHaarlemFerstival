@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import AppLayout from "../Pages/Layouts/AppLayout.vue";
-import { cart, fetchCartItems, addToCart, updateCartItem } from '../composables/cart';
-import { wishlist, fetchWishlistItems, addToWishlist, removeFromWishlist } from '../composables/wishlist';
+import { cart, fetchCartItems, addToCart } from '../composables/cart';
+import { wishlist, fetchWishlistItems, addToWishlist } from '../composables/wishlist';
+import { ref } from 'vue';
 
-defineProps({
+const props = defineProps({
     festivals: {
         type: Array,
         default: () => []
@@ -13,6 +14,41 @@ defineProps({
 const parseToUrl = (title: string) => {
     return title.trim().toLowerCase().replace(/\s+/g, '-');
 };
+
+// Helper function to find festival ID by name
+const getEventId = (name: string) => {
+    const festival = props.festivals.find((f: any) => f.name === name);
+    return festival ? festival.id : null;
+};
+
+// Schedule data to avoid repetition
+const days = ['24', '25', '26', '27'];
+const scheduleEvents = [
+    { 
+        type: 'history-event',
+        time: '10:00 - 16:00', 
+        name: 'A Stroll Through History',
+        eventId: getEventId('A Stroll Through History')
+    },
+    { 
+        type: 'yummy-event',
+        time: '16:00 - 18:00', 
+        name: 'Yummy!',
+        eventId: getEventId('Food Festival')
+    },
+    { 
+        type: 'jazz-event',
+        time: '18:00 - 22:00', 
+        name: 'Haarlem Jazz',
+        eventId: getEventId('Jazz Festival')
+    },
+    { 
+        type: 'teylers-event',
+        time: '10:00 - 17:00', 
+        name: 'Magic@ Teyler',
+        eventId: getEventId('Night@Teylers')
+    }
+];
 
 fetchCartItems(); 
 fetchWishlistItems();
@@ -25,10 +61,48 @@ fetchWishlistItems();
             <section class="mb-5">
                 <h2 class="text-center mb-4">Schedule</h2>
                 <div class="schedule-container p-3 border rounded">
-                    <!-- Placeholder for the schedule -->
-                    <div class="schedule-grid">
-                        <!-- This will be replaced with actual schedule implementation -->
-                        <div class="time-slot">Schedule placeholder</div>
+                    <div class="schedule-tabs mb-3">
+                        <ul class="nav nav-tabs justify-content-center" id="scheduleTabs" role="tablist">
+                            <li v-for="day in days" :key="day" class="nav-item" role="presentation">
+                                <button class="nav-link" 
+                                       :class="{'active': day === '24'}"
+                                       :id="`day${day}-tab`" 
+                                       data-bs-toggle="tab" 
+                                       :data-bs-target="`#day${day}`" 
+                                       type="button" 
+                                       role="tab" 
+                                       :aria-controls="`day${day}`" 
+                                       :aria-selected="day === '24'">
+                                    July {{ day }}
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="tab-content" id="scheduleTabsContent">
+                        <!-- Loop through each day -->
+                        <div v-for="day in days" :key="day"
+                             class="tab-pane fade" 
+                             :class="{'show active': day === '24'}"
+                             :id="`day${day}`" 
+                             role="tabpanel" 
+                             :aria-labelledby="`day${day}-tab`">
+                            <div class="schedule-grid">
+                                <!-- Loop through each event -->
+                                <div v-for="(event, index) in scheduleEvents" :key="index"
+                                     class="schedule-event"
+                                     :class="event.type">
+                                    <div class="event-time">{{ event.time }}</div>
+                                    <div class="event-name">{{ event.name }}</div>
+                                    <div class="event-actions">
+                                        <button class="btn btn-sm btn-primary" 
+                                                @click.prevent="addToCart(event.eventId)">
+                                            <i class="fas fa-ticket-alt"></i> Book
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -62,47 +136,10 @@ fetchWishlistItems();
                 </div>
             </section>
 
-            <!-- Cart Section -->
-            <section class="mb-5">
-                <h2 class="text-center mb-4">Cart</h2>
-                <div v-if="cart.length" class="cart-container p-3 border rounded">
-                    <div v-for="item in cart" :key="item.festival_id" class="cart-item d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <h5>{{ item.festival.name }}</h5>
-                            <p>Tickets: {{ item.quantity }}</p>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-secondary" @click="updateCartItem(item.festival_id, item.quantity - 1)">-</button>
-                            <button class="btn btn-outline-secondary" @click="updateCartItem(item.festival_id, item.quantity + 1)">+</button>
-                        </div>
-                    </div>
-                </div>
-                <div v-else class="text-center">
-                    <p>Your cart is empty.</p>
-                </div>
-            </section>
-
-            <!-- Wishlist Section -->
-            <section class="mb-5">
-                <h2 class="text-center mb-4">Wishlist</h2>
-                <div v-if="wishlist.length" class="wishlist-container p-3 border rounded">
-                    <div v-for="item in wishlist" :key="item.festival_id" class="wishlist-item d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <h5>{{ item.festival.name }}</h5>
-                        </div>
-                        <button class="btn btn-outline-danger" @click="removeFromWishlist(item.festival_id)">Remove</button>
-                    </div>
-                </div>
-                <div v-else class="text-center">
-                    <p>Your wishlist is empty.</p>
-                </div>
-            </section>
-
             <!-- Locations(Map) Section -->
             <section class="mb-5">
                 <h2 class="text-center mb-4">Locations</h2>
                 <div class="map-container">
-                    <!-- Placeholder for the map -->
                     <div class="map-placeholder border rounded">
                         Map will be implemented here
                     </div>
@@ -111,64 +148,3 @@ fetchWishlistItems();
         </div>
     </AppLayout>
 </template>
-
-<style scoped>
-.festival-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.festival-card {
-    transition: transform 0.3s ease;
-    width: 100%;
-}
-
-.festival-card:hover {
-    transform: translateY(-5px);
-}
-
-.schedule-container {
-    min-height: 200px;
-    background: #f8f9fa;
-}
-
-.map-container {
-    min-height: 400px;
-}
-
-.map-placeholder {
-    width: 100%;
-    height: 400px;
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cart-container {
-    background: #f8f9fa;
-}
-
-.cart-item {
-    background: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.card-img-top {
-    height: 200px;
-    object-fit: cover;
-}
-
-.wishlist-container {
-    background: #f8f9fa;
-}
-
-.wishlist-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px 0;
-}
-</style>
