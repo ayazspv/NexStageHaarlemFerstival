@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\CMS;
 use App\Models\Festival;
 use App\Models\Game;
+use App\Models\JazzFestival;
 use App\Models\Style;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -43,6 +44,15 @@ class SlugsController
             return Inertia::render('Festivals/NightAtTeylers', [
                 'festival' => $festival,
                 'games' => $games,
+            ]);
+        }
+
+        if($festival->festivalType == 0) {
+            $bands = JazzFestival::where('festival_id', $festival->id)->get();
+
+            return Inertia::render('Festivals/Jazz', [
+                'festival' => $festival,
+                'bands' => $bands,
             ]);
         }
 
