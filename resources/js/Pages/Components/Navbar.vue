@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import { cart, fetchCartItems, updateCartItem } from '../../composables/cart'; 
+import { cart, fetchCartItems, updateCartItem } from '../../composables/cart';
 import { wishlist, fetchWishlistItems, addToWishlist, removeFromWishlist } from '../../composables/wishlist';
 
 // Define TypeScript interface for User
@@ -52,7 +52,7 @@ function toggleWishlistMenu() {
     isCartMenuVisible.value = false;
 }
 
-fetchCartItems(); 
+fetchCartItems();
 fetchWishlistItems();
 
 </script>
@@ -63,7 +63,7 @@ fetchWishlistItems();
             <div class="navbar-option">
                 <!-- Logo here -->
                 <a href="/" class="logo-link">
-                    <img src="/path-to-logo.png" alt="Logo" class="navbar-logo">
+                    <img class="navbar-logo" src="/storage/main/logo.png" width="64px" height="64px" alt="Logo">
                 </a>
             </div>
             <div class="navbar-option">

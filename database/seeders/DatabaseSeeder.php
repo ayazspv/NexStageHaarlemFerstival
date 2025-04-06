@@ -42,23 +42,28 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Jazz Festival',
                 'description' => 'Experience the best jazz music in Haarlem',
-                'image_path' => 'festivals/jazz.jpg'
+                'image_path' => 'festivals/jazz.jpg',
+                'festivalType' => 0,
             ],
             [
                 'name' => 'Food Festival',
                 'description' => 'Taste the finest cuisine Haarlem has to offer',
-                'image_path' => 'festivals/food.jpg'
-            ],
-            [
-                'name' => 'Dance Festival',
-                'description' => 'Dance the night away in Haarlem',
-                'image_path' => 'festivals/dance.jpg'
+                'image_path' => 'festivals/food.jpg',
+                'festivalType' => 1,
             ],
             [
                 'name' => 'Historic Festival',
                 'description' => 'Discover Haarlem\'s rich history',
-                'image_path' => 'festivals/historic.jpg'
-            ]
+                'image_path' => 'festivals/historic.jpg',
+                'festivalType' => 2,
+            ],
+            [
+                'name' => 'Night@Teylers',
+                'description' => 'Night at the museum',
+                'image_path' => 'festivals/teyler.jpg',
+                'isGame' => true,
+                'festivalType' => 3,
+            ],
         ];
 
         // Populate festivals table

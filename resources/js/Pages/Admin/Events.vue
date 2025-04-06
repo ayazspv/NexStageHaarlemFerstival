@@ -2,14 +2,15 @@
 import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
 import {useForm, Link, router, usePage} from '@inertiajs/vue3';
 import { ref } from "vue";
-import { Festival } from "../../../models";
+import {Festival} from "../../../models";
 
-defineProps<{
+const props = defineProps<{
     festivals: Festival[];
 }>();
 
 const page = usePage();
 const csrfToken = page.props.csrf_token as string || "";
+console.log("CSRF Token:", csrfToken); // Debuging line
 
 const showCreateForm = ref(false);
 const showEditForm = ref(false);
@@ -17,9 +18,10 @@ const editingFestival = ref<Festival | null>(null);
 
 const form = useForm({
     name: '',
-    // description: '',
     image: null as File | null,
-    isGame: false
+    isGame: false,
+    festivalType: 0,
+    ticket_amount: 0
 });
 
 const resetForm = () => {
@@ -31,7 +33,7 @@ const resetForm = () => {
 
 const submit = () => {
     if (showEditForm.value && editingFestival.value) {
-        form.post(`/admin/festivals/${editingFestival.value.id}`, {
+        form.put(`/admin/festivals/${editingFestival.value.id}`, {
             headers: {
                 "X-CSRF-TOKEN": csrfToken,
             },
@@ -52,8 +54,8 @@ const submit = () => {
 const editFestival = (festival: Festival) => {
     editingFestival.value = festival;
     form.name = festival.name;
-    // form.description = festival.description;
     form.isGame = festival.isGame || false;
+    form.ticket_amount = festival.ticket_amount || 0;
     showEditForm.value = true;
     showCreateForm.value = false;
 };
@@ -71,6 +73,7 @@ const deleteFestival = (id: number) => {
 const manageEvent = (festivalId: number) => {
     router.get(`/admin/festivals/cms/manage/${festivalId}`);
 };
+
 </script>
 
 <template>
@@ -105,24 +108,23 @@ const manageEvent = (festivalId: number) => {
                         </div>
 
                         <div class="mb-3 form-check">
-                            <input type="checkbox" 
-                                   class="form-check-input" 
-                                   id="isGame" 
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   id="isGame"
                                    v-model="form.isGame">
                             <label class="form-check-label" for="isGame">Is Game Festival</label>
                         </div>
 
-                        <!-- Commented out description textarea
                         <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea v-model="form.description"
-                                    class="form-control"
-                                    :class="{ 'is-invalid': form.errors.description }"
-                                    id="description"
-                                    rows="3"></textarea>
-                            <div class="invalid-feedback">{{ form.errors.description }}</div>
+                            <label for="ticket_amount" class="form-label">Available Tickets</label>
+                            <input v-model="form.ticket_amount"
+                                   type="number"
+                                   min="0"
+                                   class="form-control"
+                                   :class="{ 'is-invalid': form.errors.ticket_amount }"
+                                   id="ticket_amount">
+                            <div class="invalid-feedback">{{ form.errors.ticket_amount }}</div>
                         </div>
-                        -->
 
                         <div class="mb-3">
                             <label for="image" class="form-label">Festival Image</label>
@@ -168,16 +170,15 @@ const manageEvent = (festivalId: number) => {
                             <thead>
                                 <tr>
                                     <th>Name</th>
-                                    <!-- <th>Description</th> -->
                                     <th>Image</th>
-                                    <th>Game</th> <!-- Add this column header -->
+                                    <th>Game</th>
+                                    <th>Available Tickets</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="festival in festivals" :key="festival.id">
                                     <td>{{ festival.name }}</td>
-                                    <!-- <td>{{ festival.description }}</td> -->
                                     <td>
                                         <img :src="`/storage/${festival.image_path}`"
                                              :alt="festival.name"
@@ -189,6 +190,7 @@ const manageEvent = (festivalId: number) => {
                                             {{ festival.isGame ? 'Game' : 'Standard' }}
                                         </span>
                                     </td>
+                                    <td>{{ festival.ticket_amount }}</td>
                                     <td>
                                         <div class="btn-group gap-2">
                                             <button @click="manageEvent(festival.id)"
