@@ -40,7 +40,7 @@ class SlugsController
         if($festival->isGame) {
             $games = Game::where('festival_id', $festival->id)->get();
 
-            return Inertia::render('Components/FestivalGamePage', [
+            return Inertia::render('Festivals/NightAtTeylers', [
                 'festival' => $festival,
                 'games' => $games,
             ]);

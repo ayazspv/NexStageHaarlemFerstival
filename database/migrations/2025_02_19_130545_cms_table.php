@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('cms', function (Blueprint $table) {
+        /*Schema::create('cms', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('festival_id');
             $table->unsignedBigInteger('parent_id')->nullable();
@@ -28,11 +28,11 @@ return new class extends Migration
                 ->references('id')
                 ->on('cms')
                 ->onDelete('cascade');
-        });
+        });*/
     }
 
     public function down()
     {
-        Schema::dropIfExists('cms');
+        //Schema::dropIfExists('cms');
     }
 };
