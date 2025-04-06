@@ -1,60 +1,48 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import AppLayout from "@/Pages/Layouts/AppLayout.vue";
 import { Festival, Game } from "../../../models";
-import MobileFooter from "@/Pages/Components/Mobile/MobileFooter.vue";
-import {route} from "../../../utils";
+import { route } from "../../../utils";
+import Home from "../Festivals/NightAtTeylers/Home.vue";
+import Games from "../Festivals/NightAtTeylers/Games.vue";
+import Map from "../Festivals/NightAtTeylers/Map.vue";
+import Stamps from "../Festivals/NightAtTeylers/Stamps.vue";
 
 const props = defineProps<{
     festival: Festival,
     games?: Game[],
 }>();
+
+const currentView = ref('home');
+
+// Function to change the current view
+const changeView = (view: string) => {
+    currentView.value = view;
+};
 </script>
 
 <template>
-    <AppLayout :title="props.festival.name">
+    <AppLayout :festival="props.festival" :title="props.festival.name">
         <div class="mobile-wrapper">
             <div class="mobile-display">
-                <div class="mobile-content">
-                    <div class="d-flex flex-row justify-content-between align-items-center mt-4">
-                        <img class="mobile-logo" src="/storage/main/arrow-left.png" alt="Arrow left">
-                        <h3 style="text-align: center">{{ festival.name }}</h3>
-                        <img class="mobile-logo" src="/storage/main/logo.png" alt="Logo">
+
+                <Home v-if="currentView === 'home'" :festival="props.festival" />
+                <Games v-else-if="currentView === 'games'" :festival="props.festival" :games="props.games" />
+                <Map v-else-if="currentView === 'map'" :festival="props.festival" />
+                <Stamps v-else-if="currentView === 'stamps'" :festival="props.festival" />
+
+                <footer>
+                    <div class="d-flex flex-row mobile-footer">
+                        <img src="/storage/main/home.png" alt="Home" @click="changeView('home')"
+                             :class="{ active: currentView === 'home' }" />
+                        <img src="/storage/main/game.png" alt="Games" @click="changeView('games')"
+                             :class="{ active: currentView === 'games' }" />
+                        <img src="/storage/main/map.png" alt="Map" @click="changeView('map')"
+                             :class="{ active: currentView === 'map' }" />
+                        <img src="/storage/main/image.png" alt="Stamps" @click="changeView('stamps')"
+                             :class="{ active: currentView === 'stamps' }" />
                     </div>
-                    <div class="d-flex flex-column mt-10 w-100">
-                        <div class="w-75 mx-auto" >
-                            <p>
-                                {{ festival.description }}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="d-flex flex-row justify-content-center gap-3 mt-10">
-                        <a :href="route(festival.name, '')">
-                            <div class="mobile-box">
-                                <img class="mt-2" src="/storage/main/games/play.png" alt="Play icon">
-                                <h3 class="mt-3">
-                                    Play
-                                </h3>
-                            </div>
-                        </a>
-                        <a :href="route(festival.name, 'map')">
-                            <div class="mobile-box blue">
-                                <img class="mt-2" src="/storage/main/games/map.png" alt="Map icon">
-                                <h3 class="mt-3">
-                                    Map
-                                </h3>
-                            </div>
-                        </a>
-                        <a :href="route(festival.name, 'stamps')">
-                            <div class="mobile-box green">
-                                <img class="mt-2" src="/storage/main/games/stamps.png" alt="Stamps icon">
-                                <h3 class="mt-3">
-                                    Stamps
-                                </h3>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-                <MobileFooter :festival="props.festival"/>
+                </footer>
             </div>
         </div>
     </AppLayout>
@@ -74,21 +62,15 @@ const props = defineProps<{
     width: 100%;
 }
 
-.mobile-logo {
-    height: 50px;
-    width: 50px;
-}
-
 .mobile-display {
     width: 420px;
     height: 100%;
-    position: relative; /* Make room for the pseudo-element */
+    position: relative;
     display: flex;
     flex-direction: column;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px, rgb(51, 51, 51) 0px 0px 0px 3px;
 }
 
-/* Use a pseudo-element for the background image with 50% opacity */
 .mobile-display::before {
     content: "";
     position: absolute;
@@ -100,18 +82,12 @@ const props = defineProps<{
     background-position: 100% 0%;
     background-size: contain;
     opacity: 0.5;
-    pointer-events: none; /* Allow clicks to pass through */
-    z-index: -1; /* Place it behind the content */
+    pointer-events: none;
+    z-index: -1;
 }
-
 
 .mobile-display p {
     font-size: 22px;
-}
-
-.mobile-content {
-    flex: 1;
-    overflow-y: auto;
 }
 
 .mobile-display footer {
@@ -120,34 +96,19 @@ const props = defineProps<{
     width: 100%;
 }
 
-.mobile-box {
-    height: 200px;
-    width: 110px;
-    background-color: #F9E593;
-
+.mobile-footer {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 40px;
     align-items: center;
+    justify-content: center;
+    height: inherit;
+    box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
 }
 
-.mobile-box.blue {
-    height: 200px;
-    width: 110px;
-    background-color: #A9D7ED;
+.mobile-footer img {
+    height: 40px;
+    width: 40px;
+    cursor: pointer;
 }
-
-.mobile-box.green {
-    height: 200px;
-    width: 110px;
-    background-color: #CDDBC5; /* Light green */
-}
-
-.mobile-box img {
-    width: 80%;
-}
-
-.mobile-box h3 {
-    color: black;
-}
-
 </style>
