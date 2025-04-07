@@ -1,3 +1,5 @@
+import NightAtTeylers from "./js/Pages/Festivals/NightAtTeylers.vue";
+
 export enum Role {
     Admin,
     User
@@ -78,5 +80,7 @@ export type Ticket = {
     order_id: number,
     festival_id: number,
     festival: Festival,
+    detail_ticket_id: number,
+    detail_ticket: JazzFestival, // | Restaurant | History | Dance !! Add this once you have added your models for festivals
     qr_code: string,
 }

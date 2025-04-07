@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('festival_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('detail_ticket_id');
             $table->string('qr_code',64)->nullable();
             $table->timestamps();
         });
