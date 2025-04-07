@@ -10,11 +10,6 @@ defineProps<{
 
 <template>
     <div class="mobile-content">
-        <div class="d-flex flex-row justify-content-between align-items-center mt-4">
-            <img class="mobile-logo" src="/storage/main/arrow-left.png" alt="Arrow left">
-            <h3 style="text-align: center">{{ festival.name }}</h3>
-            <img class="mobile-logo" src="/storage/main/logo.png" alt="Logo">
-        </div>
         <div class="d-flex flex-column mt-10 w-100">
             <div class="w-75 mx-auto" >
                 <p>
@@ -57,12 +52,6 @@ defineProps<{
 * {
     font-family: "Fredoka", sans-serif;
 }
-
-.mobile-logo {
-    height: 50px;
-    width: 50px;
-}
-
 
 .mobile-display p {
     font-size: 22px;

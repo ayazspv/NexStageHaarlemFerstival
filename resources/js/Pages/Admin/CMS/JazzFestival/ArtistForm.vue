@@ -273,7 +273,8 @@ onMounted(() => {
 
 <style scoped>
 .artist-form-modal {
-    background-color: rgba(0, 0, 0, 0.5);
+    /* Make the background darker for better contrast */
+    background-color: rgba(255, 255, 255);
     position: fixed;
     top: 0;
     left: 0;
@@ -282,13 +283,74 @@ onMounted(() => {
     z-index: 1050;
     overflow-y: auto;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding: 30px 15px;
 }
 
 .modal-dialog {
     width: 100%;
     max-width: 900px;
     margin: 1.75rem auto;
+    z-index: 1051; 
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); 
+    border-radius: 8px; 
+}
+
+.modal-content {
+    border-radius: 8px; 
+    border: none; 
+}
+
+/* Style the header for better appearance */
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 1rem 1.5rem;
+}
+
+.modal-header .btn-close {
+    padding: 1rem;
+    margin: -0.5rem -0.5rem -0.5rem auto;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: #2565c7;
+}
+
+/* Style the footer for better appearance */
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    padding: 1rem 1.5rem;
+}
+
+/* Improve scrolling for long forms */
+.modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+/* Style form elements */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Make the editor containers more distinct */
+.border.rounded {
+    border: 1px solid #ced4da !important;
+    background-color: white;
 }
 </style>
