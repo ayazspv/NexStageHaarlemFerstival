@@ -60,27 +60,26 @@ const closeBandDetails = () => {
 
 <template>
     <AppLayout :title="festival?.name || 'Jazz Festival'">
-        <!-- Hero Section -->
-        <section class="jazz-hero">
+        <!-- Festival Header Section -->
+        <section class="festival-header">
+            <div class="container text-center">
+                <h1 class="festival-title display-4">{{ festival.name }}</h1>
+            </div>
+        </section>
+
+        <!-- Festival Info Section -->
+        <section class="festival-info py-5">
             <div class="container">
                 <div class="row align-items-center">
-                    <div class="col-lg-6">
-                        <h1 class="jazz-title">{{ festival.name }}</h1>
-                        <div class="jazz-description" v-html="festival.description"></div>
-                        <div class="jazz-time-slot">
-                            <i class="far fa-clock me-2"></i>
-                            <span>{{ festival.time_slot }}</span>
-                        </div>
-                        <button class="btn btn-primary jazz-btn" @click="addToCart(festival.id)">
-                            Get Tickets
-                        </button>
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <img 
+                            :src="`/storage/${festival.image_path}`" 
+                            :alt="festival.name" 
+                            class="img-fluid rounded festival-image shadow"
+                        />
                     </div>
                     <div class="col-lg-6">
-                        <div class="jazz-hero-image-container">
-                            <img :src="`/storage/${festival.image_path}`" 
-                                :alt="festival.name" 
-                                class="jazz-hero-image"/>
-                        </div>
+                        <div class="festival-description" v-html="festival.description"></div>
                     </div>
                 </div>
             </div>
@@ -228,3 +227,35 @@ const closeBandDetails = () => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.festival-header {
+    background-color: #f8f9fa;
+    padding: 2.5rem 0;
+    margin-bottom: 0;
+}
+
+.festival-title {
+    color: #2565c7;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.festival-info {
+    background-color: white;
+}
+
+.festival-image {
+    transition: transform 0.3s ease;
+}
+
+.festival-image:hover {
+    transform: scale(1.02);
+}
+
+.festival-description {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #333;
+}
+</style>

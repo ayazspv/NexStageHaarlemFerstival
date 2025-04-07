@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, onMounted } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
 import { Editor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
-import { useCsrf } from '@/composables/csrf';
+import { usePage } from '@inertiajs/vue3';
 import { Festival } from '../../../../../models';
 
-const { csrfToken } = useCsrf();
+// Get CSRF token directly from the page props
+const page = usePage();
+const csrfToken = page.props.csrf_token as string;
 
 const props = defineProps<{
     festival: Festival
@@ -16,8 +18,6 @@ const props = defineProps<{
 const festivalForm = reactive({
     name: props.festival.name || '',
     description: props.festival.description || '',
-    time_slot: props.festival.time_slot || '',
-    ticket_amount: props.festival.ticket_amount || 0,
     image: null as File | null,
 });
 
@@ -25,8 +25,9 @@ const festivalForm = reactive({
 const festivalDescriptionEditor = new Editor({
     content: props.festival.description || '<p>Enter festival description...</p>',
     extensions: [StarterKit],
-    onUpdate({ editor }) {
+    onUpdate: ({ editor }) => {
         festivalForm.description = editor.getHTML();
+        console.log("Editor content updated:", festivalForm.description);
     },
 });
 
@@ -38,26 +39,51 @@ const handleFestivalImage = (e: Event) => {
     }
 };
 
-// Save festival general details
+// Save festival general details using the new endpoint
 const saveFestivalDetails = () => {
+    // Ensure we have the latest editor content
+    festivalForm.description = festivalDescriptionEditor.getHTML();
+    
+    console.log('Submitting festival details:', {
+        name: festivalForm.name,
+        descriptionLength: festivalForm.description?.length || 0,
+        hasImage: !!festivalForm.image
+    });
+    
     const formData = new FormData();
     formData.append('name', festivalForm.name);
     formData.append('description', festivalForm.description);
-    formData.append('time_slot', festivalForm.time_slot);
-    formData.append('ticket_amount', festivalForm.ticket_amount.toString());
     formData.append('_method', 'PUT');
     
     if (festivalForm.image) {
         formData.append('image', festivalForm.image);
     }
     
-    Inertia.post(`/admin/festivals/${props.festival.id}`, formData, {
+    // Use the new endpoint for updating only festival details
+    Inertia.post(`/admin/festivals/${props.festival.id}/details`, formData, {
         headers: { 'X-CSRF-TOKEN': csrfToken },
         onSuccess: () => {
             alert('Festival details updated successfully!');
+            // Reload the page to show updated data
+            window.location.reload();
         },
+        onError: (errors) => {
+            console.error('Error updating festival details:', errors);
+            alert('Failed to update festival details. Please check console for errors.');
+        }
     });
 };
+
+onMounted(() => {
+    // Set initial form values from props
+    festivalForm.name = props.festival.name || '';
+    festivalForm.description = props.festival.description || '';
+    
+    // Set initial editor content
+    festivalDescriptionEditor.commands.setContent(
+        props.festival.description || '<p>Enter festival description...</p>'
+    );
+});
 </script>
 
 <template>
@@ -81,28 +107,6 @@ const saveFestivalDetails = () => {
                     </div>
                     
                     <div class="mb-3">
-                        <label for="timeSlot" class="form-label">Time Slot</label>
-                        <input 
-                            type="text" 
-                            class="form-control" 
-                            id="timeSlot" 
-                            v-model="festivalForm.time_slot"
-                            placeholder="e.g. 18:00 - 22:00"
-                        >
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="ticketAmount" class="form-label">Available Tickets</label>
-                        <input 
-                            type="number" 
-                            class="form-control" 
-                            id="ticketAmount" 
-                            v-model="festivalForm.ticket_amount"
-                            min="0"
-                        >
-                    </div>
-                    
-                    <div class="mb-3">
                         <label for="festivalImage" class="form-label">Festival Image</label>
                         <input 
                             type="file" 
@@ -111,6 +115,7 @@ const saveFestivalDetails = () => {
                             @change="handleFestivalImage"
                             accept="image/*"
                         >
+                        <small class="form-text text-muted">This image will be displayed on the festival page.</small>
                     </div>
                     
                     <div class="mb-4">
@@ -118,6 +123,7 @@ const saveFestivalDetails = () => {
                         <div class="border rounded p-3" style="min-height: 200px;">
                             <EditorContent :editor="festivalDescriptionEditor" />
                         </div>
+                        <small class="form-text text-muted">This description will be displayed on the festival page.</small>
                     </div>
                     
                     <div class="row align-items-center">
@@ -141,35 +147,6 @@ const saveFestivalDetails = () => {
                         </div>
                     </div>
                 </form>
-            </div>
-        </div>
-        
-        <!-- Festival Preview Card -->
-        <div class="card mt-4">
-            <div class="card-header bg-info text-white">
-                <h3 class="mb-0">Festival Preview</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <img 
-                            v-if="props.festival.image_path"
-                            :src="`/storage/${props.festival.image_path}`" 
-                            alt="Festival Image" 
-                            class="img-fluid rounded"
-                        >
-                    </div>
-                    <div class="col-md-8">
-                        <h2>{{ props.festival.name }}</h2>
-                        <div v-html="props.festival.description"></div>
-                        <div class="mt-3">
-                            <strong>Time Slot:</strong> {{ props.festival.time_slot || 'Not specified' }}
-                        </div>
-                        <div>
-                            <strong>Available Tickets:</strong> {{ props.festival.ticket_amount }}
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

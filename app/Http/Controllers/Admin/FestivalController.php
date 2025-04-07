@@ -7,6 +7,7 @@ use App\Models\Festival;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Response;
 
@@ -74,6 +75,53 @@ class FestivalController
         ]);
 
         return redirect()->back();
+    }
+
+    /**
+     * Update only the basic festival details (name, description, image).
+     */
+    public function updateDetails(Request $request, $id): RedirectResponse
+    {
+        $festival = Festival::findOrFail($id);
+        \Log::info('Festival details update request:', [
+            'festival_id' => $id,
+            'has_name' => $request->has('name'),
+            'has_description' => $request->has('description'),
+            'has_image' => $request->hasFile('image')
+        ]);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        // Create updateData with validated fields
+        $updateData = [];
+        
+        // Only include fields that are explicitly provided
+        if ($request->has('name')) {
+            $updateData['name'] = $validated['name'];
+        }
+        
+        if ($request->has('description')) {
+            $updateData['description'] = $request->description;
+        }
+        
+        // Handle image upload if present
+        if ($request->hasFile('image')) {
+            if ($festival->image_path) {
+                Storage::disk('public')->delete($festival->image_path);
+            }
+            $updateData['image_path'] = $request->file('image')->store('festivals', 'public');
+        }
+        
+        // Only update if we have something to update
+        if (!empty($updateData)) {
+            $festival->update($updateData);
+        }
+
+        return redirect()->back()->with('success', 'Festival details updated successfully');
     }
 
     public function destroy($id): RedirectResponse
