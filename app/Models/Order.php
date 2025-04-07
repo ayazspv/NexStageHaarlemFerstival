@@ -11,7 +11,6 @@ class Order extends Model
         'total_price',
         'status',
         'ordered_at',
-        'qr_code_has'
     ];
     public function user() {
         return $this->belongsTo(User::class);

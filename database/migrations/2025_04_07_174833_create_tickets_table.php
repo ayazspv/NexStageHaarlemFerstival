@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('orders', function (Blueprint $table) {
+        Schema::create('tickets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->decimal('total_price, 10, 2');
-            $table->string('status')->default('pending');
-            $table->timestamp('ordered_at')->useCurrent();
+            $table->foreignId('order_id')->constrained()->onDelete('cascade');
+            $table->foreignId('festival_id')->constrained()->onDelete('cascade');
+            $table->string('qr_code',64)->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('orders');
+        Schema::dropIfExists('tickets');
     }
 };

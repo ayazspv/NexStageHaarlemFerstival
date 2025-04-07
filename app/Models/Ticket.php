@@ -2,13 +2,23 @@
 
 namespace App\Models;
 
-class Ticket
+use Illuminate\Database\Eloquent\Model;
+
+class Ticket extends Model
 {
     protected $fillable = [
-        'ticket_id',
-        'user_id',
-        'event_id',
+        'order_id',
+        'festival_id',
         'qr_code',
-        'date_time'
     ];
+
+    public function festival()
+    {
+        return $this->belongsTo(Festival::class);
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 }
