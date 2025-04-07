@@ -4,6 +4,7 @@ import { Festival } from "../../../models";
 import { addToCart } from '@/composables/cart';
 import { addToWishlist } from '@/composables/wishlist';
 import { ref, computed } from 'vue';
+import '../../../css/jazz.css';
 
 const props = defineProps<{
     festival: Festival;
@@ -50,11 +51,27 @@ const sortedBandsByTime = computed(() => {
 
 // Modal for band details
 const selectedBand = ref(null);
-const showBandDetails = (band) => {
-    selectedBand.value = band;
+
+// Animation helpers for modal
+const openModalWithAnimation = () => {
+  document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
 };
+
+const closeModalWithAnimation = () => {
+  document.body.style.overflow = ''; // Restore scrolling
+};
+
+// Updated band details functions
+const showBandDetails = (band) => {
+  selectedBand.value = band;
+  openModalWithAnimation();
+};
+
 const closeBandDetails = () => {
+  closeModalWithAnimation();
+  setTimeout(() => {
     selectedBand.value = null;
+  }, 300); // Match this to the animation duration
 };
 </script>
 
@@ -140,14 +157,14 @@ const closeBandDetails = () => {
                          class="festival-row band-row"
                          :class="{ 'flex-row-reverse': index % 2 !== 0 }">
                         
-                        <!-- Artist Image -->
+                        <!-- Artist Image - Fixed size -->
                         <div class="festival-image-container">
                             <img :src="`/storage/${band.band_image}`"
                                  :alt="band.band_name"
                                  class="festival-image">
                         </div>
                         
-                        <!-- Artist Content -->
+                        <!-- Artist Content - Adjustable height -->
                         <div class="festival-content">
                             <h3 class="festival-title">{{ band.band_name }}</h3>
                             <div class="band-description" v-html="band.band_description.length > 300 ? band.band_description.substring(0, 300) + '...' : band.band_description"></div>
@@ -155,7 +172,8 @@ const closeBandDetails = () => {
                             <!-- Performance Time -->
                             <div class="festival-time-slot mb-3">
                                 <i class="far fa-clock me-2"></i>
-                                <span>{{ formatTime(band.performance_datetime) }}</span>
+                                <span>{{ band.start_time || formatTime(band.performance_datetime) }} 
+                                {{ band.end_time ? '- ' + band.end_time : '' }}</span>
                                 <span class="ms-2 badge bg-primary">€{{ typeof band.ticket_price === 'number' ? band.ticket_price.toFixed(2) : Number(band.ticket_price).toFixed(2) }}</span>
                             </div>
                             
@@ -183,35 +201,58 @@ const closeBandDetails = () => {
         </section>
 
         <!-- Band Details Modal -->
-        <div v-if="selectedBand" class="jazz-modal">
-            <div class="jazz-modal-content">
-                <span class="jazz-modal-close" @click="closeBandDetails">&times;</span>
-                <div class="jazz-modal-header">
+        <div v-if="selectedBand" class="artist-details-modal">
+            <div class="artist-details-overlay" @click="closeBandDetails"></div>
+            <div class="artist-details-content">
+                <button class="artist-details-close" @click="closeBandDetails">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <div class="artist-details-header">
                     <h2>{{ selectedBand.band_name }}</h2>
                 </div>
-                <div class="jazz-modal-body">
-                    <div class="row">
-                        <div class="col-md-5">
-                            <div class="jazz-modal-image-container">
+                
+                <div class="artist-details-body">
+                    <div class="row g-4">
+                        <!-- Artist Image -->
+                        <div class="col-lg-5">
+                            <div class="artist-details-image-container">
                                 <img 
+                                    v-if="selectedBand.band_image"
                                     :src="`/storage/${selectedBand.band_image}`" 
                                     :alt="selectedBand.band_name" 
-                                    class="jazz-modal-image"
+                                    class="artist-details-image"
                                 />
+                                <div v-else class="artist-details-image-placeholder">
+                                    <i class="fas fa-music"></i>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-7">
-                            <div class="jazz-modal-details">
-                                <div class="jazz-modal-datetime">
-                                    <i class="far fa-calendar-alt me-2"></i>
-                                    <span>{{ formatDate(selectedBand.performance_datetime) }}</span>
+                        
+                        <!-- Artist Info -->
+                        <div class="col-lg-7">
+                            <div class="artist-details-info">
+                                <div class="artist-details-meta">
+                                    <div class="artist-details-time">
+                                        <i class="far fa-calendar-alt me-2"></i>
+                                        <span>July {{ selectedBand.performance_day }}, </span>
+                                        <span>
+                                            {{ selectedBand.start_time || formatTime(selectedBand.performance_datetime) }}
+                                            {{ selectedBand.end_time ? '- ' + selectedBand.end_time : '' }}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="artist-details-price">
+                                        <i class="fas fa-ticket-alt me-2"></i>
+                                        <span>€{{ typeof selectedBand.ticket_price === 'number' ? selectedBand.ticket_price.toFixed(2) : Number(selectedBand.ticket_price).toFixed(2) }}</span>
+                                    </div>
                                 </div>
-                                <div class="jazz-modal-price">
-                                    <strong>Price:</strong> €{{ typeof selectedBand.ticket_price === 'number' ? selectedBand.ticket_price.toFixed(2) : Number(selectedBand.ticket_price).toFixed(2) }}
-                                </div>
-                                <div class="jazz-modal-description" v-html="selectedBand.band_description"></div>
-                                <div class="jazz-modal-details-content" v-html="selectedBand.band_details"></div>
-                                <div class="jazz-modal-actions">
+                                
+                                <div class="artist-details-description" v-html="selectedBand.band_description"></div>
+                                
+                                <div class="artist-details-full-info" v-html="selectedBand.band_details"></div>
+                                
+                                <div class="artist-details-actions">
                                     <button class="btn btn-primary" @click.prevent="addToCart(selectedBand.id)">
                                         <i class="fas fa-ticket-alt me-1"></i> Book Tickets
                                     </button>
@@ -227,35 +268,3 @@ const closeBandDetails = () => {
         </div>
     </AppLayout>
 </template>
-
-<style scoped>
-.festival-header {
-    background-color: #f8f9fa;
-    padding: 2.5rem 0;
-    margin-bottom: 0;
-}
-
-.festival-title {
-    color: #2565c7;
-    font-weight: 700;
-    margin-bottom: 0;
-}
-
-.festival-info {
-    background-color: white;
-}
-
-.festival-image {
-    transition: transform 0.3s ease;
-}
-
-.festival-image:hover {
-    transform: scale(1.02);
-}
-
-.festival-description {
-    font-size: 1.1rem;
-    line-height: 1.7;
-    color: #333;
-}
-</style>
