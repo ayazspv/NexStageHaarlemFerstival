@@ -4,20 +4,17 @@ import { Link } from '@inertiajs/vue3';
 
 const isOpen = ref(false);
 
-// Toggle Sidebar
 const toggleSidebar = () => {
     isOpen.value = !isOpen.value;
 };
 
-// Compute menu icon based on sidebar state
 const menuIcon = computed(() => (isOpen.value ? 'bx-menu-alt-right' : 'bx-menu'));
 
-// Sidebar Menu Items
 const navItems = [
     { name: 'Dashboard', icon: 'bx bxs-dashboard', link: '/admin/dashboard' },
     { name: 'Events', icon: 'bx bxs-calendar', link: '/admin/events' },
     { name: 'Users', icon: 'bx bxs-user-detail', link: '/admin/users' },
-    { name: 'Invoices', icon: 'bx bxs-receipt', link: '/admin/invoices' },
+    { name: 'Orders', icon: 'bx bxs-receipt', link: '/admin/orders' },
     { name: 'Administrator', icon: 'bx bxs-cog', link: '/admin/administrator' },
 ];
 </script>

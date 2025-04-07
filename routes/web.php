@@ -1,7 +1,6 @@
 <?php
 
-use App\Http\Controllers\Admin\CMSController;
-use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\FestivalContentController;
 use App\Http\Controllers\Admin\GameCMSController;
 use App\Http\Controllers\Admin\JazzFestivalController;
@@ -46,6 +45,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+
+    // Orders
+    Route::get('/orders', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+
 
     //CMS
     Route::get('/festivals/cms/manage/{festivalId}', [FestivalContentController::class, 'show'])->name('admin.festivals.show');

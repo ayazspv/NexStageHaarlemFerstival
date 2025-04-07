@@ -20,17 +20,6 @@ export type User = {
     Role: role
 }
 
-export type CMS = {
-    id: number;
-    festival_id: number;
-    parent_id: number | null;
-    title: string;
-    content: string | null; // single string value from the CMS 'content' field
-    link: string;
-    image_path: string | null;
-    order: number; // single numeric value
-};
-
 export type Festival = {
     id: number;
     name: string;
@@ -63,7 +52,7 @@ export interface JazzFestival {
     id?: number;
     festival_id: number;
     band_name: string;
-    performance_datetime: string; 
+    performance_datetime: string;
     performance_day: number; // 24, 25, 26, or 27
     ticket_price: number;
     band_description: string;
@@ -74,4 +63,18 @@ export interface JazzFestival {
     updated_at?: string;
 }
 
+export type Order = {
+    id: number,
+    user_id: number,
+    user: User,
+    total_price: number,
+    status: string,
+    ordered_at: string,
+}
 
+export type Ticket = {
+    id: number,
+    order_id: number,
+    festival_id: number,
+    qr_code: string,
+}
