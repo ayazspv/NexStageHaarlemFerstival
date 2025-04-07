@@ -11,10 +11,8 @@ class AdminOrderController
     public function show()
     {
         $orders = Order::with('user')
-            ->with('tickets')
+            ->with('tickets.festival')
             ->get();
-
-        error_log($orders);
 
         return Inertia::render('Admin/Orders', [
             'orders' => $orders,

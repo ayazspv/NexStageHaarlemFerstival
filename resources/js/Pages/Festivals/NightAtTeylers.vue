@@ -34,8 +34,9 @@ const handleGameSelect = (game: Game) => {
             <div class="mobile-display">
                 <Navbar :festival="props.festival" />
 
-                <!-- Dynamic component selection -->
-                <Home v-if="currentView === 'home'" :festival="props.festival" />
+                <Home v-if="currentView === 'home'"
+                      :festival="props.festival"
+                      @changeView="changeView" />
                 <Games
                     v-else-if="currentView === 'games'"
                     :festival="props.festival"
