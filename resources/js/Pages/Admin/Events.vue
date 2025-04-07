@@ -10,44 +10,49 @@ const props = defineProps<{
 
 const page = usePage();
 const csrfToken = page.props.csrf_token as string || "";
-console.log("CSRF Token:", csrfToken); // Debuging line
 
-const showCreateForm = ref(false);
+// Remove showCreateForm ref since we won't need it anymore
 const showEditForm = ref(false);
 const editingFestival = ref<Festival | null>(null);
 
+// Removed image field from form
 const form = useForm({
     name: '',
-    image: null as File | null,
     isGame: false,
-    festivalType: 0,
     ticket_amount: 0,
-    time_slot: '' 
+    time_slot: '',
+    _method: 'PUT' // For method spoofing
 });
 
 const resetForm = () => {
     form.reset();
-    showCreateForm.value = false;
+    form.clearErrors();
     showEditForm.value = false;
     editingFestival.value = null;
 };
 
 const submit = () => {
     if (showEditForm.value && editingFestival.value) {
-        form.put(`/admin/festivals/${editingFestival.value.id}`, {
-            headers: {
-                "X-CSRF-TOKEN": csrfToken,
+        // Edit mode
+        const formData = new FormData();
+        formData.append('_method', 'PUT');
+        formData.append('name', form.name);
+        formData.append('isGame', form.isGame ? '1' : '0');
+        formData.append('ticket_amount', form.ticket_amount.toString());
+        formData.append('time_slot', form.time_slot || '');
+        formData.append('_token', csrfToken);
+        
+        router.post(`/admin/festivals/${editingFestival.value.id}`, formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                resetForm();
+                window.location.reload();
             },
-            preserveScroll: true,
-            onSuccess: () => resetForm()
-        });
-    } else {
-        form.post('/admin/festivals', {
-            headers: {
-                "X-CSRF-TOKEN": csrfToken,
-            },
-            preserveScroll: true,
-            onSuccess: () => resetForm()
+            onError: (errors) => {
+                Object.keys(errors).forEach(key => {
+                    form.setError(key, errors[key]);
+                });
+            }
         });
     }
 };
@@ -58,8 +63,8 @@ const editFestival = (festival: Festival) => {
     form.isGame = festival.isGame || false;
     form.ticket_amount = festival.ticket_amount || 0;
     form.time_slot = festival.time_slot || '';
+    form.clearErrors();
     showEditForm.value = true;
-    showCreateForm.value = false;
 };
 
 const deleteFestival = (id: number) => {
@@ -75,37 +80,33 @@ const deleteFestival = (id: number) => {
 const manageEvent = (festivalId: number) => {
     router.get(`/admin/festivals/cms/manage/${festivalId}`);
 };
-
 </script>
 
 <template>
     <AdminAppLayout :title="'Manage Events'">
         <div class="container-fluid p-4">
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Header - Removed the Add New Festival button -->
+            <div class="mb-4">
                 <h2>Manage Events</h2>
-                <button v-if="!showCreateForm"
-                        @click="showCreateForm = true"
-                        class="btn btn-primary">
-                    Add New Festival
-                </button>
             </div>
 
-            <!-- Create/Edit Form -->
-            <div v-if="showCreateForm || showEditForm" class="card mb-4">
+            <!-- Edit Form - Removed the condition for showCreateForm -->
+            <div v-if="showEditForm" class="card mb-4">
                 <div class="card-body">
-                    <h3 class="card-title mb-4">
-                        {{ showEditForm ? 'Edit Festival' : 'Create New Festival' }}
-                    </h3>
+                    <h3 class="card-title mb-4">Edit Festival</h3>
 
                     <form @submit.prevent="submit">
+                        <input type="hidden" name="_token" :value="csrfToken">
+                        <input type="hidden" name="_method" value="PUT">
+                        
                         <div class="mb-3">
                             <label for="name" class="form-label">Name</label>
                             <input v-model="form.name"
                                    type="text"
                                    class="form-control"
                                    :class="{ 'is-invalid': form.errors.name }"
-                                   id="name">
+                                   id="name"
+                                   required>
                             <div class="invalid-feedback">{{ form.errors.name }}</div>
                         </div>
 
@@ -119,7 +120,7 @@ const manageEvent = (festivalId: number) => {
 
                         <div class="mb-3">
                             <label for="ticket_amount" class="form-label">Available Tickets</label>
-                            <input v-model="form.ticket_amount"
+                            <input v-model.number="form.ticket_amount"
                                    type="number"
                                    min="0"
                                    class="form-control"
@@ -140,31 +141,11 @@ const manageEvent = (festivalId: number) => {
                             <small class="form-text text-muted">Enter the time slot for this event (e.g. 10:00 - 16:00)</small>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Festival Image</label>
-                            <input type="file"
-                                   class="form-control"
-                                   :class="{ 'is-invalid': form.errors.image }"
-                                   @input="(e) => {
-                                       const target = e.target as HTMLInputElement;
-                                       if (target.files) {
-                                           form.image = target.files[0];
-                                       }
-                                   }"
-                                   id="image">
-                            <div class="invalid-feedback">{{ form.errors.image }}</div>
-                            <img v-if="editingFestival?.image_path"
-                                 :src="`/storage/${editingFestival.image_path}`"
-                                 class="mt-2 img-thumbnail"
-                                 style="height: 100px"
-                                 alt="Current image">
-                        </div>
-
                         <div class="d-flex gap-2">
                             <button type="submit"
                                     class="btn btn-primary"
                                     :disabled="form.processing">
-                                {{ showEditForm ? 'Update Festival' : 'Create Festival' }}
+                                Update Festival
                             </button>
                             <button type="button"
                                     @click="resetForm"
@@ -195,10 +176,12 @@ const manageEvent = (festivalId: number) => {
                                 <tr v-for="festival in festivals" :key="festival.id">
                                     <td>{{ festival.name }}</td>
                                     <td>
-                                        <img :src="`/storage/${festival.image_path}`"
+                                        <img v-if="festival.image_path" 
+                                             :src="`/storage/${festival.image_path}`"
                                              :alt="festival.name"
                                              class="img-thumbnail"
                                              style="height: 50px">
+                                        <span v-else class="badge bg-secondary">No image</span>
                                     </td>
                                     <td>
                                         <span class="badge" :class="festival.isGame ? 'bg-success' : 'bg-secondary'">
