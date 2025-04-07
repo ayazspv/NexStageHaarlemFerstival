@@ -40,19 +40,21 @@ export type Festival = {
     time_slot?: string;
     link?: string;
     isGame?: boolean;
-    ticket_amount: number; 
+    ticket_amount: number;
     created_at?: string;
     updated_at?: string;
 }
 
 export type Game = {
     id?: number;
+    title: string,
     question: string;
     option1: string;
     option2: string;
     option3: string;
     option4: string;
     correct_option: number | null;
+    hint: string;
     thumbnail?: File | null | string;
     stamp?: File | null | string;
 }

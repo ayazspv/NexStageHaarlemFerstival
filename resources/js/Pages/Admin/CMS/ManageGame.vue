@@ -14,12 +14,14 @@ const props = defineProps<{
 }>();
 
 const newGame = reactive<Game>({
+    title: '',
     question: '',
     option1: '',
     option2: '',
     option3: '',
     option4: '',
     correct_option: null,
+    hint: '',
     thumbnail: null,
     stamp: null,
 });
@@ -28,11 +30,13 @@ const gamesList = ref<Game[]>([...props.games]);
 
 const editingGameId = ref<number | null>(null);
 const editGame = reactive<Game>({
+    title: '',
     question: '',
     option1: '',
     option2: '',
     option3: '',
     option4: '',
+    hint: '',
     correct_option: null,
     thumbnail: null,
     stamp: null,
@@ -40,12 +44,14 @@ const editGame = reactive<Game>({
 
 const addGame = () => {
     const formData = new FormData();
+    formData.append('title', newGame.title);
     formData.append('question', newGame.question);
     formData.append('option1', newGame.option1);
     formData.append('option2', newGame.option2);
     formData.append('option3', newGame.option3);
     formData.append('option4', newGame.option4);
     formData.append('correct_option', String(newGame.correct_option));
+    formData.append('hint', newGame.hint);
 
     if (newGame.thumbnail) {
         formData.append('thumbnail', newGame.thumbnail as Blob);
@@ -57,28 +63,31 @@ const addGame = () => {
     Inertia.post(`/admin/festivals/${props.festival.id}/game`, formData, {
         headers: { 'X-CSRF-TOKEN': csrfToken },
         onSuccess: () => {
-            // Reset newGame fields after successful submission
+            newGame.title = '';
             newGame.question = '';
             newGame.option1 = '';
             newGame.option2 = '';
             newGame.option3 = '';
             newGame.option4 = '';
             newGame.correct_option = null;
+            newGame.hint = '';
             newGame.thumbnail = null;
             newGame.stamp = null;
         },
     });
 };
 
+
 const enableEdit = (game: Game) => {
     editingGameId.value = game.id || null;
+    editGame.title = game.title;
     editGame.question = game.question;
     editGame.option1 = game.option1;
     editGame.option2 = game.option2;
     editGame.option3 = game.option3;
     editGame.option4 = game.option4;
     editGame.correct_option = game.correct_option;
-    // Reset file fields (if user wants to update images)
+    editGame.hint = game.hint;
     editGame.thumbnail = null;
     editGame.stamp = null;
 };
@@ -86,13 +95,14 @@ const enableEdit = (game: Game) => {
 const updateGame = () => {
     if (!editingGameId.value) return;
     const formData = new FormData();
-    // Method spoofing for PUT
     formData.append('_method', 'PUT');
+    formData.append('title', editGame.title)
     formData.append('question', editGame.question);
     formData.append('option1', editGame.option1);
     formData.append('option2', editGame.option2);
     formData.append('option3', editGame.option3);
     formData.append('option4', editGame.option4);
+    formData.append('hint', editGame.hint);
     formData.append('correct_option', String(editGame.correct_option));
 
     if (editGame.thumbnail instanceof File) {
@@ -117,6 +127,10 @@ const updateGame = () => {
             <!-- New Game Section -->
             <section class="d-flex flex-column gap-2 new-game max-w-md mx-auto p-4 section-box mt-5 w-25">
                 <h2>Add New Game</h2>
+                <div class="d-flex flex-column">
+                    <label>Title:</label>
+                    <input v-model="newGame.title" class="form-control" placeholder="Enter title" />
+                </div>
                 <div class="d-flex flex-column">
                     <label>Question:</label>
                     <input v-model="newGame.question" class="form-control" placeholder="Enter question" />
@@ -145,6 +159,10 @@ const updateGame = () => {
                         <option :value="3">Option 3</option>
                         <option :value="4">Option 4</option>
                     </select>
+                </div>
+                <div class="d-flex flex-column">
+                    <label>Hint:</label>
+                    <input v-model="newGame.hint" class="form-control"  placeholder="Enter hint" />
                 </div>
                 <div>
                     <label>Thumbnail Image:</label>

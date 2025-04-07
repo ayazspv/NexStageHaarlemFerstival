@@ -2,11 +2,12 @@
 import { ref } from 'vue';
 import AppLayout from "@/Pages/Layouts/AppLayout.vue";
 import { Festival, Game } from "../../../models";
-import { route } from "../../../utils";
 import Home from "../Festivals/NightAtTeylers/Home.vue";
 import Games from "../Festivals/NightAtTeylers/Games.vue";
 import Map from "../Festivals/NightAtTeylers/Map.vue";
 import Stamps from "../Festivals/NightAtTeylers/Stamps.vue";
+import Navbar from "../Festivals/NightAtTeylers/Components/Navbar.vue";
+import GameQuestion from "@/Pages/Festivals/NightAtTeylers/GameQuestion.vue";
 
 const props = defineProps<{
     festival: Festival,
@@ -15,9 +16,15 @@ const props = defineProps<{
 
 const currentView = ref('home');
 
-// Function to change the current view
 const changeView = (view: string) => {
     currentView.value = view;
+};
+
+const selectedGame = ref<Game | null>(null);
+
+const handleGameSelect = (game: Game) => {
+    selectedGame.value = game;
+    currentView.value = 'gamequestion';
 };
 </script>
 
@@ -25,22 +32,28 @@ const changeView = (view: string) => {
     <AppLayout :festival="props.festival" :title="props.festival.name">
         <div class="mobile-wrapper">
             <div class="mobile-display">
+                <Navbar :festival="props.festival" />
 
+                <!-- Dynamic component selection -->
                 <Home v-if="currentView === 'home'" :festival="props.festival" />
-                <Games v-else-if="currentView === 'games'" :festival="props.festival" :games="props.games" />
+                <Games
+                    v-else-if="currentView === 'games'"
+                    :festival="props.festival"
+                    :games="props.games"
+                    @selectGame="handleGameSelect" />
                 <Map v-else-if="currentView === 'map'" :festival="props.festival" />
-                <Stamps v-else-if="currentView === 'stamps'" :festival="props.festival" />
+                <Stamps v-else-if="currentView === 'stamps'" :games="games" :festival="props.festival" />
+                <GameQuestion
+                    v-else-if="currentView === 'gamequestion'"
+                    :festival="props.festival"
+                    :game="selectedGame" />
 
                 <footer>
                     <div class="d-flex flex-row mobile-footer">
-                        <img src="/storage/main/home.png" alt="Home" @click="changeView('home')"
-                             :class="{ active: currentView === 'home' }" />
-                        <img src="/storage/main/game.png" alt="Games" @click="changeView('games')"
-                             :class="{ active: currentView === 'games' }" />
-                        <img src="/storage/main/map.png" alt="Map" @click="changeView('map')"
-                             :class="{ active: currentView === 'map' }" />
-                        <img src="/storage/main/image.png" alt="Stamps" @click="changeView('stamps')"
-                             :class="{ active: currentView === 'stamps' }" />
+                        <img src="/storage/main/home.png" alt="Home" @click="changeView('home')" :class="{ active: currentView === 'home' }" />
+                        <img src="/storage/main/game.png" alt="Games" @click="changeView('games')" :class="{ active: currentView === 'games' }" />
+                        <img src="/storage/main/map.png" alt="Map" @click="changeView('map')" :class="{ active: currentView === 'map' }" />
+                        <img src="/storage/main/image.png" alt="Stamps" @click="changeView('stamps')" :class="{ active: currentView === 'stamps' }" />
                     </div>
                 </footer>
             </div>
