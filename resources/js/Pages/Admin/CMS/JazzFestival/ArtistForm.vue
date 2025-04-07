@@ -23,7 +23,8 @@ const festivalDays = [24, 25, 26, 27];
 // Artist form data
 const artistForm = reactive({
     band_name: '',
-    performance_datetime: '',
+    start_time: '', // New field for start time
+    end_time: '',   // New field for end time
     performance_day: props.selectedDay,
     ticket_price: 0,
     band_description: '<p>Enter artist description...</p>',
@@ -64,6 +65,23 @@ const handleSecondImage = (e: Event) => {
     }
 };
 
+// Helper function to extract time from datetime
+const extractTimeFromDateTime = (dateTimeStr: string) => {
+    if (!dateTimeStr) return '';
+    const date = new Date(dateTimeStr);
+    return date.toTimeString().substring(0, 5); // Get HH:MM format
+};
+
+// Calculate performance_datetime from day and start_time
+const createPerformanceDateTime = (day: number, timeStr: string) => {
+    if (!timeStr) return '';
+    // Create a date for July [day], 2024
+    const date = new Date(2024, 6, day); // July is 6 (0-indexed)
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    date.setHours(hours, minutes);
+    return date.toISOString().substring(0, 16); // Format as YYYY-MM-DDTHH:MM
+};
+
 // Submit form
 const submitArtistForm = (e: Event) => {
     if (e) e.preventDefault();
@@ -75,7 +93,7 @@ const submitArtistForm = (e: Event) => {
     artistForm.band_details = artistDetailsEditor.getHTML();
     
     // Form validation
-    if (!artistForm.band_name || !artistForm.performance_datetime || 
+    if (!artistForm.band_name || !artistForm.start_time || !artistForm.end_time || 
         !artistForm.band_description || !artistForm.band_details) {
         alert('Please fill in all required fields');
         console.log("Validation failed - missing required fields");
@@ -85,10 +103,18 @@ const submitArtistForm = (e: Event) => {
     console.log("Form validation passed");
     console.log("Submitting artist form:", artistForm);
     
+    // Create a performance_datetime from the day and start_time
+    const performance_datetime = createPerformanceDateTime(
+        artistForm.performance_day, 
+        artistForm.start_time
+    );
+    
     const formData = new FormData();
     formData.append('band_name', artistForm.band_name);
-    formData.append('performance_datetime', artistForm.performance_datetime);
+    formData.append('performance_datetime', performance_datetime);
     formData.append('performance_day', artistForm.performance_day.toString());
+    formData.append('start_time', artistForm.start_time);
+    formData.append('end_time', artistForm.end_time);
     formData.append('ticket_price', artistForm.ticket_price.toString());
     formData.append('band_description', artistForm.band_description);
     formData.append('band_details', artistForm.band_details);
@@ -160,7 +186,8 @@ const submitArtistForm = (e: Event) => {
 onMounted(() => {
     if (props.mode === 'edit' && props.currentBand) {
         artistForm.band_name = props.currentBand.band_name;
-        artistForm.performance_datetime = props.currentBand.performance_datetime;
+        artistForm.start_time = props.currentBand.start_time || extractTimeFromDateTime(props.currentBand.performance_datetime);
+        artistForm.end_time = props.currentBand.end_time || '';
         artistForm.performance_day = props.currentBand.performance_day || props.selectedDay;
         artistForm.ticket_price = typeof props.currentBand.ticket_price === 'number' ? 
             props.currentBand.ticket_price : Number(props.currentBand.ticket_price);
@@ -194,17 +221,22 @@ onMounted(() => {
                             <input type="text" class="form-control" id="bandName" v-model="artistForm.band_name" required>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="performanceDatetime" class="form-label">Performance Date & Time <span class="text-danger">*</span></label>
-                                <input type="datetime-local" class="form-control" id="performanceDatetime" v-model="artistForm.performance_datetime" required>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
                                 <label for="performanceDay" class="form-label">Festival Day <span class="text-danger">*</span></label>
                                 <select class="form-select" id="performanceDay" v-model="artistForm.performance_day">
                                     <option v-for="day in festivalDays" :key="day" :value="day">July {{ day }}</option>
                                 </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="startTime" class="form-label">Start Time <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" id="startTime" v-model="artistForm.start_time" required>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="endTime" class="form-label">End Time <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" id="endTime" v-model="artistForm.end_time" required>
                             </div>
                         </div>
                         

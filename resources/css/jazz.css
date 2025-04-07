@@ -630,3 +630,285 @@
         justify-content: flex-end;
     }
 }
+
+/* Festival header and general styles */
+.festival-header {
+    background-color: #f8f9fa;
+    padding: 2.5rem 0;
+    margin-bottom: 0;
+}
+
+.festival-title {
+    color: #2565c7;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.festival-info {
+    background-color: white;
+}
+
+.festival-image {
+    transition: transform 0.3s ease;
+}
+
+.festival-image:hover {
+    transform: scale(1.02);
+}
+
+.festival-description {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #333;
+}
+
+/* Artist Details Modal Styles */
+.artist-details-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+}
+
+.artist-details-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1051;
+    backdrop-filter: blur(3px);
+}
+
+.artist-details-content {
+    background-color: white;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 1052;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.artist-details-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 5;
+}
+
+.artist-details-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: rotate(90deg);
+}
+
+.artist-details-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #eee;
+    background: linear-gradient(to right, #2565c7, #4b86db);
+}
+
+.artist-details-header h2 {
+    margin: 0;
+    color: white;
+    font-weight: 700;
+    font-size: 2rem;
+}
+
+.artist-details-body {
+    padding: 2rem;
+}
+
+.artist-details-image-container {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.artist-details-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.artist-details-image:hover {
+    transform: scale(1.02);
+}
+
+.artist-details-image-placeholder {
+    width: 100%;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+}
+
+.artist-details-image-placeholder i {
+    font-size: 4rem;
+    color: #aaa;
+}
+
+.artist-details-info {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.artist-details-meta {
+    display: flex;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.artist-details-time, .artist-details-price {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.artist-details-time {
+    background-color: #e8f0fe;
+    color: #2565c7;
+}
+
+.artist-details-price {
+    background-color: #e8f5e9;
+    color: #28a745;
+}
+
+.artist-details-description {
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    color: #333;
+}
+
+.artist-details-full-info {
+    margin-bottom: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    line-height: 1.6;
+    color: #555;
+}
+
+.artist-details-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Festival row and artist card styles */
+.festival-row {
+    display: flex;
+    margin-bottom: 3rem;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    min-height: 300px;
+}
+
+.festival-image-container {
+    flex: 0 0 35%;
+    overflow: hidden;
+    position: relative;
+    /* Added these properties to center the image vertically */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.festival-content {
+    flex: 1;
+    padding: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    height: auto;
+}
+
+.band-description {
+    margin-bottom: 1.5rem;
+    color: #555;
+    line-height: 1.6;
+    overflow: visible;
+    max-height: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .artist-details-content {
+        width: 95%;
+        max-height: 80vh;
+    }
+    
+    .artist-details-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .artist-details-body {
+        padding: 1.5rem;
+    }
+    
+    .artist-details-meta {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .artist-details-actions {
+        flex-direction: column;
+    }
+    
+    .artist-details-actions .btn {
+        width: 100%;
+    }
+    
+    .festival-row {
+        flex-direction: column !important;
+        height: auto;
+    }
+    
+    .festival-image-container {
+        height: 200px;
+        flex: none;
+        width: 100%;
+    }
+    
+    .festival-content {
+        padding: 1.5rem;
+    }
+}

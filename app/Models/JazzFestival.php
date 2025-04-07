@@ -2,24 +2,29 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class JazzFestival extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'festival_id',
         'band_name',
         'performance_datetime',
-        'performance_day', // field for the day (24, 25, 26, 27)
+        'performance_day',
+        'start_time',
+        'end_time',
         'ticket_price',
         'band_description',
         'band_details',
         'band_image',
-        'second_image',
     ];
 
     protected $casts = [
         'performance_day' => 'integer',
+        'ticket_price' => 'float',
     ];
 
     public function festival()
