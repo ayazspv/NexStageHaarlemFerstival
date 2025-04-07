@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MailController;
+
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -66,6 +68,8 @@ Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->where('path', '.*')
     ->name('festivals.show');
 
+Route::post('/api/send-mail', [MailController::class, 'sendMail']);
+
 /*if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();
 
@@ -78,3 +82,5 @@ Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
             ->name('festivals.show');
     }
 }*/
+
+
