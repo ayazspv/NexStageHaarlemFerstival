@@ -33,6 +33,7 @@ class JazzFestivalController
         $data = $request->validate([
             'band_name'            => 'required|string|max:255',
             'performance_datetime' => 'required|date',
+            'performance_day'      => 'required|integer|between:24,27',
             'ticket_price'         => 'required|numeric',
             'band_description'     => 'required|string',
             'band_details'         => 'required|string',
@@ -51,8 +52,7 @@ class JazzFestivalController
 
         JazzFestival::create($data);
 
-        // Refresh the page by redirecting back
-        return redirect()->back()->with('success', 'Jazz Festival has been created.');
+        return redirect()->back()->with('success', 'Artist has been added successfully.');
     }
 
     public function edit($festivalId, $id)
@@ -70,6 +70,7 @@ class JazzFestivalController
         $data = $request->validate([
             'band_name'            => 'required|string|max:255',
             'performance_datetime' => 'required|date',
+            'performance_day'      => 'required|integer|between:24,27',
             'ticket_price'         => 'required|numeric',
             'band_description'     => 'required|string',
             'band_details'         => 'required|string',

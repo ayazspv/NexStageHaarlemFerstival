@@ -21,7 +21,8 @@ const form = useForm({
     image: null as File | null,
     isGame: false,
     festivalType: 0,
-    ticket_amount: 0
+    ticket_amount: 0,
+    time_slot: '' 
 });
 
 const resetForm = () => {
@@ -56,6 +57,7 @@ const editFestival = (festival: Festival) => {
     form.name = festival.name;
     form.isGame = festival.isGame || false;
     form.ticket_amount = festival.ticket_amount || 0;
+    form.time_slot = festival.time_slot || '';
     showEditForm.value = true;
     showCreateForm.value = false;
 };
@@ -127,6 +129,18 @@ const manageEvent = (festivalId: number) => {
                         </div>
 
                         <div class="mb-3">
+                            <label for="time_slot" class="form-label">Time Slot</label>
+                            <input v-model="form.time_slot"
+                                   type="text"
+                                   class="form-control"
+                                   :class="{ 'is-invalid': form.errors.time_slot }"
+                                   id="time_slot"
+                                   placeholder="e.g. 10:00 - 16:00">
+                            <div class="invalid-feedback">{{ form.errors.time_slot }}</div>
+                            <small class="form-text text-muted">Enter the time slot for this event (e.g. 10:00 - 16:00)</small>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="image" class="form-label">Festival Image</label>
                             <input type="file"
                                    class="form-control"
@@ -172,6 +186,7 @@ const manageEvent = (festivalId: number) => {
                                     <th>Name</th>
                                     <th>Image</th>
                                     <th>Game</th>
+                                    <th>Time Slot</th> 
                                     <th>Available Tickets</th>
                                     <th>Actions</th>
                                 </tr>
@@ -190,6 +205,7 @@ const manageEvent = (festivalId: number) => {
                                             {{ festival.isGame ? 'Game' : 'Standard' }}
                                         </span>
                                     </td>
+                                    <td>{{ festival.time_slot || 'Not specified' }}</td>
                                     <td>{{ festival.ticket_amount }}</td>
                                     <td>
                                         <div class="btn-group gap-2">

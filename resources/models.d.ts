@@ -37,6 +37,7 @@ export type Festival = {
     description?: string | null;
     image_path: string;
     date?: string;
+    time_slot?: string;
     link?: string;
     isGame?: boolean;
     ticket_amount: number;
@@ -62,7 +63,8 @@ export interface JazzFestival {
     id?: number;
     festival_id: number;
     band_name: string;
-    performance_datetime: string; // ISO date string
+    performance_datetime: string; 
+    performance_day: number; // 24, 25, 26, or 27
     ticket_price: number;
     band_description: string;
     band_details: string;

@@ -1,0 +1,294 @@
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue';
+import { Editor, EditorContent } from '@tiptap/vue-3';
+import StarterKit from '@tiptap/starter-kit';
+import { JazzFestival } from '../../../../../models';
+import { useCsrf } from '@/composables/csrf';
+
+const { csrfToken } = useCsrf();
+
+const props = defineProps<{
+    festivalId: number;
+    mode: 'create' | 'edit';
+    editingBandId: number | null;
+    currentBand: JazzFestival | null;
+    selectedDay: number;
+}>();
+
+const emit = defineEmits(['close', 'submitted']);
+
+// Festival day options
+const festivalDays = [24, 25, 26, 27];
+
+// Artist form data
+const artistForm = reactive({
+    band_name: '',
+    performance_datetime: '',
+    performance_day: props.selectedDay,
+    ticket_price: 0,
+    band_description: '<p>Enter artist description...</p>',
+    band_details: '<p>Enter artist details...</p>',
+    band_image: null as File | null,
+    second_image: null as File | null,
+});
+
+// Initialize artist description editors
+const artistDescriptionEditor = new Editor({
+    content: '<p>Enter artist description...</p>',
+    extensions: [StarterKit],
+    onUpdate({ editor }) {
+        artistForm.band_description = editor.getHTML();
+    },
+});
+
+const artistDetailsEditor = new Editor({
+    content: '<p>Enter artist details...</p>',
+    extensions: [StarterKit],
+    onUpdate({ editor }) {
+        artistForm.band_details = editor.getHTML();
+    },
+});
+
+// Handle image uploads
+const handleArtistImage = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+        artistForm.band_image = input.files[0];
+    }
+};
+
+const handleSecondImage = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+        artistForm.second_image = input.files[0];
+    }
+};
+
+// Submit form
+const submitArtistForm = (e: Event) => {
+    if (e) e.preventDefault();
+    
+    console.log("Form submission started");
+    
+    // Update form values with the latest editor content
+    artistForm.band_description = artistDescriptionEditor.getHTML();
+    artistForm.band_details = artistDetailsEditor.getHTML();
+    
+    // Form validation
+    if (!artistForm.band_name || !artistForm.performance_datetime || 
+        !artistForm.band_description || !artistForm.band_details) {
+        alert('Please fill in all required fields');
+        console.log("Validation failed - missing required fields");
+        return;
+    }
+
+    console.log("Form validation passed");
+    console.log("Submitting artist form:", artistForm);
+    
+    const formData = new FormData();
+    formData.append('band_name', artistForm.band_name);
+    formData.append('performance_datetime', artistForm.performance_datetime);
+    formData.append('performance_day', artistForm.performance_day.toString());
+    formData.append('ticket_price', artistForm.ticket_price.toString());
+    formData.append('band_description', artistForm.band_description);
+    formData.append('band_details', artistForm.band_details);
+    
+    // Add CSRF token explicitly
+    formData.append('_token', csrfToken);
+    
+    if (artistForm.band_image) {
+        console.log("Appending band image");
+        formData.append('band_image', artistForm.band_image);
+    }
+    
+    if (artistForm.second_image) {
+        console.log("Appending second image");
+        formData.append('second_image', artistForm.second_image);
+    }
+    
+    if (props.mode === 'create') {
+        console.log("Creating new artist - sending POST request");
+        
+        fetch(`/admin/festivals/${props.festivalId}/jazz-festival`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log("Artist added successfully");
+                emit('submitted');
+            } else {
+                return response.json().then(err => {
+                    throw new Error(JSON.stringify(err));
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error adding artist:", error);
+            alert('Error adding artist. Please check the browser console for details.');
+        });
+    } else if (props.mode === 'edit' && props.editingBandId) {
+        console.log("Updating existing artist - sending PUT request");
+        formData.append('_method', 'PUT');
+        
+        fetch(`/admin/festivals/${props.festivalId}/jazz-festival/${props.editingBandId}`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log("Artist updated successfully");
+                emit('submitted');
+            } else {
+                return response.json().then(err => {
+                    throw new Error(JSON.stringify(err));
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error updating artist:", error);
+            alert('Error updating artist. Please check the browser console for details.');
+        });
+    }
+};
+
+// Initialize form with existing data if editing
+onMounted(() => {
+    if (props.mode === 'edit' && props.currentBand) {
+        artistForm.band_name = props.currentBand.band_name;
+        artistForm.performance_datetime = props.currentBand.performance_datetime;
+        artistForm.performance_day = props.currentBand.performance_day || props.selectedDay;
+        artistForm.ticket_price = typeof props.currentBand.ticket_price === 'number' ? 
+            props.currentBand.ticket_price : Number(props.currentBand.ticket_price);
+        artistForm.band_description = props.currentBand.band_description;
+        artistForm.band_details = props.currentBand.band_details;
+        
+        artistDescriptionEditor.commands.setContent(
+            props.currentBand.band_description || '<p>Enter artist description...</p>'
+        );
+        artistDetailsEditor.commands.setContent(
+            props.currentBand.band_details || '<p>Enter artist details...</p>'
+        );
+    }
+});
+</script>
+
+<template>
+    <div class="artist-form-modal">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ props.mode === 'create' ? 'Add New Artist' : 'Edit Artist' }}</h5>
+                    <button type="button" class="btn-close" @click="$emit('close')"></button>
+                </div>
+                <div class="modal-body">
+                    <form @submit.prevent="submitArtistForm">
+                        <input type="hidden" name="_token" :value="csrfToken">
+                        
+                        <div class="mb-3">
+                            <label for="bandName" class="form-label">Artist Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="bandName" v-model="artistForm.band_name" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="performanceDatetime" class="form-label">Performance Date & Time <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="performanceDatetime" v-model="artistForm.performance_datetime" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="performanceDay" class="form-label">Festival Day <span class="text-danger">*</span></label>
+                                <select class="form-select" id="performanceDay" v-model="artistForm.performance_day">
+                                    <option v-for="day in festivalDays" :key="day" :value="day">July {{ day }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="ticketPrice" class="form-label">Ticket Price (€) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="ticketPrice" v-model.number="artistForm.ticket_price" step="0.01" min="0" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="artistImage" class="form-label">Artist Image</label>
+                            <input type="file" class="form-control" id="artistImage" @change="handleArtistImage" accept="image/*">
+                            <small class="form-text">This will be displayed on the artist card.</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="secondImage" class="form-label">Secondary Image (Optional)</label>
+                            <input type="file" class="form-control" id="secondImage" @change="handleSecondImage" accept="image/*">
+                            <small class="form-text">This will be displayed in the gallery section.</small>
+                        </div>
+                        
+                        <div v-if="props.mode === 'edit' && props.currentBand" class="mb-3">
+                            <label class="form-label">Current Images</label>
+                            <div class="d-flex gap-3">
+                                <div v-if="props.currentBand.band_image" class="text-center">
+                                    <img :src="`/storage/${props.currentBand.band_image}`" alt="Artist Image" style="height: 100px; object-fit: cover;" class="img-thumbnail">
+                                    <div>Main Image</div>
+                                </div>
+                                <div v-if="props.currentBand.second_image" class="text-center">
+                                    <img :src="`/storage/${props.currentBand.second_image}`" alt="Secondary Image" style="height: 100px; object-fit: cover;" class="img-thumbnail">
+                                    <div>Secondary Image</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Artist Description <span class="text-danger">*</span></label>
+                            <div class="border rounded p-2" 
+                                :class="{'border-danger': !artistForm.band_description}" 
+                                style="min-height: 150px;">
+                                <EditorContent :editor="artistDescriptionEditor" />
+                            </div>
+                            <small class="form-text">Brief description displayed on artist cards.</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Artist Details <span class="text-danger">*</span></label>
+                            <div class="border rounded p-2" 
+                                :class="{'border-danger': !artistForm.band_details}"
+                                style="min-height: 200px;">
+                                <EditorContent :editor="artistDetailsEditor" />
+                            </div>
+                            <small class="form-text">Detailed information displayed when viewing artist details.</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="$emit('close')">Cancel</button>
+                    <button type="button" class="btn btn-primary" @click="submitArtistForm">
+                        {{ props.mode === 'create' ? 'Add Artist' : 'Update Artist' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style scoped>
+.artist-form-modal {
+    background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1050;
+    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-dialog {
+    width: 100%;
+    max-width: 900px;
+    margin: 1.75rem auto;
+}
+</style>

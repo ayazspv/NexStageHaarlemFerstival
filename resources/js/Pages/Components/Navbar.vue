@@ -26,13 +26,13 @@ function navigateToDashboard() {
     if (auth.value.user) {
         switch (auth.value.user.role) {
             case 'admin':
-                router.visit('/dashboard'); // Redirect to the admin dashboard
+                router.visit('/admin/dashboard'); // Fixed path for admin dashboard
                 break;
             case 'user':
-                router.visit('/home'); // Redirect to the user dashboard
+                router.visit('/home'); // Regular user dashboard
                 break;
             default:
-                router.visit('/default-dashboard'); // Fallback dashboard
+                router.visit('/'); // Fallback to homepage
                 break;
         }
     }
@@ -71,8 +71,13 @@ fetchWishlistItems();
             <div class="navbar-option">
                 <div class="navbar-suboption">
                     <template v-if="auth.user">
-                        <span @click.prevent="navigateToDashboard" class="cursor-pointer underline">{{ auth.user.firstName }}</span>
-                        <button type="button" class="btn btn-outline-danger logoutBtn" @click.prevent="logout">Log Out</button>
+                        <span @click="navigateToDashboard" 
+                              class="cursor-pointer user-name">
+                            {{ auth.user.firstName }}
+                        </span>
+                        <button type="button" class="btn btn-outline-danger logoutBtn" @click="logout">
+                            Log Out
+                        </button>
                     </template>
                     <template v-else>
                         <a href="/login">
@@ -178,6 +183,20 @@ fetchWishlistItems();
     flex-direction: row;
     gap: 25px;
     align-items: center;
+}
+
+/* Added styles for user name and logout button */
+.user-name {
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 500;
+    color: #2565c7;
+}
+
+.logoutBtn {
+    min-width: 100px; /* Make the button wider */
+    padding: 6px 15px;
+    font-weight: 500;
 }
 
 .cart-popup-menu {
