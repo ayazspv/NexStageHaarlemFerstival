@@ -44,6 +44,7 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Experience the rhythm of Haarlem this summer with unforgettable live performances, vibrant city stages, and a celebration of music, art, and culture at the iconic Haarlem Jazz Festival.',
                 'image_path' => 'festivals/jazz.jpg',
                 'festivalType' => 0,
+                'ticket_amount' => 250,
                 'time_slot' => '18:00 - 22:00',  
             ],
             [
@@ -51,6 +52,7 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Curious about the dining options available at Haarlem Culinary 2024? Explore the delectable offerings from a selection of renowned Haarlem restaurants this year. Indulge your palate in a culinary journey with these exquisite dining experiences.',
                 'image_path' => 'festivals/food.jpg',
                 'festivalType' => 1,
+                'ticket_amount' => 150,
                 'time_slot' => '16:00 - 18:00',  
             ],
             [
@@ -58,6 +60,7 @@ class DatabaseSeeder extends Seeder
                 'description' => 'A Stroll Through History is a tour within the Haarlem festival events, with 10 stops starting with the Church of St. Bavo ending at the Hof van Bakenes. The tour comes with English, Dutch or Chinese guide.',
                 'image_path' => 'festivals/historic.jpg',
                 'festivalType' => 2,
+                'ticket_amount' => 100,
                 'time_slot' => '10:00 - 16:00',  
             ],
             [

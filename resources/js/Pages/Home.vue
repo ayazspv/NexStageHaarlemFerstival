@@ -222,11 +222,8 @@ fetchWishlistItems();
                                 <a :href="`/festivals/${parseToUrl(festival.name)}`" class="btn btn-outline-primary me-2">
                                     <i class="fas fa-info-circle me-1"></i> View Details
                                 </a>
-                                <button class="btn btn-primary me-2" @click.prevent="addToCart(festival.id)">
-                                    <i class="fas fa-ticket-alt me-1"></i> Buy Ticket
-                                </button>
-                                <button class="btn btn-outline-secondary" @click.prevent="addToWishlist(festival.id)">
-                                    <i class="fas fa-heart"></i>
+                                <button class="btn btn-outline-secondary" @click.prevent="addToCart(festival.id)">
+                                    <i class="fas fa-heart"></i> Add to Cart
                                 </button>
                             </div>
                             
