@@ -61,7 +61,6 @@ const formatPrice = (price) => {
                     <i class="fas fa-heart"></i> Add to Wishlist
                 </button>
             </div>
-            <div class="price-badge">€{{ formatPrice(band.ticket_price) }}</div>
         </div>
     </div>
 </template>

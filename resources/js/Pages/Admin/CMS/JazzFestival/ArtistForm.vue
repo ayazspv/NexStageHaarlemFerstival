@@ -20,17 +20,16 @@ const emit = defineEmits(['close', 'submitted']);
 // Festival day options
 const festivalDays = [24, 25, 26, 27];
 
-// Artist form data
+// Artist form data - Removed second_image
 const artistForm = reactive({
     band_name: '',
-    start_time: '', // New field for start time
-    end_time: '',   // New field for end time
+    start_time: '',
+    end_time: '',
     performance_day: props.selectedDay,
     ticket_price: 0,
     band_description: '<p>Enter artist description...</p>',
     band_details: '<p>Enter artist details...</p>',
-    band_image: null as File | null,
-    second_image: null as File | null,
+    band_image: null as File | null
 });
 
 // Initialize artist description editors
@@ -50,18 +49,11 @@ const artistDetailsEditor = new Editor({
     },
 });
 
-// Handle image uploads
+// Handle image upload - Removed handleSecondImage function
 const handleArtistImage = (e: Event) => {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
         artistForm.band_image = input.files[0];
-    }
-};
-
-const handleSecondImage = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-        artistForm.second_image = input.files[0];
     }
 };
 
@@ -127,10 +119,7 @@ const submitArtistForm = (e: Event) => {
         formData.append('band_image', artistForm.band_image);
     }
     
-    if (artistForm.second_image) {
-        console.log("Appending second image");
-        formData.append('second_image', artistForm.second_image);
-    }
+    // Removed second_image append
     
     if (props.mode === 'create') {
         console.log("Creating new artist - sending POST request");
@@ -251,23 +240,15 @@ onMounted(() => {
                             <small class="form-text">This will be displayed on the artist card.</small>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="secondImage" class="form-label">Secondary Image (Optional)</label>
-                            <input type="file" class="form-control" id="secondImage" @change="handleSecondImage" accept="image/*">
-                            <small class="form-text">This will be displayed in the gallery section.</small>
-                        </div>
+                        <!-- Removed secondary image input -->
                         
-                        <div v-if="props.mode === 'edit' && props.currentBand" class="mb-3">
-                            <label class="form-label">Current Images</label>
-                            <div class="d-flex gap-3">
-                                <div v-if="props.currentBand.band_image" class="text-center">
-                                    <img :src="`/storage/${props.currentBand.band_image}`" alt="Artist Image" style="height: 100px; object-fit: cover;" class="img-thumbnail">
-                                    <div>Main Image</div>
-                                </div>
-                                <div v-if="props.currentBand.second_image" class="text-center">
-                                    <img :src="`/storage/${props.currentBand.second_image}`" alt="Secondary Image" style="height: 100px; object-fit: cover;" class="img-thumbnail">
-                                    <div>Secondary Image</div>
-                                </div>
+                        <div v-if="props.mode === 'edit' && props.currentBand && props.currentBand.band_image" class="mb-3">
+                            <label class="form-label">Current Image</label>
+                            <div class="text-center">
+                                <img :src="`/storage/${props.currentBand.band_image}`" 
+                                     alt="Artist Image" 
+                                     style="height: 100px; object-fit: cover;" 
+                                     class="img-thumbnail">
                             </div>
                         </div>
                         
@@ -285,7 +266,7 @@ onMounted(() => {
                             <label class="form-label">Artist Details <span class="text-danger">*</span></label>
                             <div class="border rounded p-2" 
                                 :class="{'border-danger': !artistForm.band_details}"
-                                style="min-height: 200px;">
+                                style="min-height: 150px;">
                                 <EditorContent :editor="artistDetailsEditor" />
                             </div>
                             <small class="form-text">Detailed information displayed when viewing artist details.</small>

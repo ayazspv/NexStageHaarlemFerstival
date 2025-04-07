@@ -133,6 +133,12 @@ onMounted(() => {
 
 fetchCartItems(); 
 fetchWishlistItems();
+
+// Add this function to strip HTML tags from descriptions
+const stripHtmlTags = (html) => {
+  if (!html) return '';
+  return html.replace(/<\/?[^>]+(>|$)/g, "");
+};
 </script>
 
 <template>
@@ -209,7 +215,8 @@ fetchWishlistItems();
                         <!-- Festival Content -->
                         <div class="festival-content">
                             <h3 class="festival-title">{{ festival.name }}</h3>
-                            <p class="festival-description">{{ festival.description || 'Join us for this amazing festival experience!' }}</p>
+                            <!-- Apply the stripHtmlTags function to remove HTML tags -->
+                            <p class="festival-description">{{ stripHtmlTags(festival.description) || 'Join us for this amazing festival experience!' }}</p>
                             
                             <!-- Time slot information -->
                             <div class="festival-time-slot mb-3">
