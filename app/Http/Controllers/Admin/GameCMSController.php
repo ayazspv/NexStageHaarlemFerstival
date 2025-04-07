@@ -9,16 +9,21 @@ class GameCMSController
 {
     public function storeGame(Request $request, $festivalId)
     {
+
         $data = $request->validate([
+            'title'          => 'required|string',
             'question'       => 'required|string',
             'option1'        => 'required|string',
             'option2'        => 'required|string',
             'option3'        => 'required|string',
             'option4'        => 'required|string',
             'correct_option' => 'required|integer|in:1,2,3,4',
+            'hint'           => 'required|string',
             'thumbnail'      => 'nullable|image|max:2048',
             'stamp'          => 'nullable|image|max:2048',
         ]);
+
+        error_log('passing');
 
         $data['festival_id'] = $festivalId;
 
@@ -40,12 +45,14 @@ class GameCMSController
         $game = Game::findOrFail($gameId);
 
         $data = $request->validate([
+            'title'          => 'required|string',
             'question'       => 'required|string',
             'option1'        => 'required|string',
             'option2'        => 'required|string',
             'option3'        => 'required|string',
             'option4'        => 'required|string',
             'correct_option' => 'required|integer|in:1,2,3,4',
+            'hint'           => 'required|string',
             'thumbnail'      => 'sometimes|nullable|image|max:2048',
             'stamp'          => 'sometimes|nullable|image|max:2048',
         ]);

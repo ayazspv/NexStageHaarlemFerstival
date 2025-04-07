@@ -1,3 +1,5 @@
+import NightAtTeylers from "./js/Pages/Festivals/NightAtTeylers.vue";
+
 export enum Role {
     Admin,
     User
@@ -20,17 +22,6 @@ export type User = {
     Role: role
 }
 
-export type CMS = {
-    id: number;
-    festival_id: number;
-    parent_id: number | null;
-    title: string;
-    content: string | null; // single string value from the CMS 'content' field
-    link: string;
-    image_path: string | null;
-    order: number; // single numeric value
-};
-
 export type Festival = {
     id: number;
     name: string;
@@ -40,19 +31,21 @@ export type Festival = {
     time_slot?: string;
     link?: string;
     isGame?: boolean;
-    ticket_amount: number; 
+    ticket_amount: number;
     created_at?: string;
     updated_at?: string;
 }
 
 export type Game = {
     id?: number;
+    title: string,
     question: string;
     option1: string;
     option2: string;
     option3: string;
     option4: string;
     correct_option: number | null;
+    hint: string;
     thumbnail?: File | null | string;
     stamp?: File | null | string;
 }
@@ -61,7 +54,7 @@ export interface JazzFestival {
     id?: number;
     festival_id: number;
     band_name: string;
-    performance_datetime: string; 
+    performance_datetime: string;
     performance_day: number; // 24, 25, 26, or 27
     ticket_price: number;
     band_description: string;
@@ -72,4 +65,22 @@ export interface JazzFestival {
     updated_at?: string;
 }
 
+export type Order = {
+    id: number,
+    user_id: number,
+    user: User,
+    total_price: number,
+    status: string,
+    ordered_at: string,
+    tickets: Ticket[],
+}
 
+export type Ticket = {
+    id: number,
+    order_id: number,
+    festival_id: number,
+    festival: Festival,
+    detail_ticket_id: number,
+    detail_ticket: JazzFestival, // | Restaurant | History | Dance !! Add this once you have added your models for festivals
+    qr_code: string,
+}

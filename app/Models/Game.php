@@ -8,12 +8,14 @@ class Game extends Model
 {
     protected $fillable = [
         'festival_id',
+        'title',
         'question',
         'option1',
         'option2',
         'option3',
         'option4',
         'correct_option',
+        'hint',
         'thumbnail',
         'stamp',
     ];
