@@ -27,7 +27,8 @@ const formatPrice = (price) => {
         <div class="card-header d-flex justify-content-between align-items-center bg-light">
             <h5 class="mb-0">{{ band.band_name }}</h5>
             <span class="badge bg-primary">
-                {{ formatTime(band.performance_datetime) }}
+                {{ band.start_time || formatTime(band.performance_datetime) }}
+                {{ band.end_time ? '- ' + band.end_time : '' }}
             </span>
         </div>
         <div class="position-relative artist-image-container">
