@@ -39,6 +39,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/festivals/{festival}', [FestivalController::class, 'destroy'])->name('admin.festivals.destroy');
     Route::resource('festivals', FestivalController::class);
 
+    Route::put('/festivals/{festival}/details', [FestivalController::class, 'updateDetails'])
+        ->name('admin.festivals.update-details');
+
     Route::get('/users', [UserController::class, 'index'])->name('admin.users');
     Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
