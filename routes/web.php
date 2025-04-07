@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\JazzFestivalController;
 use App\Http\Controllers\Admin\SlugsController;
 use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OrderExportController;
 use App\Models\CMS;
 use App\Models\Festival;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +50,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Orders
     Route::get('/orders', [AdminOrderController::class, 'show'])->name('admin.orders.show');
 
+    // Orders Export
+    Route::get('/orders/export', [\App\Http\Controllers\Admin\OrderAdminController::class, 'export']);
 
     //CMS
     Route::get('/festivals/cms/manage/{festivalId}', [FestivalContentController::class, 'show'])->name('admin.festivals.show');

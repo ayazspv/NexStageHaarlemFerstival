@@ -14,6 +14,8 @@ class AdminOrderController
             ->with('tickets')
             ->get();
 
+        error_log($orders);
+
         return Inertia::render('Admin/Orders', [
             'orders' => $orders,
         ]);
