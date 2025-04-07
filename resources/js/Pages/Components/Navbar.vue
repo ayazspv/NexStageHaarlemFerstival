@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import { cart, fetchCartItems, updateCartItem } from '../../composables/cart';
+import { cart, fetchCartItems, updateCartItem, clearCart, checkout } from '../../composables/cart';
 import { wishlist, fetchWishlistItems, addToWishlist, removeFromWishlist } from '../../composables/wishlist';
 
 // Define TypeScript interface for User
@@ -99,10 +99,15 @@ fetchWishlistItems();
     <div v-if="isCartMenuVisible" class="cart-popup-menu">
         <div v-if="cart.length">
             <div v-for="item in cart" :key="item.festival_id" class="cart-item">
-                <span>Festival ID: {{ item.festival_id }}</span>
+                <span>{{ item.name }}</span> <!-- Changed from Festival ID to Festival Name -->
                 <span>Quantity: {{ item.quantity }}</span>
                 <button @click="updateCartItem(item.festival_id, item.quantity - 1)">-</button>
                 <button @click="updateCartItem(item.festival_id, item.quantity + 1)">+</button>
+            </div>
+            <!-- Add Remove Items and Checkout buttons -->
+            <div class="cart-actions">
+                <button class="btn btn-danger" @click="clearCart()">Remove Items</button>
+                <button class="btn btn-primary" @click="checkout()">Checkout</button>
             </div>
         </div>
         <div v-else class="text-center">
@@ -114,7 +119,7 @@ fetchWishlistItems();
     <div v-if="isWishlistMenuVisible" class="wishlist-popup-menu">
         <div v-if="wishlist.length">
             <div v-for="item in wishlist" :key="item.festival_id" class="wishlist-item">
-                <span>Festival ID: {{ item.festival_id }}</span>
+                <span>{{ item.name }}</span> <!-- Changed from Festival ID to Festival Name -->
                 <button @click="removeFromWishlist(item.festival_id)">Remove</button>
             </div>
             <a href="/wishlist" class="view-wishlist-btn">View Wishlist</a>
@@ -216,7 +221,44 @@ fetchWishlistItems();
 .cart-item {
     display: flex;
     justify-content: space-between;
-    padding: 5px 0;
+    align-items: center;
+    padding: 10px 0; /* Increase padding for better spacing */
+    margin-bottom: 15px; /* Add more margin between cart items */
+    border-bottom: 1px solid #ddd; /* Optional: Add a separator between items */
+}
+
+.cart-item span {
+    flex: 1; /* Allow the name and quantity to take up available space */
+    margin-right: 10px; /* Add spacing between the name and quantity */
+}
+
+.cart-item button {
+    margin: 0 8px; /* Add more spacing between the buttons */
+}
+
+.cart-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.cart-actions .btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.cart-actions .btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+}
+
+.cart-actions .btn-primary {
+    background-color: #007bff;
+    color: white;
+    border: none;
 }
 
 .view-cart-btn {
