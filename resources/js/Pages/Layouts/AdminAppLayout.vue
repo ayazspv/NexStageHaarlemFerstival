@@ -17,11 +17,13 @@ defineProps<{
             <Sidebar/>
 
             <section class="main-content">
-                <div class="d-flex flex-column h-100">
+                <div class="content-wrapper">
                     <Navbar/>
-                    <slot/>
+                    <div class="page-content">
+                        <slot/>
+                    </div>
+                    <Footer/>
                 </div>
-                <Footer/>
             </section>
         </div>
     </div>
@@ -39,5 +41,16 @@ defineProps<{
     background-color: #fff; /* Optional background color for main content */
     transition: margin-left 0.5s ease; /* Smooth transition for any layout changes */
     height: 100%;
+}
+
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.page-content {
+    flex: 1 0 auto;
+    padding-bottom: 2rem; /* Space before footer */
 }
 </style>

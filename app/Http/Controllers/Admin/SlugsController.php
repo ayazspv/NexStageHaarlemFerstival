@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\CMS;
 use App\Models\Festival;
+use App\Models\JazzFestival;
 use App\Models\Game;
 use App\Models\Style;
 use Illuminate\Http\Request;
@@ -46,33 +47,16 @@ class SlugsController
             ]);
         }
 
-        $topPages = CMS::where('festival_id', $festival->id)
-            ->whereNull('parent_id')
-            ->with('children')
-            ->get();
+        if($festival->festivalType == 0) {
+            $bands = JazzFestival::where('festival_id', $festival->id)->get();
 
-        if (!$path) {
-            return Inertia::render('Components/FestivalPage', [
+            return Inertia::render('Festivals/Jazz', [
                 'festival' => $festival,
-                'cmsPages' => $topPages
+                'bands' => $bands,
             ]);
         }
 
-        $segments = explode('/', trim($path, '/'));
-        $currentPage = $this->findPageRecursively($topPages, $segments);
-
-        if (!$currentPage) {
-            abort(404);
-        }
-
-        $style = Style::where('cms_id', $currentPage->id)->first();
-
-        return Inertia::render('Components/FestivalPage', [
-            'festival' => $festival,
-            'cmsPages' => $currentPage->children,
-            'currentPageId' => $currentPage->id,
-            'style' => $style,
-        ]);
+        abort(404);
     }
 
 }

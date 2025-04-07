@@ -78,7 +78,7 @@ defineProps<DashboardProps>();
                                 <div class="col-6">
                                     <div class="stats-box">
                                         <h3 class="text-success">{{ stats.employees.total }}</h3>
-                                        <p class="text-muted">Total Employees</p>
+                                        <p class="text-muted">Total Users</p>
                                     </div>
                                 </div>
                                 <div class="col-6">

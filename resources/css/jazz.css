@@ -1,0 +1,632 @@
+/* Additional styles for Jazz.vue */
+:root {
+    --jazz-primary: #2565c7;
+    --jazz-secondary: #ff9800;
+    --jazz-light: #f8f9fa;
+    --jazz-text: #333;
+}
+
+/* Hero section styles */
+.jazz-hero {
+    padding: 5rem 0;
+    background-color: white;
+}
+
+.jazz-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--jazz-primary);
+    margin-bottom: 1.5rem;
+}
+
+.jazz-description {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: var(--jazz-text);
+    margin-bottom: 1.5rem;
+}
+
+.jazz-time-slot {
+    font-size: 1.1rem;
+    color: var(--jazz-secondary);
+    margin-bottom: 2rem;
+}
+
+.jazz-btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.jazz-btn-primary {
+    background-color: var(--jazz-primary);
+    border-color: var(--jazz-primary);
+    color: white;
+}
+
+.jazz-btn-primary:hover {
+    background-color: darken(var(--jazz-primary), 10%);
+}
+
+.jazz-btn-outline-primary {
+    color: var(--jazz-primary);
+    border-color: var(--jazz-primary);
+}
+
+.jazz-btn-outline-primary:hover {
+    background-color: var(--jazz-primary);
+    color: white;
+}
+
+.jazz-hero-image-container {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.jazz-hero-image {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+    transform: scale(1);
+    transition: transform 0.5s ease;
+}
+
+.jazz-hero-image:hover {
+    transform: scale(1.05);
+}
+
+/* Section Title Styles */
+.jazz-section-title {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--jazz-primary);
+    margin-bottom: 2rem;
+}
+
+/* Schedule Section */
+.jazz-schedule {
+    padding: 5rem 0;
+    background-color: white;
+}
+
+.jazz-schedule-container {
+    margin-top: 1rem;
+}
+
+.jazz-performance-card {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.jazz-performance-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.jazz-card-image-container {
+    height: 200px;
+    overflow: hidden;
+}
+
+.jazz-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.jazz-performance-card:hover .jazz-card-image {
+    transform: scale(1.1);
+}
+
+.jazz-card-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--jazz-light);
+}
+
+.jazz-card-image-placeholder i {
+    font-size: 48px;
+    color: var(--jazz-primary);
+}
+
+.jazz-card-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.jazz-card-title {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    color: var(--jazz-primary);
+    font-weight: 600;
+}
+
+.jazz-card-datetime {
+    display: flex;
+    align-items: center;
+    color: var(--jazz-text);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.jazz-card-price {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--jazz-secondary);
+    margin-bottom: 1rem;
+}
+
+.jazz-card-description {
+    margin-bottom: 1.5rem;
+    color: var(--jazz-text);
+    flex-grow: 1;
+}
+
+.jazz-card-actions {
+    margin-top: auto;
+}
+
+.jazz-no-performances {
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--jazz-light);
+    border-radius: 8px;
+}
+
+.jazz-no-performances i {
+    font-size: 48px;
+    color: var(--jazz-primary);
+    margin-bottom: 1rem;
+}
+
+.jazz-no-performances p {
+    font-size: 1.2rem;
+    color: var(--jazz-primary);
+}
+
+/* Artists Section */
+.jazz-artists {
+    padding: 5rem 0;
+    background-color: #f9f9f9;
+}
+
+/* About Section */
+.jazz-about {
+    padding: 5rem 0;
+    background-color: var(--jazz-light);
+}
+
+.jazz-about-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--jazz-text);
+}
+
+.jazz-festival-info {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.jazz-info-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.jazz-info-item:last-child {
+    margin-bottom: 0;
+}
+
+.jazz-info-item i {
+    color: var(--jazz-secondary);
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    min-width: 24px;
+}
+
+.jazz-info-item h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+    color: var(--jazz-primary);
+    font-weight: 600;
+}
+
+.jazz-info-item p {
+    margin: 0;
+    color: var(--jazz-text);
+}
+
+/* Gallery Section */
+.jazz-gallery {
+    padding: 5rem 0;
+    background: white;
+}
+
+.jazz-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.jazz-gallery-item {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    height: 250px;
+}
+
+.jazz-gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.jazz-gallery-item:hover .jazz-gallery-image {
+    transform: scale(1.1);
+}
+
+/* Call To Action Section */
+.jazz-cta {
+    padding: 5rem 0;
+    background: linear-gradient(rgba(44, 62, 80, 0.9), rgba(44, 62, 80, 0.9)), url('/storage/jazz-gallery/image3.jpg');
+    background-position: center;
+    background-size: cover;
+    color: white;
+    text-align: center;
+}
+
+.jazz-cta-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.jazz-cta-content p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+/* Modal styles for band details */
+.jazz-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.jazz-modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.jazz-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+    color: #aaa;
+    z-index: 5;
+}
+
+.jazz-modal-close:hover {
+    color: black;
+}
+
+.jazz-modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.jazz-modal-header h2 {
+    margin: 0;
+    color: var(--jazz-primary);
+    font-weight: 700;
+}
+
+.jazz-modal-body {
+    padding: 1.5rem;
+}
+
+.jazz-modal-image-container {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.jazz-modal-image {
+    width: 100%;
+    height: auto;
+}
+
+.jazz-modal-details {
+    padding: 0 1rem;
+}
+
+.jazz-modal-datetime {
+    margin-bottom: 1rem;
+    color: var(--jazz-text);
+}
+
+.jazz-modal-price {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--jazz-secondary);
+}
+
+.jazz-modal-description {
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.jazz-modal-details-content {
+    margin-bottom: 1.5rem;
+}
+
+.jazz-modal-actions {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Nav tabs styling */
+.nav-tabs {
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-tabs .nav-item {
+    margin-bottom: -1px;
+}
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+    color: #495057;
+    padding: .5rem 1rem;
+    cursor: pointer;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--jazz-primary);
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+    border-bottom: 2px solid var(--jazz-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .jazz-title {
+        font-size: 2rem;
+    }
+
+    .jazz-hero {
+        padding: 3rem 0;
+    }
+
+    .jazz-modal-content {
+        width: 95%;
+    }
+
+    .jazz-section-title {
+        font-size: 1.8rem;
+    }
+
+    .jazz-about, .jazz-schedule, .jazz-gallery, .jazz-cta {
+        padding: 3rem 0;
+    }
+    
+    .jazz-info-item i {
+        font-size: 1.2rem;
+    }
+}
+
+.jazz-btn {
+    padding: 10px 20px;
+    font-weight: 500;
+}
+
+.band-description {
+    margin-bottom: 15px;
+}
+
+.band-row {
+    height: 320px;
+}
+
+.schedule-grid {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.schedule-event {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    transition: transform 0.2s ease;
+    border-left: 4px solid #2196f3;
+}
+
+.schedule-event:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.event-time {
+    flex: 0 0 120px;
+    font-weight: bold;
+}
+
+.event-name {
+    flex: 1;
+    font-size: 1.1rem;
+}
+
+.event-actions {
+    margin-left: 15px;
+}
+
+.festivals-container {
+    margin-top: 2rem;
+}
+
+.festival-row {
+    display: flex;
+    margin-bottom: 3rem;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 300px;
+}
+
+.festival-row:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.festival-image-container {
+    flex: 0 0 45%;
+    overflow: hidden;
+    height: 100%;
+}
+
+.festival-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.festival-row:hover .festival-image {
+    transform: scale(1.05);
+}
+
+.festival-content {
+    flex: 1;
+    padding: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.festival-title {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    color: #2565c7;
+    font-weight: 700;
+}
+
+.festival-description {
+    margin-bottom: 1.5rem;
+    color: #555;
+    line-height: 1.6;
+    flex-grow: 1;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.festival-time-slot {
+    color: #666;
+    font-weight: 500;
+}
+
+.festival-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+.ticket-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background-color: #28a745;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .festival-row {
+        flex-direction: column !important;
+        height: auto;
+        max-height: none;
+    }
+    
+    .festival-image-container {
+        height: 200px;
+        flex: none;
+    }
+    
+    .festival-content {
+        padding: 1.5rem;
+    }
+    
+    .festival-description {
+        max-height: none;
+    }
+
+    .schedule-event {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .event-time {
+        flex: none;
+    }
+    
+    .event-actions {
+        margin-left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
+}
