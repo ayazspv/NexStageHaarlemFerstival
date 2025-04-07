@@ -10,7 +10,9 @@ class AdminOrderController
 {
     public function show()
     {
-        $orders = Order::all();
+        $orders = Order::with('user')
+            ->with('tickets')
+            ->get();
 
         return Inertia::render('Admin/Orders', [
             'orders' => $orders,

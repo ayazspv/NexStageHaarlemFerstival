@@ -70,11 +70,13 @@ export type Order = {
     total_price: number,
     status: string,
     ordered_at: string,
+    tickets: Ticket[],
 }
 
 export type Ticket = {
     id: number,
     order_id: number,
     festival_id: number,
+    festival: Festival,
     qr_code: string,
 }
