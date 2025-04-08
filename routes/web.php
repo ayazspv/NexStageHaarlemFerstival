@@ -1,13 +1,13 @@
 <?php
 
-use App\Http\Controllers\Admin\CMSController;
-use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\FestivalContentController;
 use App\Http\Controllers\Admin\GameCMSController;
 use App\Http\Controllers\Admin\JazzFestivalController;
 use App\Http\Controllers\Admin\SlugsController;
 use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OrderExportController;
 use App\Models\CMS;
 use App\Models\Festival;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MailController;
+use App\Http\Controllers\WishlistController;
+
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -29,6 +32,12 @@ Route::get('/admin/', function () {
 Route::get('/login', [LoginController::class, 'show'])->name('loadLogin');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+use App\Http\Controllers\CartController;
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart');
+Route::post('/paymentCredentials', [CartController::class, 'paymentCredentials'])->name('paymentCredentials');
+Route::get('/paymentCredentials', [CartController::class, 'paymentCredentialsRender'])->name('paymentCredentials');
+
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminPanelController::class, 'show'])->name('admin.dashboard');
@@ -46,6 +55,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+
+    // Orders
+    Route::get('/orders', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+
+    // Orders Export
+    Route::get('/orders/export', [\App\Http\Controllers\Admin\OrderAdminController::class, 'export']);
 
     //CMS
     Route::get('/festivals/cms/manage/{festivalId}', [FestivalContentController::class, 'show'])->name('admin.festivals.show');
@@ -69,6 +84,18 @@ Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->where('path', '.*')
     ->name('festivals.show');
 
+Route::post('/api/send-mail', [MailController::class, 'sendMail']);
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart');
+
+Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
+
+Route::get('/qr-reader', function () {
+    return Inertia::render('QrReader/QrReader');
+})->name('qr-reader');
+
+
+
 /*if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();
 
@@ -81,3 +108,5 @@ Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
             ->name('festivals.show');
     }
 }*/
+
+

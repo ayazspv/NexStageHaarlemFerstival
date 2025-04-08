@@ -6,9 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\CartItem;
 use Inertia\Inertia;
+use Inertia\Controller;
 
-class CartController 
+
+class CartController extends Controller
 {
+
+
+
     public function getCartItems(Request $request)
     {
         $cartItems = CartItem::with('festival')->where('cart_id', $request->session()->get('cart_id'))->get();
@@ -51,4 +56,30 @@ class CartController
 
         return response()->json(['message' => 'Cart item updated successfully']);
     }
+
+    public function index()
+    {
+        return Inertia::render('Cart/Cart');
+    }
+
+    public function paymentCredentialsRender()
+    {
+        return Inertia::render('Cart/PaymentCredentials');
+    }
+    public function paymentCredentials(Request $request)
+    {
+        $validated = $request->validate([
+            'totalAmount' => 'required|numeric|min:0',
+            'items' => 'required|array|min:1',
+            'items.*.festivalID' => 'required|integer',
+            'items.*.festivalName' => 'required|string',
+            'items.*.festivalQuantity' => 'required|integer|min:1',
+            'items.*.festivalCost' => 'required|numeric|min:0',
+        ]);
+
+        return Inertia::render('Cart/PaymentCredentials', [
+            'cartData' => $validated,
+        ]);
+    }
+
 }

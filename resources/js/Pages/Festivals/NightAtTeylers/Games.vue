@@ -15,7 +15,7 @@ const emit = defineEmits<{ (e: 'selectGame', game: Game): void }>();
         <div class="d-flex flex-row flex-wrap">
             <div class="mobile-box blue m-5 d-flex flex-column gap-5" v-for="(game, index) in games" :key="game.id" @click="emit('selectGame', game)">
                 <h1 class="mt-3">
-                    {{ index += 1 }}
+                    {{ (index as number) += 1 }}
                 </h1>
                 <h3>
                     Play
