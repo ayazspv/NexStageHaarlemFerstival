@@ -177,7 +177,7 @@ fetchWishlistItems();
                                     <div class="event-name">{{ event.name }}</div>
                                     <div class="event-actions">
                                         <button class="btn btn-sm btn-primary" 
-                                                @click.prevent="addToCart(event.eventId)">
+                                                @click.prevent="addToCart(event.eventId, event.name, 10)">
                                             <i class="fas fa-ticket-alt"></i> Book
                                         </button>
                                     </div>
@@ -222,7 +222,7 @@ fetchWishlistItems();
                                 <a :href="`/festivals/${parseToUrl(festival.name)}`" class="btn btn-outline-primary me-2">
                                     <i class="fas fa-info-circle me-1"></i> View Details
                                 </a>
-                                <button class="btn btn-outline-secondary" @click.prevent="addToCart(festival.id)">
+                                <button class="btn btn-outline-secondary" @click.prevent="addToCart(festival.id, festival.name, 20)">
                                     <i class="fas fa-heart"></i> Add to Cart
                                 </button>
                             </div>

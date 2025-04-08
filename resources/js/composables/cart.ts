@@ -8,12 +8,23 @@ export function fetchCartItems() {
     cart.value = [...cart.value]; // Trigger reactivity update
 }
 
-export function addToCart(festivalId: number) {
+export function addToCartBackup(festivalId: number) {
     const existingItem = cart.value.find(item => item.festival_id === festivalId);
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
         cart.value.push({ festival_id: festivalId, quantity: 1 });
+    }
+    localStorage.setItem('cart', JSON.stringify(cart.value));
+    cart.value = [...cart.value]; // Trigger reactivity update
+}
+
+export function addToCart(festivalId: number, festivalName: string, festivalCost: number) {
+    const existingItem = cart.value.find(item => item.festival_id === festivalId);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.value.push({ festival_id: festivalId, festival_name: festivalName, festival_cost: festivalCost, quantity: 1 });
     }
     localStorage.setItem('cart', JSON.stringify(cart.value));
     cart.value = [...cart.value]; // Trigger reactivity update
@@ -40,4 +51,7 @@ export function useCart() {
     };
 }
 
+// export function layerOneOutput(totalAmount: number, items: Array) {
+//     const storedData = JSON.parse(totalAmount, items)
+// }
 

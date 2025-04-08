@@ -7,7 +7,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use Inertia\Inertia;
 
-class CartController 
+class CartController
 {
     public function getCartItems(Request $request)
     {
@@ -51,4 +51,14 @@ class CartController
 
         return response()->json(['message' => 'Cart item updated successfully']);
     }
+
+    public function index()
+    {
+        return Inertia::render('Cart/Cart'); 
+    }
+
+    public function paymentCredentialsRender() {
+        return Inertia::render('Cart/PaymentCredentials');
+    }
+
 }
