@@ -5,9 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Wishlist;
 use App\Models\WishlistItem;
+use Inertia\Inertia;
+use Inertia\Controller;
 
-class WishlistController 
+class WishlistController extends Controller
 {
+
+    public function index()
+    {
+        return Inertia::render('Wishlist/Wishlist');
+    }
     public function getWishlistItems(Request $request)
     {
         $wishlistItems = WishlistItem::with('festival')->where('wishlist_id', $request->session()->get('wishlist_id'))->get();

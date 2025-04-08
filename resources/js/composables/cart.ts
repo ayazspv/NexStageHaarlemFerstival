@@ -9,10 +9,10 @@ export function fetchCartItems() {
     cart.value = [...cart.value]; // Trigger reactivity update
 }
 
-export async function addToCart(festivalId: number, festivalName: string) {
+/* export async function addToCart(festivalId: number, festivalName: string) {
     
-/*     const page = usePage();
-    const csrfToken = page.props.csrf_token as string || ""; */
+    const page = usePage();
+    const csrfToken = page.props.csrf_token as string || ""; 
 
     const existingItem = cart.value.find(item => item.festival_id === festivalId);
     if (existingItem) {
@@ -23,7 +23,7 @@ export async function addToCart(festivalId: number, festivalName: string) {
     localStorage.setItem('cart', JSON.stringify(cart.value));
     cart.value = [...cart.value]; // Trigger reactivity update
 
-    /* Uncomment this block if you want to send an email when an item is added to the cart
+     
     try {
         const response = await fetch('/api/send-mail', {
             method: 'POST',
@@ -48,8 +48,8 @@ export async function addToCart(festivalId: number, festivalName: string) {
     } catch (error) {
         console.error('Error sending email:', error);
     }
-    */
-}
+    
+} */
 
 export function addToCart(festivalId: number, festivalName: string, festivalCost: number) {
     const existingItem = cart.value.find(item => item.festival_id === festivalId);
@@ -61,7 +61,7 @@ export function addToCart(festivalId: number, festivalName: string, festivalCost
     localStorage.setItem('cart', JSON.stringify(cart.value));
     cart.value = [...cart.value]; // Trigger reactivity update
 
-    /* Uncomment this block if you want to send an email when an item is added to the cart
+    /* 
     try {
         const response = await fetch('/api/send-mail', {
             method: 'POST',
@@ -106,11 +106,6 @@ export function clearCart() {
     localStorage.setItem('cart', JSON.stringify(cart.value)); // Update localStorage
 }
 
-export function checkout() {
-    // Redirect to the checkout page
-   /*  router.visit('/checkout'); */
-}
-
 export function addAllToCart(items: { festival_id: number; name: string; quantity: number }[]) {
     items.forEach(item => {
         const existingItem = cart.value.find(cartItem => cartItem.festival_id === item.festival_id);
@@ -132,7 +127,7 @@ export function useCart() {
         addAllToCart, // Add the new function here
         updateCartItem,
         clearCart,
-        checkout
+        
     };
 }
 

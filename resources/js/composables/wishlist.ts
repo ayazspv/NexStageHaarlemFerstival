@@ -2,15 +2,6 @@ import { ref } from 'vue';
 
 export const wishlist = ref<any[]>([]);
 
-
-// add wishlist page
-// in wishlist page add fucntionality to 
-// remove all items
-// and
-// add all items to cart
-
-
-
 export function fetchWishlistItems() {
     const storedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
     wishlist.value = storedWishlist;
@@ -31,12 +22,19 @@ export function removeFromWishlist(festivalId: number) {
     wishlist.value = [...wishlist.value]; // Trigger reactivity update
 }
 
+export function clearWishlist() {
+    wishlist.value = []; // Clear the wishlist
+    localStorage.removeItem('wishlist'); // Remove wishlist from localStorage
+    wishlist.value = [...wishlist.value]; // Trigger reactivity update
+}
+
 export function useWishlist() {
     return {
         wishlist,
         fetchWishlistItems,
         addToWishlist,
-        removeFromWishlist
+        removeFromWishlist,
+        clearWishlist 
     };
 }
 

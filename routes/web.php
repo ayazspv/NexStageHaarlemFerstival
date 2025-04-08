@@ -20,6 +20,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MailController;
+use App\Http\Controllers\WishlistController;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -83,6 +84,12 @@ Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->name('festivals.show');
 
 Route::post('/api/send-mail', [MailController::class, 'sendMail']);
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart');
+
+Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
+
+
 
 /*if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();

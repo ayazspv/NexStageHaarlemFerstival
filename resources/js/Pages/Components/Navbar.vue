@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import { cart, fetchCartItems, updateCartItem, clearCart, checkout } from '../../composables/cart';
+import { cart, fetchCartItems, updateCartItem, clearCart } from '../../composables/cart';
 import { wishlist, fetchWishlistItems, addToWishlist, removeFromWishlist } from '../../composables/wishlist';
 
 // Define TypeScript interface for User
 interface User {
     id: number;
-    firstName: string;
+    firstName: string;  
     lastName: string;
     email: string;
     role: string;
@@ -99,7 +99,7 @@ fetchWishlistItems();
     <div v-if="isCartMenuVisible" class="cart-popup-menu">
         <div v-if="cart.length">
             <div v-for="item in cart" :key="item.festival_id" class="cart-item">
-                <span>{{ item.name }}</span> <!-- Changed from Festival ID to Festival Name -->
+                <span>{{ item.festival_name }}</span> <!-- Changed from Festival ID to Festival Name -->
                 <span>Quantity: {{ item.quantity }}</span>
                 <button @click="updateCartItem(item.festival_id, item.quantity - 1)">-</button>
                 <button @click="updateCartItem(item.festival_id, item.quantity + 1)">+</button>
@@ -107,7 +107,7 @@ fetchWishlistItems();
             <!-- Add Remove Items and Checkout buttons -->
             <div class="cart-actions">
                 <button class="btn btn-danger" @click="clearCart()">Remove Items</button>
-                <button class="btn btn-primary" @click="checkout()">Checkout</button>
+               <a href="/cart" class="btn btn-primary">Checkout</a>
             </div>
         </div>
         <div v-else class="text-center">
