@@ -2,6 +2,7 @@
 import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
 import { ref } from 'vue';
 
+// Defines structure of the dashboard statistics
 interface DashboardProps {
     stats: {
         events: {

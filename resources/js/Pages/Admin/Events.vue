@@ -11,17 +11,16 @@ const props = defineProps<{
 const page = usePage();
 const csrfToken = page.props.csrf_token as string || "";
 
-// Remove showCreateForm ref since we won't need it anymore
+// Removed showCreateForm
 const showEditForm = ref(false);
 const editingFestival = ref<Festival | null>(null);
 
-// Removed image field from form
 const form = useForm({
     name: '',
     isGame: false,
     ticket_amount: 0,
     time_slot: '',
-    _method: 'PUT' // For method spoofing
+    _method: 'PUT'
 });
 
 const resetForm = () => {
@@ -31,9 +30,10 @@ const resetForm = () => {
     editingFestival.value = null;
 };
 
+// Handle form submission
 const submit = () => {
     if (showEditForm.value && editingFestival.value) {
-        // Edit mode
+        // FormData object for the submission
         const formData = new FormData();
         formData.append('_method', 'PUT');
         formData.append('name', form.name);
@@ -57,6 +57,7 @@ const submit = () => {
     }
 };
 
+// Set up editing an existing festival
 const editFestival = (festival: Festival) => {
     editingFestival.value = festival;
     form.name = festival.name;
@@ -85,12 +86,10 @@ const manageEvent = (festivalId: number) => {
 <template>
     <AdminAppLayout :title="'Manage Events'">
         <div class="container-fluid p-4">
-            <!-- Header - Removed the Add New Festival button -->
             <div class="mb-4">
                 <h2>Manage Events</h2>
             </div>
 
-            <!-- Edit Form - Removed the condition for showCreateForm -->
             <div v-if="showEditForm" class="card mb-4">
                 <div class="card-body">
                     <h3 class="card-title mb-4">Edit Festival</h3>

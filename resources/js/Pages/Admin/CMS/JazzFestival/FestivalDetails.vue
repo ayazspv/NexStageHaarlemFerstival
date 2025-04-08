@@ -21,14 +21,14 @@ const festivalForm = reactive({
     image: null as File | null,
 });
 
-// Initialize festival description editor
+// Initialize (Tiptap) festival description editor
 const festivalDescriptionEditor = new Editor({
-    content: props.festival.description || '<p>Enter festival description...</p>',
-    extensions: [StarterKit],
+    content: props.festival.description || '<p>Enter festival description...</p>', // Initial content
+    extensions: [StarterKit], //very basic editing features
     onUpdate: ({ editor }) => {
         festivalForm.description = editor.getHTML();
         console.log("Editor content updated:", festivalForm.description);
-    },
+    }, //not working (I removed the preview of how it would look like)
 });
 
 // Handle festival image upload
@@ -55,6 +55,7 @@ const saveFestivalDetails = () => {
     formData.append('description', festivalForm.description);
     formData.append('_method', 'PUT');
     
+    // Only include image if there is one selected
     if (festivalForm.image) {
         formData.append('image', festivalForm.image);
     }
@@ -63,11 +64,11 @@ const saveFestivalDetails = () => {
     Inertia.post(`/admin/festivals/${props.festival.id}/details`, formData, {
         headers: { 'X-CSRF-TOKEN': csrfToken },
         onSuccess: () => {
-            alert('Festival details updated successfully!');
+            alert('Festival details updated successfully!'); //notify user
             // Reload the page to show updated data
             window.location.reload();
         },
-        onError: (errors) => {
+        onError: (errors) => { // Error handling
             console.error('Error updating festival details:', errors);
             alert('Failed to update festival details. Please check console for errors.');
         }

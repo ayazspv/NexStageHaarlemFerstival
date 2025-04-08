@@ -76,7 +76,7 @@ const formatPrice = (price) => {
                             <div class="artist-details-full-info" v-html="band.band_details"></div>
                             
                             <div class="artist-details-actions">
-                                <!-- Book Tickets button has been removed -->
+                                <!-- Wishlist button atm -->
                                 <button class="btn btn-primary" @click.prevent="addToWishlist(band.id)">
                                     <i class="fas fa-heart me-1"></i> Add to Wishlist
                                 </button>

@@ -9,16 +9,17 @@ const props = defineProps<{
     festivals: Festival[];
 }>();
 
+// URL-friendly
 const parseToUrl = (title: string) => {
     return title.trim().toLowerCase().replace(/\s+/g, '-');
 };
 
-// Helper function to find festival by name
+// Helper function to find festival by name (not in use)
 const findFestival = (name: string) => {
     return props.festivals.find((f: Festival) => f.name === name);
 };
 
-// Festival Type Classes by type ID instead of name
+// Festival Type Classes by type ID
 const festivalTypeClassMap = {
     0: 'jazz-event',     // Jazz
     1: 'yummy-event',    // Food
@@ -26,7 +27,7 @@ const festivalTypeClassMap = {
     3: 'teylers-event'   // Night@Teylers
 };
 
-// Schedule data using dynamic festival information
+// Schedule data
 const days = ['24', '25', '26', '27'];
 
 const scheduleEvents = computed(() => {
@@ -77,7 +78,7 @@ const festivalLocations = [
 
 // Map initialization function
 const initMap = () => {
-    // Check if we're in the browser environment
+    // Check if the map container exists
     if (typeof window === 'undefined' || !document.getElementById('festival-map')) return;
     
     // Create map centered on Haarlem
@@ -110,7 +111,7 @@ const initMap = () => {
         // Create custom icon
         const icon = L.divIcon({
             className: 'custom-map-marker',
-            html: `<div style="background-color: ${iconColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+            html: `<div style="background-color: ${iconColor}; width: 21px; height: 17px; border-radius: 50%; border: 2px solid white;"></div>`,
             iconSize: [16, 16],
             iconAnchor: [8, 8]
         });
@@ -127,7 +128,7 @@ const initMap = () => {
 
 // Call the map initialization after component is mounted
 onMounted(() => {
-    // Timeout to ensure the DOM is ready
+    // Timeout to ensure its ready
     setTimeout(initMap, 100);
 });
 

@@ -3,6 +3,7 @@ import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
 import { useForm, router, usePage } from '@inertiajs/vue3';
 import { ref } from "vue";
 
+// Defines a User interface for type checking
 interface User {
     id: number;
     firstName: string;
@@ -17,10 +18,11 @@ defineProps<{
     users: User[];
 }>();
 
-const showEditForm = ref(false);
-const showCreateForm = ref(false); 
-const editingUser = ref<User | null>(null);
+const showEditForm = ref(false); // Defines a User interface for type checking
+const showCreateForm = ref(false); // Defines a User interface for type checking
+const editingUser = ref<User | null>(null); // Defines a User interface for type checking
 
+// Creates a reactive form
 const form = useForm({
     firstName: '',
     lastName: '',
@@ -43,6 +45,7 @@ const editUser = (user: User) => {
     showEditForm.value = true;
 };
 
+// Reset an hide
 const resetForm = () => {
     form.reset();
     showEditForm.value = false;
