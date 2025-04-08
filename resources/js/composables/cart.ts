@@ -24,31 +24,7 @@ export async function addToCart(festivalId: number, festivalName: string, festiv
     const csrfToken = page.props.csrf_token as string || ""; 
 
     
-/*     try {
-        const response = await fetch('/api/send-mail', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            body: JSON.stringify({
-                to: 'aron.lakatos123@gmail.com',
-                subject: 'New Item Added to Cart',
-                body: `An item with ID ${festivalId} and name ${festivalName} has been added to your cart.`,
-                altBody: `An item with ID ${festivalId} and name ${festivalName} has been added to your cart.`,
-                qrCodesNumber : ["1234"]
-            }),
-        });
 
-        if (!response.ok) {
-            throw new Error(`Failed to send email: ${response.statusText} (${response.body})`);
-        }
-
-        const result = await response.json();
-        console.log('Email sent successfully:', result.message);
-    } catch (error) {
-        console.error('Error sending email:', error);
-    } */
    
 }
 
