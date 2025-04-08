@@ -31,6 +31,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 use App\Http\Controllers\CartController;
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
+Route::post('/paymentCredentials', [CartController::class, 'paymentCredentials'])->name('paymentCredentials');
 Route::get('/paymentCredentials', [CartController::class, 'paymentCredentialsRender'])->name('paymentCredentials');
 
 

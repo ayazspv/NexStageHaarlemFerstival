@@ -55,3 +55,8 @@ export function useCart() {
 //     const storedData = JSON.parse(totalAmount, items)
 // }
 
+
+export function addOutputLayer1() {
+    
+}
+
