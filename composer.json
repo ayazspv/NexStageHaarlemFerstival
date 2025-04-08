@@ -12,6 +12,7 @@
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "3.1.59",
         "phpmailer/phpmailer": "^6.9",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "tightenco/ziggy": "^2.5"
     },
     "require-dev": {

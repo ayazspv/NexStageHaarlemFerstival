@@ -50,8 +50,11 @@ class LoginController
             if($user->role == 'admin') {
                 return redirect()->intended('/admin/dashboard');
             }
-            else {
+            if ($user->role == 'user') {
                 return redirect()->intended('/');
+            }
+            if ($user->role == 'employee') {
+                return redirect()->intended('/qr-reader');
             }
         }
         else {

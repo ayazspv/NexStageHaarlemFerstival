@@ -98,6 +98,7 @@ const prepareDataForNextLayer = () => {
         festivalName: item.festival_name,
         festivalQuantity: item.quantity,
         festivalCost: item.festival_cost,
+        qrCode: `${item.festival_id}-${Math.floor(100000 + Math.random() * 900000)}`,
     }));
 
     return {

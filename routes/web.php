@@ -89,6 +89,10 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart');
 
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
 
+Route::get('/qr-reader', function () {
+    return Inertia::render('QrReader/QrReader');
+})->name('qr-reader');
+
 
 
 /*if (Schema::hasTable('festivals')) {
