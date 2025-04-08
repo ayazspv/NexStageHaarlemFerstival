@@ -2,8 +2,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Ticket; 
-
+use App\Models\Ticket;
+use Inertia\Controller;
 class QrReaderController extends Controller
 {
     

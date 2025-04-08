@@ -6,7 +6,9 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
-use SimpleSoftwareIO\QrCode\Facades\QrCode; 
+use chillerlan\QRCode\{QRCode, QROptions};
+use chillerlan\QRCode\Data\QRMatrix;
+use chillerlan\QRCode\Output\QROutputInterface;
 
 require base_path('vendor/autoload.php'); // Ensure the correct path to autoload.php
 
@@ -22,6 +24,7 @@ class MailController
             'altBody' => 'nullable|string',
             'qrCodesNumber' => 'required|array', // Ensure qrCodesNumber is an array
         ]);
+
 
         // Initialize PHPMailer
         $mail = new PHPMailer(true);
@@ -46,17 +49,38 @@ class MailController
             $mail->Body = $validated['body'];
             $mail->AltBody = $validated['altBody'] ?? '';
 
+            $options = new QROptions;
+
+            $options->outputType       = QROutputInterface::FPDF;
+            $options->scale            = 5;
+            $options->fpdfMeasureUnit  = 'mm'; // pt, mm, cm, in
+            $options->bgColor          = [222, 222, 222]; // [R, G, B]
+            $options->drawLightModules = false;
+            $options->moduleValues     = [
+                QRMatrix::M_FINDER_DARK    => [0, 63, 255],    // dark (true)
+                QRMatrix::M_FINDER_DOT     => [0, 63, 255],    // finder dot, dark (true)
+                QRMatrix::M_FINDER         => [255, 255, 255], // light (false)
+                QRMatrix::M_ALIGNMENT_DARK => [255, 0, 255],
+                QRMatrix::M_ALIGNMENT      => [255, 255, 255],
+                QRMatrix::M_DATA_DARK      => [0, 0, 0],
+                QRMatrix::M_DATA           => [255, 255, 255],
+            ];
+
             // Generate QR codes and attach them to the email
             foreach ($validated['qrCodesNumber'] as $index => $qrCodeNumber) {
-                // Generate the QR code as a PNG image
-                $qrCodeImage = QrCode::format('png')->size(200)->generate($qrCodeNumber);
+                try {
+                    // Generate the QR code as a PDF image
+                    $qrcode = (new QRCode($options))->render($qrCodeNumber);
 
-                // Save the QR code to a temporary file
-                $tempFilePath = sys_get_temp_dir() . "/qr_code_{$index}.png";
-                file_put_contents($tempFilePath, $qrCodeImage);
+                    // Save the QR code to a temporary file
+                    $tempFilePath = sys_get_temp_dir() . "/qr_code_{$index}.pdf";
+                    file_put_contents($tempFilePath, $qrcode);
 
-                // Attach the QR code image to the email
-                $mail->addAttachment($tempFilePath, "QR_Code_{$qrCodeNumber}.png");
+                    // Attach the QR code image to the email
+                    $mail->addAttachment($tempFilePath, "QR_Code_{$qrCodeNumber}.pdf");
+                } catch (\Exception $e) {
+                    Log::error("Error generating QR code for {$qrCodeNumber}: {$e->getMessage()}");
+                }
             }
 
             // Send the email

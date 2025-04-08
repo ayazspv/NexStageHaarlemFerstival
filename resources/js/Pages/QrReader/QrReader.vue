@@ -42,6 +42,9 @@ const showModal = ref(false);
 const isValid = ref(false);
 
 async function onDecode(data: string) {
+    // Prevent processing the same QR code multiple times
+    if (decodedData.value === data) return;
+
     decodedData.value = data; // Store the decoded QR code data
     console.log('Decoded QR Code:', data);
 
@@ -77,6 +80,7 @@ function onInit(promise: Promise<void>) {
 
 function closeModal() {
     showModal.value = false; // Close the modal
+    decodedData.value = null; // Reset decoded data to allow scanning for new QR codes
 }
 </script>
 
