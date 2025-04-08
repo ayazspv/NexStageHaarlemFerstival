@@ -32,7 +32,6 @@ const sortedBandsByTime = computed(() => {
     });
 });
 
-// Use the band details composable
 const { selectedBand, showBandDetails, closeBandDetails } = useBandDetails();
 </script>
 

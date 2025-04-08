@@ -24,6 +24,7 @@ const formatTime = (dateString: string) => {
 </script>
 
 <template>
+    <!-- Schedule section -->
     <section class="jazz-schedule">
         <div class="container">
             <h2 class="text-center mb-4">Performance Schedule</h2>
