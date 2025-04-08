@@ -66,6 +66,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.festivals.game.update');
     Route::post('/festivals/{festival}/game', [GameCMSController::class, 'storeGame'])
         ->name('admin.festivals.game.store');
+    Route::delete('/festivals/{gameId}/game', [GameCMSController::class, 'deleteGame']);
 });
 
 Route::get('/api/styles', [StyleController::class, 'index'])
