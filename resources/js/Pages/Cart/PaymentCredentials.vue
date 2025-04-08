@@ -40,7 +40,7 @@ export default {
     },
     methods: {
         generateJson() {
-            // Generate a random cartId (you can replace this with any ID generation method you prefer)
+            // Generate a random cartId 
             const cartId = this.generateRandomId();
 
 
@@ -55,18 +55,14 @@ export default {
                 fail_url: '/failed'
             };
 
-            // Update the jsonOutput data to show the generated JSON
             this.jsonOutput = JSON.stringify(jsonData, null, 2);
         },
         generateRandomId() {
-            // Generate a random ID (you can customize the format of the ID)
             return 'cart_' + Math.random().toString(36).substr(2, 9);
         },
         downloadJson() {
-            // Create a Blob object with JSON data
             const blob = new Blob([JSON.stringify(this.jsonOutput)], { type: 'application/json' });
 
-            // Create a link element for downloading the file
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = 'cart_data.json';
@@ -75,9 +71,15 @@ export default {
     }
 };
 
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+const cartData = page.props.cartData;
+
+console.log("Received Data:", cartData);
+
 
 </script>
 
 <style scoped>
-/* Add custom styles here if needed */
 </style>

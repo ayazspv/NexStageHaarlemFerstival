@@ -50,7 +50,7 @@
                 <strong>Total To Pay: </strong> <span> €{{ totalCost }}</span>
             </div>
             <div class="text-center">
-                <button class="btn btn-success btn-lg" @click="">Proceed to Checkout</button>
+                <button class="btn btn-success btn-lg" @click="goToNextPage()">Proceed to Checkout</button>
             </div>
         </div>
     </div>
@@ -63,7 +63,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { cart, fetchCartItems, updateCartItem } from '../../composables/cart';
+import { Inertia } from '@inertiajs/inertia';
 import { removeFromWishlist } from '../../composables/wishlist';
+
 
 onMounted(() => {
     fetchCartItems();
@@ -110,10 +112,44 @@ const prepareDataForNextLayer = () => {
 const passToLayer2 = (data: any) => {
     console.log("Data passed to Layer 2:", data);
 };
+
+import { useForm, router, usePage } from "@inertiajs/vue3";
+
+const page = usePage();
+
+const csrfToken = page.props.csrf_token as string || "";
+
+const dataToSend = useForm(prepareDataForNextLayer());
+
+function passToNextLayer() {
+    Inertia.visit
+    dataToSend.get("/paymentCredentials", {
+        headers: {
+            "X-CSRF-TOKEN": csrfToken,
+        }
+    });
+}
+
+function goToNextPage() {
+  const data = prepareDataForNextLayer();
+
+  if (Object.keys(data).length === 0) {
+    console.error('No valid data to send');
+    return; // Prevent sending empty data
+  }
+
+  router.post('/paymentCredentials', data, {
+    headers: {
+      'X-CSRF-TOKEN': csrfToken, // CSRF token as a header
+    }
+  });
+}
+
+
+
 </script>
 
 
 
 <style scoped>
-/* Optional custom styles if needed */
 </style>
