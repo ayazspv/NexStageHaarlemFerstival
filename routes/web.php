@@ -21,7 +21,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\WishlistController;
-
+use App\Http\Controllers\EventController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -32,6 +32,7 @@ Route::get('/admin/', function () {
 Route::get('/login', [LoginController::class, 'show'])->name('loadLogin');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
 use App\Http\Controllers\CartController;
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
@@ -96,6 +97,19 @@ Route::get('/qr-reader', function () {
 
 
 
+
+Route::post('/api/fetch-ticket-details', [\App\Http\Controllers\QrReaderController::class, 'fetchTicketDetails']);
+
+Route::get('/events', [EventController::class, 'index']);
+Route::get('/api/events/jazz', [EventController::class, 'getJazzEvent']);
+Route::get('/api/events/food', [EventController::class, 'getFoodEvent']);
+Route::get('/api/events/dance', [EventController::class, 'getDanceEvent']);
+Route::get('/api/events/history', [EventController::class, 'getHistoryEvent']);
+Route::post('/api/events', [EventController::class, 'store']);
+Route::get('/api/events/{id}', [EventController::class, 'show']);
+Route::put('/api/events/{id}', [EventController::class, 'update']);
+Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
+
 /*if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();
 
@@ -108,5 +122,3 @@ Route::get('/qr-reader', function () {
             ->name('festivals.show');
     }
 }*/
-
-

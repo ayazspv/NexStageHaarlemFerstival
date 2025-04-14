@@ -176,14 +176,9 @@ fetchWishlistItems();
                                     <div class="event-time">{{ event.time }}</div>
                                     <div class="event-name">{{ event.name }}</div>
                                     <div class="event-actions">
-                                       <button class="btn btn-sm btn-primary me-2" 
-                                               @click.prevent="addToCart(event.eventId, event.name, 10)">
-                                            <i class="fas fa-ticket-alt"></i> Book
-                                        </button>
-                                        <button class="btn btn-sm btn-warning" 
-                                                @click.prevent="addToWishlist(event.eventId, event.name)">
-                                            <i class="fas fa-heart"></i> Wishlist
-                                        </button>
+                                       <a :href="`/festivals/${parseToUrl(event.name)}`" class="btn btn-sm btn-primary me-2">
+                                           <i class="fas fa-ticket-alt"></i> Book
+                                       </a>
                                     </div>
                                 </div>
                             </div>
@@ -226,12 +221,6 @@ fetchWishlistItems();
                                 <a :href="`/festivals/${parseToUrl(festival.name)}`" class="btn btn-outline-primary me-2">
                                     <i class="fas fa-info-circle me-1"></i> View Details
                                 </a>
-                               <button class="btn btn-outline-secondary" @click.prevent="addToCart(festival.id, festival.name, 20)">
-                                    <i class="fas fa-heart"></i> Add to Cart
-                             </button>
-                                <button class="btn btn-outline-warning" @click.prevent="addToWishlist(festival.id, festival.name)">
-                                    <i class="fas fa-heart"></i> Add to Wishlist
-                                </button>
                             </div>
                             
                             <!-- Availability Badge -->
