@@ -12,10 +12,10 @@ class Ticket extends Model
         'qr_code',
     ];
 
-    // Define the relationship with the Event model
+    // Define the relationship with the FestivalEvent model
     public function event()
     {
-        return $this->belongsTo(Event::class, 'event_id');
+        return $this->belongsTo(FestivalEvent::class, 'event_id'); // Use FestivalEvent
     }
 
     public function order()

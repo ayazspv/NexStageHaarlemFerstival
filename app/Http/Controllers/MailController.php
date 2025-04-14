@@ -55,7 +55,7 @@ class MailController
 
                     // 1. Generate QR Code
                     $qrResult = Builder::create()
-                        ->data('https://example.com') // Change this to your target URL or text
+                        ->data($qrCodeNumber) // Change this to your target URL or text
                         ->size(300)
                         ->margin(10)
                         ->build();
