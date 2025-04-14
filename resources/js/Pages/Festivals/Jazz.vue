@@ -113,7 +113,7 @@ const closeBandDetails = () => {
                                         Details
                                     </button>
                                     <button class="btn btn-sm btn-primary" 
-                                            @click.prevent="addToCart(band.id)">
+                                            @click.prevent="addToCart(band.id, band.band_name, band.ticket_price)">
                                         <i class="fas fa-ticket-alt"></i> Book
                                     </button>
                                 </div>
@@ -160,12 +160,15 @@ const closeBandDetails = () => {
                             </div>
                             
                             <!-- Action Buttons -->
-                            <div class="festival-actions">
+                            <div class="festival-actions d-flex align-items-center">
                                 <button @click="showBandDetails(band)" class="btn btn-outline-primary me-2">
                                     <i class="fas fa-info-circle me-1"></i> View Details
                                 </button>
-                                <button class="btn btn-outline-secondary" @click.prevent="addToWishlist(band.id)">
+                                <button class="btn btn-outline-secondary me-2" @click.prevent="addToWishlist(band.id, band.band_name)">
                                     <i class="fas fa-heart"></i> Add to Wishlist
+                                </button>
+                                <button class="btn btn-outline-success" @click.prevent="addToCart(band.id, band.band_name, band.ticket_price, band.performance_datetime)">
+                                    <i class="fas fa-ticket-alt"></i> Add to Cart
                                 </button>
                             </div>
                             <div class="price-badge">€{{ typeof band.ticket_price === 'number' ? band.ticket_price.toFixed(2) : Number(band.ticket_price).toFixed(2) }}</div>
