@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
+require_once base_path('vendor/autoload.php');
+
+use Endroid\QrCode\Builder\Builder;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
-use chillerlan\QRCode\{QRCode, QROptions};
-use chillerlan\QRCode\Data\QRMatrix;
-use chillerlan\QRCode\Output\QROutputInterface;
 
-require base_path('vendor/autoload.php'); // Ensure the correct path to autoload.php
 
 class MailController
 {
     public function sendMail(Request $request)
     {
-        // Validate the incoming request
+             // Validate the incoming request
         $validated = $request->validate([
             'to' => 'required|email',
             'subject' => 'required|string|max:255',
@@ -24,7 +23,6 @@ class MailController
             'altBody' => 'nullable|string',
             'qrCodesNumber' => 'required|array', // Ensure qrCodesNumber is an array
         ]);
-
 
         // Initialize PHPMailer
         $mail = new PHPMailer(true);
@@ -49,35 +47,27 @@ class MailController
             $mail->Body = $validated['body'];
             $mail->AltBody = $validated['altBody'] ?? '';
 
-            $options = new QROptions;
-
-            $options->outputType       = QROutputInterface::FPDF;
-            $options->scale            = 5;
-            $options->fpdfMeasureUnit  = 'mm'; // pt, mm, cm, in
-            $options->bgColor          = [222, 222, 222]; // [R, G, B]
-            $options->drawLightModules = false;
-            $options->moduleValues     = [
-                QRMatrix::M_FINDER_DARK    => [0, 63, 255],    // dark (true)
-                QRMatrix::M_FINDER_DOT     => [0, 63, 255],    // finder dot, dark (true)
-                QRMatrix::M_FINDER         => [255, 255, 255], // light (false)
-                QRMatrix::M_ALIGNMENT_DARK => [255, 0, 255],
-                QRMatrix::M_ALIGNMENT      => [255, 255, 255],
-                QRMatrix::M_DATA_DARK      => [0, 0, 0],
-                QRMatrix::M_DATA           => [255, 255, 255],
-            ];
+            
 
             // Generate QR codes and attach them to the email
             foreach ($validated['qrCodesNumber'] as $index => $qrCodeNumber) {
                 try {
-                    // Generate the QR code as a PDF image
-                    $qrcode = (new QRCode($options))->render($qrCodeNumber);
 
-                    // Save the QR code to a temporary file
-                    $tempFilePath = sys_get_temp_dir() . "/qr_code_{$index}.pdf";
-                    file_put_contents($tempFilePath, $qrcode);
+                    // 1. Generate QR Code
+                    $qrResult = Builder::create()
+                        ->data('https://example.com') // Change this to your target URL or text
+                        ->size(300)
+                        ->margin(10)
+                        ->build();
+
+                    // Save QR image to temp file
+                    $qrPath = sys_get_temp_dir() . '/qrcode.png';
+                    file_put_contents($qrPath, $qrResult->getString());
+
+                   
 
                     // Attach the QR code image to the email
-                    $mail->addAttachment($tempFilePath, "QR_Code_{$qrCodeNumber}.pdf");
+                    $mail->addAttachment($qrPath, "QR_Code_{$qrCodeNumber}.png");
                 } catch (\Exception $e) {
                     Log::error("Error generating QR code for {$qrCodeNumber}: {$e->getMessage()}");
                 }
@@ -93,5 +83,6 @@ class MailController
             Log::error("Mail error: {$e->getMessage()}");
             return response()->json(['error' => 'Failed to send email: ' . $e->getMessage()], 500);
         }
+      
     }
 }
