@@ -32,6 +32,10 @@ function login() {
     });
 }
 
+function redirectToSignup() {
+    router.visit("/signup");
+}
+
 function handleForgotPassword() {
     successMessage.value = null;
     errorMessage.value = null;
@@ -128,6 +132,10 @@ function handleForgotPassword() {
                     <button @click="login" class="btn btn-primary mt-3">
                         Login
                     </button>
+
+                    <button class="btn btn-outline-secondary mt-3" @click="redirectToSignup">
+                            Register
+                        </button>
 
                     <small class="mt-2">
                         <a href="#" @click.prevent="isForgotPassword = true">Forgot your password?</a>

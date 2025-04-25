@@ -21,7 +21,8 @@ use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\WishlistController;
-
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\SignupController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -32,7 +33,8 @@ Route::get('/admin/', function () {
 Route::get('/login', [LoginController::class, 'show'])->name('loadLogin');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-use App\Http\Controllers\CartController;
+Route::get('/signup', [SignupController::class, 'show'])->name('loadSignup');
+Route::post('/signup', [SignupController::class, 'signup'])->name('signup');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
 Route::post('/paymentCredentials', [CartController::class, 'paymentCredentials'])->name('paymentCredentials');
