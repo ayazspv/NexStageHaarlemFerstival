@@ -10,10 +10,17 @@ const isForgotPassword = ref(false); // Toggle for forgot password flow
 const step = ref(1); // Current step in forgot password flow
 const successMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
+const recaptchaSiteKey = "6LelsCMrAAAAAELpl5GinEOSHXQ5gNqYWTMKPDIc";
+
+function getRecaptchaToken(): string | null {
+    const response = (window as any).grecaptcha.getResponse();
+    return response;
+}
 
 const loginForm = useForm({
     email: "",
     password: "",
+    recaptcha: "",
 });
 
 const forgotPasswordForm = useForm({
@@ -24,11 +31,31 @@ const forgotPasswordForm = useForm({
 });
 
 
-function login() {
-    loginForm.post("/admin/login", {
+async function login() {
+    const token = getRecaptchaToken();
+
+    if (!token) {
+        errorMessage.value = "Please complete the reCAPTCHA.";
+        return;
+    }
+
+    loginForm.recaptcha = token;
+
+    loginForm.post("/login", {
         headers: {
             "X-CSRF-TOKEN": csrfToken,
-        }
+        },
+        onSuccess: () => {
+            successMessage.value = "Registration successful!";
+            errorMessage.value = null;
+            loginForm.reset();
+            (window as any).grecaptcha.reset();
+        },
+        onError: (errors) => {
+            errorMessage.value = Object.values(errors).flat().join(", ");
+            successMessage.value = null;
+            (window as any).grecaptcha.reset();
+        },
     });
 }
 
@@ -39,7 +66,7 @@ function handleForgotPassword() {
     if (step.value === 1) {
         // Step 1: Request reset email
         try {
-             forgotPasswordForm.post("/admin/password/reset/request", {
+            forgotPasswordForm.post("/admin/password/reset/request", {
                 onSuccess: () => {
                     step.value = 2;
                     successMessage.value = "A 6-digit PIN has been sent to your email.";
@@ -71,7 +98,7 @@ function handleForgotPassword() {
     } else if (step.value === 3) {
         // Step 3: Reset password
         try {
-             forgotPasswordForm.post("/admin/password/reset", {
+            forgotPasswordForm.post("/admin/password/reset", {
                 onSuccess: () => {
                     successMessage.value = "Password reset successfully. Redirecting to login...";
                     setTimeout(() => {
@@ -107,44 +134,44 @@ function handleForgotPassword() {
 
                 <!-- Login Form -->
                 <div v-if="!isForgotPassword" class="d-flex flex-column">
-                    <label for="email" class="form-label">Email</label>
-                    <input
-                        id="email"
-                        v-model="loginForm.email"
-                        type="text"
-                        class="form-control"
-                        placeholder="Enter your email"
-                    />
 
-                    <label for="password" class="form-label mt-3">Password</label>
-                    <input
-                        id="password"
-                        v-model="loginForm.password"
-                        type="password"
-                        class="form-control"
-                        placeholder="Enter your password"
-                    />
+                    <form @submit.prevent="login" class="d-flex flex-column">
 
-                    <button @click="login" class="btn btn-primary mt-3">
-                        Login
-                    </button>
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email</label>
+                            <input id="email" v-model="loginForm.email" type="text" class="form-control"
+                                placeholder="Enter your email" required />
+                        </div>
 
-                    <small class="mt-2">
-                        <a href="#" @click.prevent="isForgotPassword = true">Forgot your password?</a>
-                    </small>
+                        <div class="form-group">
+                            <label for="password" class="form-label mt-3">Password</label>
+                            <input id="password" v-model="loginForm.password" type="password" class="form-control"
+                                placeholder="Enter your password" required />
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <div class="g-recaptcha" :data-sitekey="recaptchaSiteKey"></div>
+                        </div>
+
+                        <button @click="login" class="btn btn-primary mt-3">
+                            Login
+                        </button>
+
+                        <div class="form-group">
+                            <small class="mt-2">
+                                <a href="#" @click.prevent="isForgotPassword = true">Forgot your password?</a>
+                            </small>
+                        </div>
+
+                    </form>
                 </div>
 
                 <!-- Forgot Password Steps -->
                 <div v-if="isForgotPassword">
                     <div v-if="step === 1" class="d-flex flex-column">
                         <label for="forgotEmail" class="form-label">Email</label>
-                        <input
-                            id="forgotEmail"
-                            v-model="forgotPasswordForm.email"
-                            type="email"
-                            class="form-control"
-                            placeholder="Enter your email"
-                        />
+                        <input id="forgotEmail" v-model="forgotPasswordForm.email" type="email" class="form-control"
+                            placeholder="Enter your email" />
                         <button @click="handleForgotPassword" class="btn btn-primary mt-3">
                             Send Reset Email
                         </button>
@@ -152,14 +179,8 @@ function handleForgotPassword() {
 
                     <div v-if="step === 2" class="d-flex flex-column">
                         <label for="token" class="form-label">6-Digit PIN</label>
-                        <input
-                            id="token"
-                            v-model="forgotPasswordForm.token"
-                            type="text"
-                            class="form-control"
-                            maxlength="6"
-                            placeholder="Enter PIN sent to your email"
-                        />
+                        <input id="token" v-model="forgotPasswordForm.token" type="text" class="form-control"
+                            maxlength="6" placeholder="Enter PIN sent to your email" />
                         <button @click="handleForgotPassword" class="btn btn-primary mt-3">
                             Verify PIN
                         </button>
@@ -167,22 +188,12 @@ function handleForgotPassword() {
 
                     <div v-if="step === 3" class="d-flex flex-column">
                         <label for="newPassword" class="form-label">New Password</label>
-                        <input
-                            id="newPassword"
-                            v-model="forgotPasswordForm.password"
-                            type="password"
-                            class="form-control"
-                            placeholder="Enter new password"
-                        />
+                        <input id="newPassword" v-model="forgotPasswordForm.password" type="password"
+                            class="form-control" placeholder="Enter new password" />
 
                         <label for="confirmPassword" class="form-label mt-3">Confirm Password</label>
-                        <input
-                            id="confirmPassword"
-                            v-model="forgotPasswordForm.password_confirmation"
-                            type="password"
-                            class="form-control"
-                            placeholder="Confirm new password"
-                        />
+                        <input id="confirmPassword" v-model="forgotPasswordForm.password_confirmation" type="password"
+                            class="form-control" placeholder="Confirm new password" />
 
                         <button @click="handleForgotPassword" class="btn btn-primary mt-3">
                             Reset Password
@@ -202,15 +213,18 @@ function handleForgotPassword() {
     border-radius: 8px;
     background-color: #ffffff;
 }
+
 .alert {
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
 }
+
 .alert-success {
     color: #155724;
     background-color: #d4edda;
 }
+
 .alert-danger {
     color: #721c24;
     background-color: #f8d7da;
