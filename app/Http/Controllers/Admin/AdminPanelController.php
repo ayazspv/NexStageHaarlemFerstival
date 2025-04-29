@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Festival;
+use App\Models\HomepageContent;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,8 +34,37 @@ class AdminPanelController
             ]
         ];
 
+        $homepageContent = HomepageContent::first();
+
+        error_log($homepageContent);
+
         return Inertia::render('Admin/Home', [
-            'stats' => $stats
+            'stats' => $stats,
+            'homepageContent' => $homepageContent->content ? $homepageContent->content : null,
         ]);
+    }
+
+    public function storeHomepageContent(Request $request)
+    {
+        $request->validate([
+            'content' => 'required|string'
+        ]);
+
+        // Find existing record or create new one
+        $homepageContent = HomepageContent::first();
+
+        if ($homepageContent) {
+            // Update existing content
+            $homepageContent->update([
+                'content' => $request->input('content')
+            ]);
+        } else {
+            // Create new content
+            HomepageContent::create([
+                'content' => $request->input('content')
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Homepage content updated successfully');
     }
 }

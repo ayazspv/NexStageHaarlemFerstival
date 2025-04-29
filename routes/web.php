@@ -42,6 +42,7 @@ Route::get('/paymentCredentials', [CartController::class, 'paymentCredentialsRen
 
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+
     Route::get('/dashboard', [AdminPanelController::class, 'show'])->name('admin.dashboard');
     Route::get('/events', [FestivalController::class, 'index'])->name('admin.events');
 
@@ -67,6 +68,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     //CMS
     Route::get('/festivals/cms/manage/{festivalId}', [FestivalContentController::class, 'show'])->name('admin.festivals.show');
 
+    Route::post('/dashboard/homepage-content', [AdminPanelController::class, 'storeHomepageContent'])
+        ->name('admin.dashboard.homepage-content.store');
+
     Route::prefix('festivals/{festival}')->group(function () {
         Route::resource('jazz-festival', \App\Http\Controllers\Admin\JazzFestivalController::class)
             ->names('admin.jazz-festival');
@@ -86,6 +90,7 @@ Route::get('/api/styles', [StyleController::class, 'index'])
 Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->where('path', '.*')
     ->name('festivals.show');
+Route::get('/api/festivals', [FestivalController::class, 'getFestivals']);
 
 Route::post('/api/send-mail', [MailController::class, 'sendMail']);
 
