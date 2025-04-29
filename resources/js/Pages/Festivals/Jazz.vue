@@ -3,8 +3,6 @@ import AppLayout from "@/Pages/Layouts/AppLayout.vue";
 import { Festival } from "../../../models";
 import { ref, computed } from 'vue';
 import '../../../css/jazz.css';
-
-// Import components
 import FestivalHeader from "./Jazz/components/FestivalHeader.vue";
 import FestivalInfo from "./Jazz/components/FestivalInfo.vue";
 import PerformanceSchedule from "./Jazz/components/PerformanceSchedule.vue";
@@ -34,7 +32,6 @@ const sortedBandsByTime = computed(() => {
     });
 });
 
-// Use the band details composable
 const { selectedBand, showBandDetails, closeBandDetails } = useBandDetails();
 </script>
 

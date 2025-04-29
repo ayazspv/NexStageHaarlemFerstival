@@ -23,17 +23,16 @@ const festivalDays = [24, 25, 26, 27];
 // Artist form data
 const artistForm = reactive({
     band_name: '',
-    start_time: '', // New field for start time
-    end_time: '',   // New field for end time
+    start_time: '',
+    end_time: '',
     performance_day: props.selectedDay,
     ticket_price: 0,
     band_description: '<p>Enter artist description...</p>',
     band_details: '<p>Enter artist details...</p>',
-    band_image: null as File | null,
-    second_image: null as File | null,
+    band_image: null as File | null
 });
 
-// Initialize artist description editors
+// Initialize tiptap editor
 const artistDescriptionEditor = new Editor({
     content: '<p>Enter artist description...</p>',
     extensions: [StarterKit],
@@ -50,18 +49,11 @@ const artistDetailsEditor = new Editor({
     },
 });
 
-// Handle image uploads
+// Handle image upload - Removed handleSecondImage function
 const handleArtistImage = (e: Event) => {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
         artistForm.band_image = input.files[0];
-    }
-};
-
-const handleSecondImage = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-        artistForm.second_image = input.files[0];
     }
 };
 
@@ -76,7 +68,7 @@ const extractTimeFromDateTime = (dateTimeStr: string) => {
 const createPerformanceDateTime = (day: number, timeStr: string) => {
     if (!timeStr) return '';
     // Create a date for July [day], 2024
-    const date = new Date(2024, 6, day); // July is 6 (0-indexed)
+    const date = new Date(2024, 6, day); // July is 6 
     const [hours, minutes] = timeStr.split(':').map(Number);
     date.setHours(hours, minutes);
     return date.toISOString().substring(0, 16); // Format as YYYY-MM-DDTHH:MM
@@ -92,7 +84,7 @@ const submitArtistForm = (e: Event) => {
     artistForm.band_description = artistDescriptionEditor.getHTML();
     artistForm.band_details = artistDetailsEditor.getHTML();
     
-    // Form validation
+    // required fields
     if (!artistForm.band_name || !artistForm.start_time || !artistForm.end_time || 
         !artistForm.band_description || !artistForm.band_details) {
         alert('Please fill in all required fields');
@@ -108,7 +100,8 @@ const submitArtistForm = (e: Event) => {
         artistForm.performance_day, 
         artistForm.start_time
     );
-    
+
+    // FormData for submission
     const formData = new FormData();
     formData.append('band_name', artistForm.band_name);
     formData.append('performance_datetime', performance_datetime);
@@ -119,22 +112,19 @@ const submitArtistForm = (e: Event) => {
     formData.append('band_description', artistForm.band_description);
     formData.append('band_details', artistForm.band_details);
     
-    // Add CSRF token explicitly
     formData.append('_token', csrfToken);
     
+    // Append band image if it exists
     if (artistForm.band_image) {
         console.log("Appending band image");
         formData.append('band_image', artistForm.band_image);
     }
-    
-    if (artistForm.second_image) {
-        console.log("Appending second image");
-        formData.append('second_image', artistForm.second_image);
-    }
-    
+        
+    //submission based on mode (edit or create)
     if (props.mode === 'create') {
         console.log("Creating new artist - sending POST request");
         
+        //new artist
         fetch(`/admin/festivals/${props.festivalId}/jazz-festival`, {
             method: 'POST',
             headers: { 'Accept': 'application/json' },
@@ -144,7 +134,7 @@ const submitArtistForm = (e: Event) => {
         .then(response => {
             if (response.ok) {
                 console.log("Artist added successfully");
-                emit('submitted');
+                emit('submitted'); //success
             } else {
                 return response.json().then(err => {
                     throw new Error(JSON.stringify(err));
@@ -159,6 +149,7 @@ const submitArtistForm = (e: Event) => {
         console.log("Updating existing artist - sending PUT request");
         formData.append('_method', 'PUT');
         
+        //update existing artist
         fetch(`/admin/festivals/${props.festivalId}/jazz-festival/${props.editingBandId}`, {
             method: 'POST',
             headers: { 'Accept': 'application/json' },
@@ -250,24 +241,14 @@ onMounted(() => {
                             <input type="file" class="form-control" id="artistImage" @change="handleArtistImage" accept="image/*">
                             <small class="form-text">This will be displayed on the artist card.</small>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="secondImage" class="form-label">Secondary Image (Optional)</label>
-                            <input type="file" class="form-control" id="secondImage" @change="handleSecondImage" accept="image/*">
-                            <small class="form-text">This will be displayed in the gallery section.</small>
-                        </div>
-                        
-                        <div v-if="props.mode === 'edit' && props.currentBand" class="mb-3">
-                            <label class="form-label">Current Images</label>
-                            <div class="d-flex gap-3">
-                                <div v-if="props.currentBand.band_image" class="text-center">
-                                    <img :src="`/storage/${props.currentBand.band_image}`" alt="Artist Image" style="height: 100px; object-fit: cover;" class="img-thumbnail">
-                                    <div>Main Image</div>
-                                </div>
-                                <div v-if="props.currentBand.second_image" class="text-center">
-                                    <img :src="`/storage/${props.currentBand.second_image}`" alt="Secondary Image" style="height: 100px; object-fit: cover;" class="img-thumbnail">
-                                    <div>Secondary Image</div>
-                                </div>
+                                                
+                        <div v-if="props.mode === 'edit' && props.currentBand && props.currentBand.band_image" class="mb-3">
+                            <label class="form-label">Current Image</label>
+                            <div class="text-center">
+                                <img :src="`/storage/${props.currentBand.band_image}`" 
+                                     alt="Artist Image" 
+                                     style="height: 100px; object-fit: cover;" 
+                                     class="img-thumbnail">
                             </div>
                         </div>
                         
@@ -285,7 +266,7 @@ onMounted(() => {
                             <label class="form-label">Artist Details <span class="text-danger">*</span></label>
                             <div class="border rounded p-2" 
                                 :class="{'border-danger': !artistForm.band_details}"
-                                style="min-height: 200px;">
+                                style="min-height: 150px;">
                                 <EditorContent :editor="artistDetailsEditor" />
                             </div>
                             <small class="form-text">Detailed information displayed when viewing artist details.</small>

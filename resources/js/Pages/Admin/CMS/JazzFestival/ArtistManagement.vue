@@ -22,7 +22,7 @@ const selectedDay = ref(24);
 // Days for the performance
 const festivalDays = [24, 25, 26, 27];
 
-// Filter bands by day for the admin view
+//Organize bands by day for easier filtering
 const bandsByDay = computed(() => {
     const result = {};
     festivalDays.forEach(day => {

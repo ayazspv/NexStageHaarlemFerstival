@@ -22,7 +22,7 @@ export function useBandDetails() {
     closeModalWithAnimation();
     setTimeout(() => {
       selectedBand.value = null;
-    }, 300); // Match this to the animation duration
+    }, 300); // animation duration
   };
 
   return {

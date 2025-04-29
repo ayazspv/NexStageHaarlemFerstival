@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { addToCart } from '@/composables/cart';
 import { addToWishlist } from '@/composables/wishlist';
 
 const props = defineProps<{
@@ -77,10 +76,8 @@ const formatPrice = (price) => {
                             <div class="artist-details-full-info" v-html="band.band_details"></div>
                             
                             <div class="artist-details-actions">
-                                <button class="btn btn-primary" @click.prevent="addToCart(band.id)">
-                                    <i class="fas fa-ticket-alt me-1"></i> Book Tickets
-                                </button>
-                                <button class="btn btn-outline-secondary" @click.prevent="addToWishlist(band.id)">
+                                <!-- Wishlist button atm -->
+                                <button class="btn btn-primary" @click.prevent="addToWishlist(band.id)">
                                     <i class="fas fa-heart me-1"></i> Add to Wishlist
                                 </button>
                             </div>

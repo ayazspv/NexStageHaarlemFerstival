@@ -7,6 +7,7 @@ defineProps<{
 </script>
 
 <template>
+    <!-- Festival info section with image and description -->
     <section class="festival-info py-5">
         <div class="container">
             <div class="row align-items-center">

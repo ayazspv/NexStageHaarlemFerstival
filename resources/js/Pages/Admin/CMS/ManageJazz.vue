@@ -11,7 +11,7 @@ const props = defineProps<{
 }>();
 
 // Active tab - festival details or artists
-const activeTab = ref('artists'); // Default to artist management tab
+const activeTab = ref('artists'); // Default to artist 
 </script>
 
 <template>

@@ -9,16 +9,17 @@ const props = defineProps<{
     festivals: Festival[];
 }>();
 
+// URL-friendly
 const parseToUrl = (title: string) => {
     return title.trim().toLowerCase().replace(/\s+/g, '-');
 };
 
-// Helper function to find festival by name
+// Helper function to find festival by name (not in use)
 const findFestival = (name: string) => {
     return props.festivals.find((f: Festival) => f.name === name);
 };
 
-// Festival Type Classes by type ID instead of name
+// Festival Type Classes by type ID
 const festivalTypeClassMap = {
     0: 'jazz-event',     // Jazz
     1: 'yummy-event',    // Food
@@ -26,7 +27,7 @@ const festivalTypeClassMap = {
     3: 'teylers-event'   // Night@Teylers
 };
 
-// Schedule data using dynamic festival information
+// Schedule data
 const days = ['24', '25', '26', '27'];
 
 const scheduleEvents = computed(() => {
@@ -77,7 +78,7 @@ const festivalLocations = [
 
 // Map initialization function
 const initMap = () => {
-    // Check if we're in the browser environment
+    // Check if the map container exists
     if (typeof window === 'undefined' || !document.getElementById('festival-map')) return;
     
     // Create map centered on Haarlem
@@ -110,7 +111,7 @@ const initMap = () => {
         // Create custom icon
         const icon = L.divIcon({
             className: 'custom-map-marker',
-            html: `<div style="background-color: ${iconColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+            html: `<div style="background-color: ${iconColor}; width: 21px; height: 17px; border-radius: 50%; border: 2px solid white;"></div>`,
             iconSize: [16, 16],
             iconAnchor: [8, 8]
         });
@@ -127,12 +128,18 @@ const initMap = () => {
 
 // Call the map initialization after component is mounted
 onMounted(() => {
-    // Timeout to ensure the DOM is ready
+    // Timeout to ensure its ready
     setTimeout(initMap, 100);
 });
 
 fetchCartItems(); 
 fetchWishlistItems();
+
+// Add this function to strip HTML tags from descriptions
+const stripHtmlTags = (html) => {
+  if (!html) return '';
+  return html.replace(/<\/?[^>]+(>|$)/g, "");
+};
 </script>
 
 <template>
@@ -176,9 +183,13 @@ fetchWishlistItems();
                                     <div class="event-time">{{ event.time }}</div>
                                     <div class="event-name">{{ event.name }}</div>
                                     <div class="event-actions">
-                                        <button class="btn btn-sm btn-primary" 
-                                                @click.prevent="addToCart(event.eventId)">
+                                       <button class="btn btn-sm btn-primary me-2" 
+                                               @click.prevent="addToCart(event.eventId, event.name, 10)">
                                             <i class="fas fa-ticket-alt"></i> Book
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" 
+                                                @click.prevent="addToWishlist(event.eventId, event.name)">
+                                            <i class="fas fa-heart"></i> Wishlist
                                         </button>
                                     </div>
                                 </div>
@@ -209,7 +220,8 @@ fetchWishlistItems();
                         <!-- Festival Content -->
                         <div class="festival-content">
                             <h3 class="festival-title">{{ festival.name }}</h3>
-                            <p class="festival-description">{{ festival.description || 'Join us for this amazing festival experience!' }}</p>
+                            <!-- Apply the stripHtmlTags function to remove HTML tags -->
+                            <p class="festival-description">{{ stripHtmlTags(festival.description) || 'Join us for this amazing festival experience!' }}</p>
                             
                             <!-- Time slot information -->
                             <div class="festival-time-slot mb-3">
@@ -222,8 +234,11 @@ fetchWishlistItems();
                                 <a :href="`/festivals/${parseToUrl(festival.name)}`" class="btn btn-outline-primary me-2">
                                     <i class="fas fa-info-circle me-1"></i> View Details
                                 </a>
-                                <button class="btn btn-outline-secondary" @click.prevent="addToCart(festival.id)">
+                               <button class="btn btn-outline-secondary" @click.prevent="addToCart(festival.id, festival.name, 20)">
                                     <i class="fas fa-heart"></i> Add to Cart
+                             </button>
+                                <button class="btn btn-outline-warning" @click.prevent="addToWishlist(festival.id, festival.name)">
+                                    <i class="fas fa-heart"></i> Add to Wishlist
                                 </button>
                             </div>
                             

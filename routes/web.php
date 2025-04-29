@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MailController;
+use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\SignupController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -29,6 +33,13 @@ Route::get('/admin/', function () {
 Route::get('/login', [LoginController::class, 'show'])->name('loadLogin');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/signup', [SignupController::class, 'show'])->name('loadSignup');
+Route::post('/signup', [SignupController::class, 'signup'])->name('signup');
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart');
+Route::post('/paymentCredentials', [CartController::class, 'paymentCredentials'])->name('paymentCredentials');
+Route::get('/paymentCredentials', [CartController::class, 'paymentCredentialsRender'])->name('paymentCredentials');
+
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminPanelController::class, 'show'])->name('admin.dashboard');
@@ -66,6 +77,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.festivals.game.update');
     Route::post('/festivals/{festival}/game', [GameCMSController::class, 'storeGame'])
         ->name('admin.festivals.game.store');
+    Route::delete('/festivals/{gameId}/game', [GameCMSController::class, 'deleteGame']);
 });
 
 Route::get('/api/styles', [StyleController::class, 'index'])
@@ -74,6 +86,18 @@ Route::get('/api/styles', [StyleController::class, 'index'])
 Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->where('path', '.*')
     ->name('festivals.show');
+
+Route::post('/api/send-mail', [MailController::class, 'sendMail']);
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart');
+
+Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
+
+Route::get('/qr-reader', function () {
+    return Inertia::render('QrReader/QrReader');
+})->name('qr-reader');
+
+
 
 /*if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();
@@ -87,3 +111,5 @@ Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
             ->name('festivals.show');
     }
 }*/
+
+
