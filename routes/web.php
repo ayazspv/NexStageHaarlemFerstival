@@ -71,6 +71,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/dashboard/homepage-content', [AdminPanelController::class, 'storeHomepageContent'])
         ->name('admin.dashboard.homepage-content.store');
 
+    Route::post('/dashboard/hero', [AdminPanelController::class, 'uploadHero'])
+        ->name('admin.dashboard.hero');
+
     Route::prefix('festivals/{festival}')->group(function () {
         Route::resource('jazz-festival', \App\Http\Controllers\Admin\JazzFestivalController::class)
             ->names('admin.jazz-festival');
@@ -102,8 +105,6 @@ Route::get('/qr-reader', function () {
     return Inertia::render('QrReader/QrReader');
 })->name('qr-reader');
 
-
-
 /*if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();
 
@@ -116,5 +117,12 @@ Route::get('/qr-reader', function () {
             ->name('festivals.show');
     }
 }*/
+
+Route::get('/api/homepage/hero-image', function() {
+    $content = \App\Models\HomepageContent::first();
+    return response()->json([
+        'path' => $content ? $content->hero_image_path : null
+    ]);
+});
 
 

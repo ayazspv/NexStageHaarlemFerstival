@@ -11,5 +11,6 @@ class HomepageContent extends Model
 
     protected $fillable = [
         'content',
+        'hero_image_path',
     ];
 }

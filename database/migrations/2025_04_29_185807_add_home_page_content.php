@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('homepage_contents', function (Blueprint $table) {
             $table->id();
             $table->longText('content');
+            $table->string('hero_image_path')->nullable();
             $table->timestamps();
         });
     }

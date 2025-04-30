@@ -3,10 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Festival;
+use App\Models\HomepageContent;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Festival;
 
 class DatabaseSeeder extends Seeder
 {
@@ -49,7 +50,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Food Festival',
-                'description' => 'Curious about the dining options available at Haarlem Culinary 2024? Explore the delectable offerings from a selection of renowned Haarlem restaurants this year. Indulge your palate in a culinary journey with these exquisite dining experiences.',
+                'description' => 'Curious about the dining options available at Haarlem? Explore what renowned Haarlem restaurants from this year has to offer. Indulge your palate in a culinary journey with these exquisite dining experiences.',
                 'image_path' => 'festivals/food.jpg',
                 'festivalType' => 1,
                 'ticket_amount' => 150,
@@ -77,5 +78,11 @@ class DatabaseSeeder extends Seeder
         foreach ($festivals as $festival) {
             Festival::create($festival);
         }
+
+        // Add HomepageContent seeder
+        HomepageContent::create([
+            'content' => '<h1>What is Haarlem Festival?</h1><p>Join the Haarlem Festival and experience four unforgettable days celebrating everything that makes Haarlem unique! From mouth-watering food and rich history to vibrant music, enjoy the very best this city has to offer all in one festival. Scroll down to discover the exciting events waiting for you!</p>',
+            'hero_image_path' => 'festivals/hero.png'
+        ]);
     }
 }
