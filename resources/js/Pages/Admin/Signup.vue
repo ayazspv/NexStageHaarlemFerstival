@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import AppLayout from "../Layouts/AppLayout.vue";
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import Recaptcha from "../Components/Recaptcha.vue";
+import { ref } from "vue";
 import { useForm, usePage } from "@inertiajs/vue3";
 
 const page = usePage();
 const csrfToken = page.props.csrf_token as string || "";
 const successMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
-const recaptchaSiteKey = "6LelsCMrAAAAAELpl5GinEOSHXQ5gNqYWTMKPDIc";
 
 const signupForm = useForm({
     firstName: "",
@@ -21,21 +21,17 @@ const signupForm = useForm({
     recaptcha: "",
 });
 
-function getRecaptchaToken(): string | null {
-    const response = (window as any).grecaptcha.getResponse();
-    return response;
+function onRecaptchaVerified(token: string) {
+    signupForm.recaptcha = token;
 }
 
 async function signup() {
-    const token = getRecaptchaToken();
-
-    if (!token) {
+    if (!signupForm.recaptcha) {
         errorMessage.value = "Please complete the reCAPTCHA.";
         return;
     }
 
     signupForm.username = signupForm.email.split("@")[0];
-    signupForm.recaptcha = token;
 
     signupForm.post("/signup", {
         headers: {
@@ -54,24 +50,6 @@ async function signup() {
         },
     });
 }
-
-function renderRecaptcha() {
-    if ((window as any).grecaptcha) {
-        (window as any).grecaptcha.render("recaptcha-container", {
-            sitekey: recaptchaSiteKey,
-        });
-    }
-}
-
-onMounted(() => {
-    renderRecaptcha();
-});
-
-onBeforeUnmount(() => {
-    if ((window as any).grecaptcha) {
-        (window as any).grecaptcha.reset();
-    }
-});
 </script>
 
 <template>
@@ -132,9 +110,7 @@ onBeforeUnmount(() => {
                     </div>
 
 
-                    <div class="form-group mt-3">
-                        <div id="recaptcha-container" class="g-recaptcha"></div>
-                    </div>
+                    <Recaptcha @verified="onRecaptchaVerified" />
 
                     <button type="submit" class="btn btn-primary mt-3">
                         Sign Up

@@ -2,6 +2,7 @@
 import AppLayout from "../Pages/Layouts/AppLayout.vue";
 import { ref } from "vue";
 import { useForm, router, usePage } from "@inertiajs/vue3";
+import Recaptcha from "./Components/Recaptcha.vue";
 
 const page = usePage();
 const csrfToken = page.props.csrf_token as string || "";
@@ -14,6 +15,7 @@ const errorMessage = ref<string | null>(null);
 const loginForm = useForm({
     email: "",
     password: "",
+    recaptcha: "",
 });
 
 const forgotPasswordForm = useForm({
@@ -21,15 +23,34 @@ const forgotPasswordForm = useForm({
     token: "",
     password: "",
     password_confirmation: "",
+    recaptcha: "",
 });
 
 
 function login() {
+    if (!loginForm.recaptcha) {
+        errorMessage.value = "Please complete the reCAPTCHA.";
+        return;
+    }
+
     loginForm.post("/login", {
         headers: {
             "X-CSRF-TOKEN": csrfToken,
+        },
+        onError: (errors) => {
+            errorMessage.value = Object.values(errors).flat().join(", ");
+            successMessage.value = null;
+            (window as any).grecaptcha.reset();
         }
     });
+}
+
+function onRecaptchaVerifiedLogin(token: string) {
+    loginForm.recaptcha = token;
+}
+
+function onRecaptchaVerifiedFP(token: string) {
+    forgotPasswordForm.recaptcha = token;
 }
 
 function redirectToSignup() {
@@ -128,6 +149,8 @@ function handleForgotPassword() {
                         class="form-control"
                         placeholder="Enter your password"
                     />
+
+                    <Recaptcha @verified="onRecaptchaVerifiedLogin" />
 
                     <button @click="login" class="btn btn-primary mt-3">
                         Login
