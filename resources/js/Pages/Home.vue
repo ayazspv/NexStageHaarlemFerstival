@@ -177,7 +177,6 @@ const stripHtmlTags = (html) => {
             </section>
 
 
-
             <div class="p-0 d-flex flex-column align-items-center">
                 <!-- Festivals Section -->
                 <section class="mb-5 mt-5 w-75">
