@@ -33,6 +33,7 @@
         "@tiptap/vue-3": "^2.11.5",
         "bootstrap": "^5.3.3",
         "dotenv": "^16.4.7",
+        "html5-qrcode": "^2.3.8",
         "nodemailer": "^6.10.0",
         "vue": "^3.5.13",
         "vue-qrcode-reader": "^5.7.1",

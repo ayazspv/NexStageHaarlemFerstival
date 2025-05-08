@@ -21,6 +21,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 
@@ -33,6 +34,7 @@ Route::get('/admin/', function () {
 Route::get('/login', [LoginController::class, 'show'])->name('loadLogin');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
 Route::get('/signup', [SignupController::class, 'show'])->name('loadSignup');
 Route::post('/signup', [SignupController::class, 'signup'])->name('signup');
 
@@ -105,18 +107,20 @@ Route::get('/qr-reader', function () {
     return Inertia::render('QrReader/QrReader');
 })->name('qr-reader');
 
-/*if (Schema::hasTable('festivals')) {
-    $festivals = Festival::all();
 
-    foreach ($festivals as $festival) {
-        $slug = Str::slug($festival->name, '-');
+Route::post('/api/fetch-ticket-details', [\App\Http\Controllers\QrReaderController::class, 'fetchTicketDetails']);
+
+Route::get('/events', [EventController::class, 'index']);
+Route::get('/api/events/jazz', [EventController::class, 'getJazzEvent']);
+Route::get('/api/events/food', [EventController::class, 'getFoodEvent']);
+Route::get('/api/events/dance', [EventController::class, 'getDanceEvent']);
+Route::get('/api/events/history', [EventController::class, 'getHistoryEvent']);
+Route::post('/api/events', [EventController::class, 'store']);
+Route::get('/api/events/{id}', [EventController::class, 'show']);
+Route::put('/api/events/{id}', [EventController::class, 'update']);
+Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
 
 
-        Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
-            ->where('path', '.*')
-            ->name('festivals.show');
-    }
-}*/
 
 Route::get('/api/homepage/hero-image', function() {
     $content = \App\Models\HomepageContent::first();
