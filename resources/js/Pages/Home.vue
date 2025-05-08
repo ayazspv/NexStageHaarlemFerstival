@@ -235,65 +235,42 @@ const stripHtmlTags = (html) => {
                 </section>
 
                 <!-- Schedule Section -->
-                <section class="w-100 d-flex flex-column justify-content-center align-items-center section-color-switch">
-                    <section class="mb-5 mt-5 w-75">
-                        <div class="d-flex flex-row align-items-center justify-content-center gap-5 mb-5">
-                            <div class="d-flex flex-column">
-                                <h2 class="text-left section-title-close">Festival</h2>
-                                <h2 class="text-left section-title">Schedule</h2>
-                            </div>
+                <section class="schedule-section py-5">
+                    <div class="container">
+                        <div class="d-flex flex-column align-items-center mb-5">
+                            <h2 class="section-title text-center">Festival Schedule</h2>
                             <div class="section-title-bars"></div>
                         </div>
-                        <div class="schedule-container p-3 border rounded">
-                            <div class="schedule-tabs mb-3">
-                                <ul class="nav nav-tabs justify-content-center" id="scheduleTabs" role="tablist">
-                                    <li v-for="day in days" :key="day" class="nav-item" role="presentation">
-                                        <button class="nav-link"
-                                                :class="{'active': day === '24'}"
-                                                :id="`day${day}-tab`"
-                                                data-bs-toggle="tab"
-                                                :data-bs-target="`#day${day}`"
-                                                type="button"
-                                                role="tab"
-                                                :aria-controls="`day${day}`"
-                                                :aria-selected="day === '24'">
-                                            July {{ day }}
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div class="tab-content" id="scheduleTabsContent">
-                                <!-- Loop through each day -->
-                                <div v-for="day in days" :key="day"
-                                     class="tab-pane fade"
-                                     :class="{'show active': day === '24'}"
-                                     :id="`day${day}`"
-                                     role="tabpanel"
-                                     :aria-labelledby="`day${day}-tab`">
-                                    <div class="schedule-grid">
-                                        <!-- Loop through each event -->
-                                        <div v-for="(event, index) in scheduleEvents" :key="index"
-                                             class="schedule-event"
-                                             :class="event.type">
-                                            <div class="event-time">{{ event.time }}</div>
-                                            <div class="event-name">{{ event.name }}</div>
-                                            <div class="event-actions">
-                                                <button class="btn btn-sm btn-primary me-2"
-                                                        @click.prevent="addToCart(event.eventId, event.name, 10)">
-                                                    <i class="fas fa-ticket-alt"></i> Book
-                                                </button>
-                                                <button class="btn btn-sm btn-warning"
-                                                        @click.prevent="addToWishlist(event.eventId, event.name)">
-                                                    <i class="fas fa-heart"></i> Wishlist
-                                                </button>
+                        
+                        <div class="custom-schedule">
+                            <div v-for="day in ['24', '25', '26', '27']" :key="day" class="schedule-item">
+                                <div class="schedule-day">
+                                    <div class="day-number">
+                                        {{ day }}<span class="month-display">JULY</span>
+                                    </div>
+                                    <div class="vertical-line"></div>
+                                    <div class="schedule-content">
+                                        <div class="time-column">
+                                            <div v-for="festival in festivals" :key="`${day}-${festival.id}-time`"
+                                                 class="time-item" 
+                                                 :class="festivalTypeClassMap[festival.festivalType]">
+                                                {{ festival.time_slot }}
+                                            </div>
+                                        </div>
+                                        <div class="vertical-separator"></div>
+                                        <div class="name-column">
+                                            <div v-for="festival in festivals" :key="`${day}-${festival.id}-name`"
+                                                 class="name-item" 
+                                                 :class="festivalTypeClassMap[festival.festivalType]">
+                                                {{ festival.name.toUpperCase() }}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                <div v-if="day !== '27'" class="day-separator"></div>
                             </div>
                         </div>
-                    </section>
+                    </div>
                 </section>
 
 

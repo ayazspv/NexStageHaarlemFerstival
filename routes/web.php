@@ -73,6 +73,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/dashboard/homepage-content', [AdminPanelController::class, 'storeHomepageContent'])
         ->name('admin.dashboard.homepage-content.store');
 
+    Route::post('/dashboard/hero', [AdminPanelController::class, 'uploadHero'])
+        ->name('admin.dashboard.hero');
+
     Route::prefix('festivals/{festival}')->group(function () {
         Route::resource('jazz-festival', \App\Http\Controllers\Admin\JazzFestivalController::class)
             ->names('admin.jazz-festival');
@@ -105,8 +108,6 @@ Route::get('/qr-reader', function () {
 })->name('qr-reader');
 
 
-
-
 Route::post('/api/fetch-ticket-details', [\App\Http\Controllers\QrReaderController::class, 'fetchTicketDetails']);
 
 Route::get('/events', [EventController::class, 'index']);
@@ -119,15 +120,13 @@ Route::get('/api/events/{id}', [EventController::class, 'show']);
 Route::put('/api/events/{id}', [EventController::class, 'update']);
 Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
 
-/*if (Schema::hasTable('festivals')) {
-    $festivals = Festival::all();
-
-    foreach ($festivals as $festival) {
-        $slug = Str::slug($festival->name, '-');
 
 
-        Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
-            ->where('path', '.*')
-            ->name('festivals.show');
-    }
-}*/
+Route::get('/api/homepage/hero-image', function() {
+    $content = \App\Models\HomepageContent::first();
+    return response()->json([
+        'path' => $content ? $content->hero_image_path : null
+    ]);
+});
+
+

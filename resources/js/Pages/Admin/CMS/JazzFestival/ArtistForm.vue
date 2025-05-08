@@ -49,11 +49,29 @@ const artistDetailsEditor = new Editor({
     },
 });
 
-// Handle image upload - Removed handleSecondImage function
+// Add these near the top with your other variables
+const imageError = ref('');
+const MAX_FILE_SIZE_MB = 2; // 2MB limit (2048 KB)
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+// Enhance the handleArtistImage function with validation
 const handleArtistImage = (e: Event) => {
     const input = e.target as HTMLInputElement;
+    imageError.value = ''; // Clear previous errors
+    
     if (input.files && input.files.length > 0) {
-        artistForm.band_image = input.files[0];
+        const file = input.files[0];
+        
+        // Check file size
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+            imageError.value = `Image is too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`;
+            // Clear the file input
+            input.value = '';
+            return;
+        }
+        
+        artistForm.band_image = file;
+        console.log(`Selected image: ${file.name}, size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
     }
 };
 
@@ -84,11 +102,19 @@ const submitArtistForm = (e: Event) => {
     artistForm.band_description = artistDescriptionEditor.getHTML();
     artistForm.band_details = artistDetailsEditor.getHTML();
     
-    // required fields
+    // Check for required fields
     if (!artistForm.band_name || !artistForm.start_time || !artistForm.end_time || 
         !artistForm.band_description || !artistForm.band_details) {
         alert('Please fill in all required fields');
         console.log("Validation failed - missing required fields");
+        return;
+    }
+    
+    // Check image size again before submission
+    if (artistForm.band_image && artistForm.band_image.size > MAX_FILE_SIZE_BYTES) {
+        imageError.value = `Image is too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`;
+        alert(`The selected image is too large. Maximum allowed size is ${MAX_FILE_SIZE_MB}MB.`);
+        console.log("Validation failed - image too large", artistForm.band_image.size);
         return;
     }
 
@@ -143,7 +169,20 @@ const submitArtistForm = (e: Event) => {
         })
         .catch(error => {
             console.error("Error adding artist:", error);
-            alert('Error adding artist. Please check the browser console for details.');
+            
+            // Try to parse the error message
+            let errorMessage = 'Error adding artist. Please check the browser console for details.';
+            try {
+                const parsedError = JSON.parse(error.message);
+                if (parsedError.errors && parsedError.errors.band_image) {
+                    imageError.value = parsedError.errors.band_image[0];
+                    errorMessage = `Upload error: ${parsedError.errors.band_image[0]}`;
+                }
+            } catch (e) {
+                // If parsing fails, use the original error message
+            }
+            
+            alert(errorMessage);
         });
     } else if (props.mode === 'edit' && props.editingBandId) {
         console.log("Updating existing artist - sending PUT request");
@@ -238,8 +277,13 @@ onMounted(() => {
                         
                         <div class="mb-3">
                             <label for="artistImage" class="form-label">Artist Image</label>
-                            <input type="file" class="form-control" id="artistImage" @change="handleArtistImage" accept="image/*">
-                            <small class="form-text">This will be displayed on the artist card.</small>
+                            <input type="file" class="form-control" id="artistImage" 
+                                   @change="handleArtistImage" accept="image/*"
+                                   :class="{'is-invalid': imageError}">
+                            <small class="form-text">This will be displayed on the artist card. Maximum size: {{MAX_FILE_SIZE_MB}}MB</small>
+                            <div v-if="imageError" class="invalid-feedback">
+                                {{ imageError }}
+                            </div>
                         </div>
                                                 
                         <div v-if="props.mode === 'edit' && props.currentBand && props.currentBand.band_image" class="mb-3">

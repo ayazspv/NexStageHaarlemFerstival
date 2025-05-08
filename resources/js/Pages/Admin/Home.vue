@@ -102,11 +102,17 @@ const currentHeroUrl = ref<string>('');
 
 // reload the existing hero.png (cache-busted)
 function loadCurrentHero() {
-    const url = `/storage/festivals/hero.png?${Date.now()}`;
-    const img = new Image();
-    img.onload  = () => currentHeroUrl.value = url;
-    img.onerror = () => currentHeroUrl.value = '';
-    img.src     = url;
+    axios.get('/api/homepage/hero-image')
+        .then(response => {
+            if (response.data.path) {
+                currentHeroUrl.value = `/storage/${response.data.path}?${Date.now()}`;
+            } else {
+                currentHeroUrl.value = '';
+            }
+        })
+        .catch(() => {
+            currentHeroUrl.value = '';
+        });
 }
 
 onMounted(loadCurrentHero);
@@ -116,8 +122,8 @@ async function uploadHero(e: Event) {
     if (!input.files?.length) return;
     const file = input.files[0];
 
-    if (file.type !== 'image/png') {
-        uploadError.value = 'Only .png files are allowed.';
+    if (!file.type.startsWith('image/')) {
+        uploadError.value = 'Only image files are allowed.';
         return;
     }
 
@@ -129,7 +135,7 @@ async function uploadHero(e: Event) {
     uploadError.value = null;
 
     try {
-        const response = await axios.post('/admin/festivals/cms/hero', formData, {
+        const response = await axios.post('/admin/dashboard/hero', formData, {
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
