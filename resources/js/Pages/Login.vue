@@ -21,8 +21,8 @@ const loginForm = useForm({
 const forgotPasswordForm = useForm({
     email: "",
     token: "",
-    password: "",
-    password_confirmation: "",
+    // password: "",
+    // password_confirmation: "",
     recaptcha: "",
 });
 
@@ -57,61 +57,29 @@ function redirectToSignup() {
     router.visit("/signup");
 }
 
+function forgetPassword() {
+    if (!forgotPasswordForm.recaptcha) {
+        errorMessage.value = "Please complete the reCAPTCHA.";
+        return;
+    }
+    
+    successMessage.value = null;
+    errorMessage.value = null;
+}
+
+function checkEmail() {
+
+}
+
 function handleForgotPassword() {
+    if (!forgotPasswordForm.recaptcha) {
+        errorMessage.value = "Please complete the reCAPTCHA.";
+        return;
+    }
+
     successMessage.value = null;
     errorMessage.value = null;
 
-    if (step.value === 1) {
-        // Step 1: Request reset email
-        try {
-             forgotPasswordForm.post("/admin/password/reset/request", {
-                onSuccess: () => {
-                    step.value = 2;
-                    successMessage.value = "A 6-digit PIN has been sent to your email.";
-                },
-                onError: (errors) => {
-                    errorMessage.value = errors.email || "Failed to send reset email.";
-                },
-            });
-        } catch (err) {
-            console.error(err);
-            errorMessage.value = "An error occurred. Please try again.";
-        }
-    } else if (step.value === 2) {
-        // Step 2: Verify PIN
-        try {
-            forgotPasswordForm.post("/admin/password/reset/verify", {
-                onSuccess: () => {
-                    step.value = 3;
-                    successMessage.value = "PIN verified successfully. Set your new password.";
-                },
-                onError: (errors) => {
-                    errorMessage.value = errors.pin || "Invalid or expired PIN.";
-                },
-            });
-        } catch (err) {
-            console.error(err);
-            errorMessage.value = "An error occurred. Please try again.";
-        }
-    } else if (step.value === 3) {
-        // Step 3: Reset password
-        try {
-             forgotPasswordForm.post("/admin/password/reset", {
-                onSuccess: () => {
-                    successMessage.value = "Password reset successfully. Redirecting to login...";
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                },
-                onError: (errors) => {
-                    errorMessage.value = errors.password || "Failed to reset password. Please try again.";
-                },
-            });
-        } catch (err) {
-            console.error(err);
-            errorMessage.value = "An error occurred. Please try again.";
-        }
-    }
 
 }
 
@@ -131,66 +99,63 @@ function handleForgotPassword() {
                 <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
 
                 <!-- Login Form -->
-                <div v-if="!isForgotPassword" class="d-flex flex-column">
-                    <label for="email" class="form-label">Email</label>
-                    <input
-                        id="email"
-                        v-model="loginForm.email"
-                        type="text"
-                        class="form-control"
-                        placeholder="Enter your email"
-                    />
+                <div v-if="!isForgotPassword">
+                    <form @submit.prevent="login" class="d-flex flex-column">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" v-model="loginForm.email" type="text" class="form-control"
+                            placeholder="Enter your email" />
 
-                    <label for="password" class="form-label mt-3">Password</label>
-                    <input
-                        id="password"
-                        v-model="loginForm.password"
-                        type="password"
-                        class="form-control"
-                        placeholder="Enter your password"
-                    />
+                        <label for="password" class="form-label mt-3">Password</label>
+                        <input id="password" v-model="loginForm.password" type="password" class="form-control"
+                            placeholder="Enter your password" />
 
-                    <Recaptcha @verified="onRecaptchaVerifiedLogin" />
+                        <Recaptcha @verified="onRecaptchaVerifiedLogin" />
 
-                    <button @click="login" class="btn btn-primary mt-3">
-                        Login
-                    </button>
+                        <button @click="login" class="btn btn-primary mt-3">
+                            Login
+                        </button>
 
-                    <button class="btn btn-outline-secondary mt-3" @click="redirectToSignup">
+                        <button class="btn btn-outline-secondary mt-3" @click="redirectToSignup">
                             Register
                         </button>
 
-                    <small class="mt-2">
-                        <a href="#" @click.prevent="isForgotPassword = true">Forgot your password?</a>
-                    </small>
+                        <small class="mt-2">
+                            <a href="#" @click.prevent="isForgotPassword = true">Forgot your password?</a>
+                        </small>
+                    </form>
                 </div>
 
                 <!-- Forgot Password Steps -->
                 <div v-if="isForgotPassword">
-                    <div v-if="step === 1" class="d-flex flex-column">
+                    <form @submit.prevent="forgetPassword" class="d-flex flex-column">
                         <label for="forgotEmail" class="form-label">Email</label>
-                        <input
-                            id="forgotEmail"
-                            v-model="forgotPasswordForm.email"
-                            type="email"
-                            class="form-control"
-                            placeholder="Enter your email"
-                        />
+                        <input id="forgotEmail" v-model="forgotPasswordForm.email" type="email" class="form-control"
+                            placeholder="Enter your email" />
+                        <Recaptcha @verified="onRecaptchaVerifiedFP" />
                         <button @click="handleForgotPassword" class="btn btn-primary mt-3">
                             Send Reset Email
                         </button>
+                    </form>
+
+
+
+
+                    <!-- <div v-if="step === 1">
+                        <form @submit.prevent="handleForgotPassword" class="d-flex flex-column">
+                            <label for="forgotEmail" class="form-label">Email</label>
+                            <input id="forgotEmail" v-model="forgotPasswordForm.email" type="email" class="form-control"
+                                placeholder="Enter your email" />
+                            <Recaptcha @verified="onRecaptchaVerifiedFP" />
+                            <button @click="handleForgotPassword" class="btn btn-primary mt-3">
+                                Send Reset Email
+                            </button>
+                        </form>
                     </div>
 
                     <div v-if="step === 2" class="d-flex flex-column">
                         <label for="token" class="form-label">6-Digit PIN</label>
-                        <input
-                            id="token"
-                            v-model="forgotPasswordForm.token"
-                            type="text"
-                            class="form-control"
-                            maxlength="6"
-                            placeholder="Enter PIN sent to your email"
-                        />
+                        <input id="token" v-model="forgotPasswordForm.token" type="text" class="form-control"
+                            maxlength="6" placeholder="Enter PIN sent to your email" />
                         <button @click="handleForgotPassword" class="btn btn-primary mt-3">
                             Verify PIN
                         </button>
@@ -198,27 +163,17 @@ function handleForgotPassword() {
 
                     <div v-if="step === 3" class="d-flex flex-column">
                         <label for="newPassword" class="form-label">New Password</label>
-                        <input
-                            id="newPassword"
-                            v-model="forgotPasswordForm.password"
-                            type="password"
-                            class="form-control"
-                            placeholder="Enter new password"
-                        />
+                        <input id="newPassword" v-model="forgotPasswordForm.password" type="password"
+                            class="form-control" placeholder="Enter new password" />
 
                         <label for="confirmPassword" class="form-label mt-3">Confirm Password</label>
-                        <input
-                            id="confirmPassword"
-                            v-model="forgotPasswordForm.password_confirmation"
-                            type="password"
-                            class="form-control"
-                            placeholder="Confirm new password"
-                        />
+                        <input id="confirmPassword" v-model="forgotPasswordForm.password_confirmation" type="password"
+                            class="form-control" placeholder="Confirm new password" />
 
                         <button @click="handleForgotPassword" class="btn btn-primary mt-3">
                             Reset Password
                         </button>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -233,15 +188,18 @@ function handleForgotPassword() {
     border-radius: 8px;
     background-color: #ffffff;
 }
+
 .alert {
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
 }
+
 .alert-success {
     color: #155724;
     background-color: #d4edda;
 }
+
 .alert-danger {
     color: #721c24;
     background-color: #f8d7da;
