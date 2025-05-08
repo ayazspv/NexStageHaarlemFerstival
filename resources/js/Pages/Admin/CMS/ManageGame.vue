@@ -4,6 +4,7 @@ import { Inertia } from '@inertiajs/inertia';
 import AdminAppLayout from '@/Pages/Layouts/AdminAppLayout.vue';
 import { usePage } from '@inertiajs/vue3';
 import { Game } from '../../../../models';
+import axios from "axios";
 
 const page = usePage();
 const csrfToken = (page.props.csrf_token as string) || '';
@@ -119,6 +120,15 @@ const updateGame = () => {
         },
     });
 };
+
+const deleteGame = (gameId: number) => {
+    axios.delete(`/admin/festivals/${gameId}/game`, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+        },
+    });
+    window.location.reload();
+}
 </script>
 
 <template>
@@ -229,6 +239,7 @@ const updateGame = () => {
                             </div>
                             <button @click="updateGame" class="btn btn-primary">Save</button>
                             <button @click="editingGameId = null">Cancel</button>
+                            <button @click="deleteGame(game.id)" class="btn btn-danger">Delete</button>
                         </div>
                         <!-- Display mode for a game -->
                         <div v-else class="d-flex flex-column game-box section-box">

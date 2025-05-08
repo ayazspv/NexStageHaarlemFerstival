@@ -40,7 +40,7 @@ class GameCMSController
         return redirect()->back()->with('success', 'Game added successfully!');
     }
 
-    public function updateGame(Request $request, $festivalId, $gameId)
+    public function updateGame(Request $request, $gameId)
     {
         $game = Game::findOrFail($gameId);
 
@@ -65,8 +65,15 @@ class GameCMSController
             $data['stamp'] = $request->file('stamp')->store('game/stamps', 'public');
         }
 
-        $game->update($data); // Use model instance for update
+        $game->update($data);
 
         return redirect()->back()->with('success', 'Game updated successfully!');
+    }
+
+    public function deleteGame($gameId) {
+
+        Game::where('id', $gameId)->delete();
+
+        return redirect()->back()->with('success', 'Game deleted successfully!');
     }
 }

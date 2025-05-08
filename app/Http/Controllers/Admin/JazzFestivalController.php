@@ -7,6 +7,7 @@ use App\Models\JazzFestival;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 
 class JazzFestivalController
 {
@@ -34,20 +35,22 @@ class JazzFestivalController
             'band_name'            => 'required|string|max:255',
             'performance_datetime' => 'required|date',
             'performance_day'      => 'required|integer|between:24,27',
+            'start_time'           => 'required|string',
+            'end_time'             => 'required|string',
             'ticket_price'         => 'required|numeric',
             'band_description'     => 'required|string',
             'band_details'         => 'required|string',
             'band_image'           => 'nullable|image|max:2048',
-            'second_image'         => 'nullable|image|max:2048',
         ]);
 
         $data['festival_id'] = $festivalId;
+        
+        // Store start and end times
+        $data['start_time'] = $request->start_time;
+        $data['end_time'] = $request->end_time;
 
         if ($request->hasFile('band_image')) {
             $data['band_image'] = $request->file('band_image')->store('festivals/jazz', 'public');
-        }
-        if ($request->hasFile('second_image')) {
-            $data['second_image'] = $request->file('second_image')->store('festivals/jazz', 'public');
         }
 
         JazzFestival::create($data);
@@ -71,25 +74,23 @@ class JazzFestivalController
             'band_name'            => 'required|string|max:255',
             'performance_datetime' => 'required|date',
             'performance_day'      => 'required|integer|between:24,27',
+            'start_time'           => 'required|string',
+            'end_time'             => 'required|string',
             'ticket_price'         => 'required|numeric',
             'band_description'     => 'required|string',
             'band_details'         => 'required|string',
             'band_image'           => 'nullable|image|max:2048',
-            'second_image'         => 'nullable|image|max:2048',
         ]);
+
+        // Store start and end times
+        $data['start_time'] = $request->start_time;
+        $data['end_time'] = $request->end_time;
 
         if ($request->hasFile('band_image')) {
             if ($band->band_image) {
                 Storage::disk('public')->delete($band->band_image);
             }
             $data['band_image'] = $request->file('band_image')->store('festivals/jazz', 'public');
-        }
-
-        if ($request->hasFile('second_image')) {
-            if ($band->second_image) {
-                Storage::disk('public')->delete($band->second_image);
-            }
-            $data['second_image'] = $request->file('second_image')->store('festivals/jazz', 'public');
         }
 
         $band->update($data);
@@ -104,9 +105,6 @@ class JazzFestivalController
 
         if ($band->band_image) {
             Storage::disk('public')->delete($band->band_image);
-        }
-        if ($band->second_image) {
-            Storage::disk('public')->delete($band->second_image);
         }
 
         $band->delete();

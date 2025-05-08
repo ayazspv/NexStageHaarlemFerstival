@@ -31,7 +31,8 @@ defineProps<{
 /* Main content area that grows to fill remaining space */
 .main-content {
     flex: 1; /* Allow this section to grow and fill available space */
-    padding: 20px; /* Optional padding for content */
+    padding: 0;
+    margin: 0;
     display: flex;
     flex-direction: column;
 }

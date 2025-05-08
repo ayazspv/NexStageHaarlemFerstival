@@ -22,6 +22,8 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\SignupController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -33,7 +35,8 @@ Route::get('/login', [LoginController::class, 'show'])->name('loadLogin');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-use App\Http\Controllers\CartController;
+Route::get('/signup', [SignupController::class, 'show'])->name('loadSignup');
+Route::post('/signup', [SignupController::class, 'signup'])->name('signup');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
 Route::post('/paymentCredentials', [CartController::class, 'paymentCredentials'])->name('paymentCredentials');
@@ -41,6 +44,7 @@ Route::get('/paymentCredentials', [CartController::class, 'paymentCredentialsRen
 
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+
     Route::get('/dashboard', [AdminPanelController::class, 'show'])->name('admin.dashboard');
     Route::get('/events', [FestivalController::class, 'index'])->name('admin.events');
 
@@ -66,6 +70,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     //CMS
     Route::get('/festivals/cms/manage/{festivalId}', [FestivalContentController::class, 'show'])->name('admin.festivals.show');
 
+    Route::post('/dashboard/homepage-content', [AdminPanelController::class, 'storeHomepageContent'])
+        ->name('admin.dashboard.homepage-content.store');
+
     Route::prefix('festivals/{festival}')->group(function () {
         Route::resource('jazz-festival', \App\Http\Controllers\Admin\JazzFestivalController::class)
             ->names('admin.jazz-festival');
@@ -76,6 +83,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         ->name('admin.festivals.game.update');
     Route::post('/festivals/{festival}/game', [GameCMSController::class, 'storeGame'])
         ->name('admin.festivals.game.store');
+    Route::delete('/festivals/{gameId}/game', [GameCMSController::class, 'deleteGame']);
 });
 
 Route::get('/api/styles', [StyleController::class, 'index'])
@@ -84,6 +92,7 @@ Route::get('/api/styles', [StyleController::class, 'index'])
 Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->where('path', '.*')
     ->name('festivals.show');
+Route::get('/api/festivals', [FestivalController::class, 'getFestivals']);
 
 Route::post('/api/send-mail', [MailController::class, 'sendMail']);
 
