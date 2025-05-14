@@ -23,6 +23,7 @@ use App\Http\Controllers\MailController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
+use App\Http\Controllers\ForgetPasswordController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -97,7 +98,12 @@ Route::get('/qr-reader', function () {
     return Inertia::render('QrReader/QrReader');
 })->name('qr-reader');
 
+Route::post('/api/send-reset-mail', [\App\Http\Controllers\ForgetPasswordController::class, 'sendResetMail'])
+    ->name('send-reset-mail');
 
+Route::get('/reset-password', [ForgetPasswordController::class, 'showResetForm']);
+Route::post('/api/reset-password', [ForgetPasswordController::class, 'resetPassword'])
+    ->name('reset-password');
 
 /*if (Schema::hasTable('festivals')) {
     $festivals = Festival::all();

@@ -21,8 +21,6 @@ const loginForm = useForm({
 const forgotPasswordForm = useForm({
     email: "",
     token: "",
-    // password: "",
-    // password_confirmation: "",
     recaptcha: "",
 });
 
@@ -57,30 +55,46 @@ function redirectToSignup() {
     router.visit("/signup");
 }
 
-function forgetPassword() {
-    if (!forgotPasswordForm.recaptcha) {
-        errorMessage.value = "Please complete the reCAPTCHA.";
-        return;
-    }
-    
+async function handleForgotPassword() {
     successMessage.value = null;
     errorMessage.value = null;
-}
 
-function checkEmail() {
-
-}
-
-function handleForgotPassword() {
     if (!forgotPasswordForm.recaptcha) {
         errorMessage.value = "Please complete the reCAPTCHA.";
         return;
     }
 
-    successMessage.value = null;
-    errorMessage.value = null;
+    if (!forgotPasswordForm.email) {
+        errorMessage.value = "Please enter your email.";
+        return;
+    }
 
+    try {
+        const response = await fetch("/api/send-reset-mail", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken, // Make sure this is defined globally
+                "Accept": "application/json", // 👈 Important to prevent Inertia interference
+            },
+            body: JSON.stringify({
+                email: forgotPasswordForm.email,
+            }),
+        });
 
+        const data = await response.json();
+
+        if (response.ok) {
+            successMessage.value = data.message || "Reset email sent.";
+            forgotPasswordForm.reset();
+        } else {
+            errorMessage.value = data.message || "Something went wrong.";
+        }
+    } catch (error) {
+        errorMessage.value = "A network error occurred. Please try again.";
+    } finally {
+        (window as any).grecaptcha.reset(); // Reset reCAPTCHA if used
+    }
 }
 
 </script>
@@ -127,12 +141,12 @@ function handleForgotPassword() {
 
                 <!-- Forgot Password Steps -->
                 <div v-if="isForgotPassword">
-                    <form @submit.prevent="forgetPassword" class="d-flex flex-column">
+                    <form @submit.prevent="handleForgotPassword" class="d-flex flex-column">
                         <label for="forgotEmail" class="form-label">Email</label>
                         <input id="forgotEmail" v-model="forgotPasswordForm.email" type="email" class="form-control"
                             placeholder="Enter your email" />
                         <Recaptcha @verified="onRecaptchaVerifiedFP" />
-                        <button @click="handleForgotPassword" class="btn btn-primary mt-3">
+                        <button type="submit" class="btn btn-primary mt-3">
                             Send Reset Email
                         </button>
                     </form>
