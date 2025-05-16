@@ -3,11 +3,14 @@ import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { cart, fetchCartItems, updateCartItem, clearCart } from '../../composables/cart';
 import { wishlist, fetchWishlistItems, addToWishlist, removeFromWishlist } from '../../composables/wishlist';
+import {Festival} from "../../../models";
+import axios from "axios";
+import {urlFriendly} from "../../../utils";
 
 // Define TypeScript interface for User
 interface User {
     id: number;
-    firstName: string;  
+    firstName: string;
     lastName: string;
     email: string;
     role: string;
@@ -39,8 +42,19 @@ function navigateToDashboard() {
 }
 
 // Popup menu visibility
+const festivals = ref<Festival[]>([]);
 const isCartMenuVisible = ref(false);
 const isWishlistMenuVisible = ref(false);
+const isFestivalMenuVisible = ref(false);
+
+async function fetchFestivals() {
+    try {
+        const { data } = await axios.get<Festival[]>('/api/festivals');
+        festivals.value = data;
+    } catch (e) {
+        console.error('Could not load festivals', e);
+    }
+}
 
 function toggleCartMenu() {
     isCartMenuVisible.value = !isCartMenuVisible.value;
@@ -52,8 +66,15 @@ function toggleWishlistMenu() {
     isCartMenuVisible.value = false;
 }
 
+function toggleFestivalMenu() {
+    isFestivalMenuVisible.value = !isFestivalMenuVisible.value;
+    isCartMenuVisible.value     = false;
+    isWishlistMenuVisible.value = false;
+}
+
 fetchCartItems();
 fetchWishlistItems();
+fetchFestivals();
 
 </script>
 
@@ -66,12 +87,31 @@ fetchWishlistItems();
                     <img class="navbar-logo" src="/storage/main/logo.png" width="64px" height="64px" alt="Logo">
                 </a>
             </div>
-            <div class="navbar-option">
+            <div class="navbar-option d-flex flex-row gap-5">
+                <div class="navbar-suboption">
+                    <a href="/">Home</a>
+                </div>
+                <div class="navbar-suboption">
+                    <a href="#">Wishlist</a>
+                </div>
+                <div class="navbar-suboption position-relative">
+                    <span class="cursor-pointer" @click="toggleFestivalMenu">
+                      Festival ⩒
+                    </span>
+                    <ul v-if="isFestivalMenuVisible" class="festival-dropdown">
+                        <li v-for="festival in festivals" :key="festival.id">
+                            <a :href="`/festivals/${urlFriendly(festival.name)}`">
+                                {{ festival.name }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
+
             <div class="navbar-option">
                 <div class="navbar-suboption">
                     <template v-if="auth.user">
-                        <span @click="navigateToDashboard" 
+                        <span @click="navigateToDashboard"
                               class="cursor-pointer user-name">
                             {{ auth.user.firstName }}
                         </span>
@@ -135,6 +175,10 @@ fetchWishlistItems();
 @import "https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap";
 @import "https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css";
 
+* {
+    background-color: transparent;
+}
+
 .navbar-container {
     display: flex;
     flex-direction: column;
@@ -188,6 +232,12 @@ fetchWishlistItems();
     flex-direction: row;
     gap: 25px;
     align-items: center;
+}
+
+.navbar-suboption a {
+    text-decoration: none!important;
+    color: black;
+    font-size: 15px!important;
 }
 
 /* Added styles for user name and logout button */
@@ -299,5 +349,39 @@ fetchWishlistItems();
     text-align: center;
     border-radius: 5px;
     text-decoration: none;
+}
+
+.navbar-suboption.position-relative {
+    position: relative;
+}
+
+.festival-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.25rem;
+    padding: 0.5rem 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    list-style: none;
+    min-width: 150px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.festival-dropdown li {
+    margin: 0;
+}
+
+.festival-dropdown li a {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #333;
+    text-decoration: none;
+}
+
+.festival-dropdown li a:hover {
+    background-color: #f8f9fa;
 }
 </style>

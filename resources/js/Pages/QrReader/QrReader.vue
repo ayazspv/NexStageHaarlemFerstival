@@ -1,110 +1,162 @@
 <template>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">QR Code Scanner</h1>
+    <div class="qr-reader">
+        <h2>QR Code Reader</h2>
+        <div id="reader"></div>
+        <p v-if="result">✅ Scanned Result: {{ result }}</p>
 
-        <!-- QR Code Reader -->
-        <qrcode-stream @decode="onDecode" @init="onInit">
-            <div v-if="error" class="alert alert-danger text-center">
-                {{ error }}
-            </div>
-        </qrcode-stream>
+        <!-- Popup for validation result -->
+        <div v-if="showPopup" class="popup-overlay">
+            <div class="popup-content" :class="{ success: isValid, error: !isValid }">
+                <p v-if="isValid">✅ Ticket is valid!</p>
+                <p v-else>❌ Ticket is invalid!</p>
 
-        <!-- Display Decoded Data -->
-        <div v-if="decodedData" class="alert alert-success text-center mt-4">
-            <h5>Decoded Data:</h5>
-            <p>{{ decodedData }}</p>
-        </div>
-
-        <!-- Modal -->
-        <div v-if="showModal" class="modal-overlay">
-            <div class="modal-content">
-                <div v-if="isValid" class="modal-body success">
-                    <i class="fas fa-check-circle"></i>
-                    <p>QR Code is valid!</p>
+                <!-- Display event and festival details if valid -->
+                <div v-if="isValid && eventDetails && festivalDetails">
+                    <p><strong>Event Name:</strong> {{ eventDetails.name }}</p>
+                    <p><strong>Event Time:</strong> {{ eventDetails.time }}</p>
+                    <p><strong>Festival Name:</strong> {{ festivalDetails.name }}</p>
                 </div>
-                <div v-else class="modal-body error">
-                    <i class="fas fa-times-circle"></i>
-                    <p>QR Code is invalid!</p>
-                </div>
-                <button class="btn btn-secondary mt-3" @click="closeModal">Close</button>
+
+                <button @click="closePopup">Close</button>
             </div>
         </div>
     </div>
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue';
-import { QrcodeStream } from 'vue-qrcode-reader';
+<script>
+import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { usePage } from "@inertiajs/vue3";
 
-const decodedData = ref<string | null>(null);
-const error = ref<string | null>(null);
-const showModal = ref(false);
-const isValid = ref(false);
+export default {
+    name: 'QrReader',
+    setup() {
+        const result = ref(null)
+        const showPopup = ref(false)
+        const isValid = ref(false)
+        const eventDetails = ref(null) // Store event details
+        const festivalDetails = ref(null) // Store festival details
+        let html5QrCode = null
 
-async function onDecode(data: string) {
-    // Prevent processing the same QR code multiple times
-    if (decodedData.value === data) return;
+        // Retrieve CSRF token from meta tag
+        const page = usePage();
+        const csrfToken = page.props.csrf_token;
 
-    decodedData.value = data; // Store the decoded QR code data
-    console.log('Decoded QR Code:', data);
+        const onScanSuccess = async (decodedText) => {
+            result.value = decodedText
+            html5QrCode.stop().catch(err => console.error('Stop failed', err))
 
-    // Call the validateQrCode API
-    try {
-        const response = await fetch('/api/validate-qr-code', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ qrCode: data }),
-        });
+            // Call the fetchTicketDetails API
+            try {
+                const response = await fetch('/api/fetch-ticket-details', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken, // Include CSRF token
+                    },
+                    body: JSON.stringify({ qrCode: decodedText }),
+                })
 
-        if (!response.ok) {
-            throw new Error('Failed to validate QR code');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch ticket details')
+                }
+
+                const data = await response.json()
+                if (data.ticket) {
+                    isValid.value = true
+                    eventDetails.value = data.event // Store event details
+                    festivalDetails.value = data.festival // Store festival details
+                } else {
+                    isValid.value = false
+                    eventDetails.value = null
+                    festivalDetails.value = null
+                }
+                showPopup.value = true
+            } catch (error) {
+                console.error('Error fetching ticket details:', error)
+            }
         }
 
-        const result = await response.json();
-        isValid.value = result.valid; // Set the validation result
-        showModal.value = true; // Show the modal
-    } catch (err) {
-        console.error('Error validating QR code:', err);
-        error.value = 'An error occurred while validating the QR code.';
+        const closePopup = () => {
+            showPopup.value = false
+            result.value = null
+            eventDetails.value = null
+            festivalDetails.value = null
+
+            // Resume scanning
+            html5QrCode.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: 500 },
+                onScanSuccess,
+                (err) => {
+                    console.warn('Scan failed:', err)
+                }
+            )
+        }
+
+        onMounted(async () => {
+            const { Html5Qrcode } = await import('html5-qrcode')
+            html5QrCode = new Html5Qrcode("reader")
+
+            try {
+                const cameras = await Html5Qrcode.getCameras()
+                if (cameras && cameras.length) {
+                    await html5QrCode.start(
+                        cameras[0].id,
+                        {
+                            fps: 10,
+                            qrbox: 500
+                        },
+                        onScanSuccess,
+                        (err) => {
+                            console.warn('Scan failed:', err)
+                        }
+                    )
+                }
+            } catch (error) {
+                console.error('Camera initialization error:', error)
+            }
+        })
+
+        onBeforeUnmount(() => {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear()
+                }).catch(err => console.error('Cleanup failed:', err))
+            }
+        })
+
+        return {
+            result,
+            showPopup,
+            isValid,
+            eventDetails,
+            festivalDetails,
+            closePopup
+        }
     }
-}
-
-function onInit(promise: Promise<void>) {
-    promise.catch(err => {
-        error.value = 'Unable to access the camera. Please check your device permissions.';
-        console.error(err);
-    });
-}
-
-function closeModal() {
-    showModal.value = false; // Close the modal
-    decodedData.value = null; // Reset decoded data to allow scanning for new QR codes
 }
 </script>
 
 <style scoped>
-.container {
+.qr-reader {
     text-align: center;
+    margin-top: 2rem;
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
 }
 
-qrcode-stream {
-    display: block;
-    margin: 0 auto;
-    max-width: 100%;
-    width: 300px;
-    height: 300px;
-    border: 2px solid #ccc;
-    border-radius: 10px;
+#reader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.alert {
-    margin-top: 20px;
-}
-
-/* Modal Styles */
-.modal-overlay {
+.popup-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -117,37 +169,33 @@ qrcode-stream {
     z-index: 1000;
 }
 
-.modal-content {
+.popup-content {
     background: white;
-    padding: 20px;
-    border-radius: 10px;
+    padding: 2rem;
+    border-radius: 8px;
     text-align: center;
-    width: 300px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.modal-body.success {
-    color: green;
+.popup-content.success {
+    border: 2px solid green;
 }
 
-.modal-body.error {
-    color: red;
+.popup-content.error {
+    border: 2px solid red;
 }
 
-.modal-body i {
-    font-size: 50px;
-    margin-bottom: 10px;
-}
-
-button {
-    padding: 10px 20px;
-    font-size: 16px;
+.popup-content button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #007bff;
+    color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
 }
 
-button.btn-secondary {
-    background-color: #ccc;
-    color: #333;
+.popup-content button:hover {
+    background: #0056b3;
 }
 </style>

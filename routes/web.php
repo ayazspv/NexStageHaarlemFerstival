@@ -21,6 +21,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
@@ -34,6 +35,7 @@ Route::get('/admin/', function () {
 Route::get('/login', [LoginController::class, 'show'])->name('loadLogin');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
 Route::get('/signup', [SignupController::class, 'show'])->name('loadSignup');
 Route::post('/signup', [SignupController::class, 'signup'])->name('signup');
 
@@ -43,6 +45,7 @@ Route::get('/paymentCredentials', [CartController::class, 'paymentCredentialsRen
 
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+
     Route::get('/dashboard', [AdminPanelController::class, 'show'])->name('admin.dashboard');
     Route::get('/events', [FestivalController::class, 'index'])->name('admin.events');
 
@@ -68,6 +71,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     //CMS
     Route::get('/festivals/cms/manage/{festivalId}', [FestivalContentController::class, 'show'])->name('admin.festivals.show');
 
+    Route::post('/dashboard/homepage-content', [AdminPanelController::class, 'storeHomepageContent'])
+        ->name('admin.dashboard.homepage-content.store');
+
+    Route::post('/dashboard/hero', [AdminPanelController::class, 'uploadHero'])
+        ->name('admin.dashboard.hero');
+
     Route::prefix('festivals/{festival}')->group(function () {
         Route::resource('jazz-festival', \App\Http\Controllers\Admin\JazzFestivalController::class)
             ->names('admin.jazz-festival');
@@ -87,6 +96,7 @@ Route::get('/api/styles', [StyleController::class, 'index'])
 Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->where('path', '.*')
     ->name('festivals.show');
+Route::get('/api/festivals', [FestivalController::class, 'getFestivals']);
 
 Route::post('/api/send-mail', [MailController::class, 'sendMail']);
 
@@ -105,17 +115,25 @@ Route::get('/reset-password', [ForgetPasswordController::class, 'showResetForm']
 Route::post('/api/reset-password', [ForgetPasswordController::class, 'resetPassword'])
     ->name('reset-password');
 
-/*if (Schema::hasTable('festivals')) {
-    $festivals = Festival::all();
+Route::post('/api/fetch-ticket-details', [\App\Http\Controllers\QrReaderController::class, 'fetchTicketDetails']);
 
-    foreach ($festivals as $festival) {
-        $slug = Str::slug($festival->name, '-');
+Route::get('/events', [EventController::class, 'index']);
+Route::get('/api/events/jazz', [EventController::class, 'getJazzEvent']);
+Route::get('/api/events/food', [EventController::class, 'getFoodEvent']);
+Route::get('/api/events/dance', [EventController::class, 'getDanceEvent']);
+Route::get('/api/events/history', [EventController::class, 'getHistoryEvent']);
+Route::post('/api/events', [EventController::class, 'store']);
+Route::get('/api/events/{id}', [EventController::class, 'show']);
+Route::put('/api/events/{id}', [EventController::class, 'update']);
+Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
 
 
-        Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
-            ->where('path', '.*')
-            ->name('festivals.show');
-    }
-}*/
+
+Route::get('/api/homepage/hero-image', function() {
+    $content = \App\Models\HomepageContent::first();
+    return response()->json([
+        'path' => $content ? $content->hero_image_path : null
+    ]);
+});
 
 

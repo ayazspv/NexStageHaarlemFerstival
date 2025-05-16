@@ -1,3 +1,4 @@
+import {router} from "@inertiajs/vue3";
 
 export function urlFriendly(title: string) {
     return title
@@ -8,4 +9,8 @@ export function urlFriendly(title: string) {
 
 export function route(name: string, path: string) {
     return `${urlFriendly(name)}/${path}`
+}
+
+export function refresh() {
+    location.reload();
 }

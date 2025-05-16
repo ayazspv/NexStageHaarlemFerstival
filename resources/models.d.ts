@@ -65,6 +65,22 @@ export interface JazzFestival {
     updated_at?: string;
 }
 
+export type Event = {
+    id: number;
+    name: string;
+    description?: string | null;
+    details?: string | null;
+    time: string; // ISO 8601 date-time string
+    ticket_price: number;
+    image?: string | null;
+    second_image?: string | null;
+    day: number; // Festival day (e.g., 24, 25, etc.)
+    festival_id: number; // Foreign key to the Festival
+    festival?: Festival; // Optional relationship to the Festival
+    created_at?: string; // Timestamp when the event was created
+    updated_at?: string; // Timestamp when the event was last updated
+};
+
 export type Order = {
     id: number,
     user_id: number,
