@@ -72,15 +72,7 @@ class ForgetPasswordController
         $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:6|confirmed',
-            'passwordRepeat' => 'required|min:6',
         ]);
-
-        // Log the password and passwordRepeat for debugging
-    Log::debug('Password reset attempt:', [
-        'email' => $validated['email'],
-        'password' => $validated['password'],
-        'passwordRepeat' => $validated['passwordRepeat'],
-    ]);
 
         // Find the user by email
         $user = \App\Models\User::where('email', $validated['email'])->first();
@@ -88,6 +80,12 @@ class ForgetPasswordController
         if (!$user) {
             Log::warning('Password reset attempt for non-existent email: ' . $validated['email']);
             return response()->json(['message' => 'The email address does not exist in our records.'], 404);
+        }
+
+        // Check if the new password is the same as the old one
+        if (Hash::check($validated['password'], $user->password)) {
+            Log::warning('Password reset attempt with the same password for email: ' . $validated['email']);
+            return response()->json(['message' => 'The new password cannot be the same as the old password.'], 400);
         }
 
         // Update the user's password

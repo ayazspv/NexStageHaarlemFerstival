@@ -21,7 +21,7 @@ const errorMessage = ref<string | null>(null);
 const credentialForm = useForm({
     email: "",
     password: "",
-    passwordRepeat: "",
+    password_confirmation: "",
     recaptcha: "",
 });
 
@@ -30,7 +30,9 @@ function onRecaptchaVerifiedFP(token: string) {
 }
 
 function redirectToLogin() {
-    router.visit("/login");
+    setTimeout(() => {
+        router.visit("/login");
+    }, 5000);
 }
 
 async function resetPassword() {
@@ -58,21 +60,20 @@ async function resetPassword() {
             body: JSON.stringify({
                 email: credentialForm.email,
                 password: credentialForm.password,
-                passwordRepeat: credentialForm.passwordRepeat,
+                password_confirmation: credentialForm.password_confirmation,
             }),
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            successMessage.value = data.message || "Password reset successfully. Redirecting to login in 10 seconds...";
+            successMessage.value = data.message + " Redirecting to login in 10 seconds...";
             credentialForm.reset();
 
-            setTimeout(() => {
-                redirectToLogin();
-            }, 10);
+            redirectToLogin()
         } else {
             errorMessage.value = data.message || "Failed to reset password.";
+            credentialForm.reset();
         }
     } catch (error) {
         errorMessage.value = "A network error occurred. Please try again.";
@@ -96,13 +97,13 @@ async function resetPassword() {
                 <form @submit.prevent="resetPassword" class="d-flex flex-column">
                     <div class="mb-3">
                         <label for="password" class="form-label mb-2">Password</label>
-                        <input id="password" v-model="credentialForm.password" type="password" class="form-control"
-                            placeholder="Enter your password" />
+                        <input id="password" v-model="credentialForm.password" type="password" name="password"
+                            class="form-control" placeholder="Enter your password" />
                     </div>
                     <div class="mb-3">
                         <label for="passwordRepeat" class="form-label mb-2">Repeat your Password</label>
-                        <input id="passwordRepeat" v-model="credentialForm.passwordRepeat" type="password"
-                            class="form-control" placeholder="Enter your password again" />
+                        <input id="passwordRepeat" v-model="credentialForm.password_confirmation" type="password"
+                            name="password_confirmation" class="form-control" placeholder="Enter your password again" />
                     </div>
                     <Recaptcha @verified="onRecaptchaVerifiedFP" />
                     <button type="submit" class="btn btn-primary mt-3">
