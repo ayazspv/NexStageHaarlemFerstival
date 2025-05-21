@@ -26,7 +26,31 @@ const props = defineProps<{
         </div>
     </div>
     <div class="info-banner">
-
+        <div class="info-content">
+            <h2>How does it work?</h2>
+            <p>
+                Curious about the dining options available at Haarlem Culinary 2025? Explore the delectable offerings
+                from a selection of renowned Haarlem restaurants this year. Indulge your palate in a culinary journey
+                with these exquisite dining experiences.
+            </p>
+        </div>
+        <div class="info-process">
+            <img src="../../../../storage/app/public/main/yummy/process.png" alt="process" class="process-shapes">
+            <div class="process-text">
+                <div class="process-item">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <p>SEARCH RESTAURANT</p>
+                </div>
+                <div class="process-item">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <p>RESERVE YOUR TABLE</p>
+                </div>
+                <div class="process-item">
+                    <i class="fa-solid fa-utensils"></i>
+                    <p>ENJOY YOUR FOOD</p>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="restaurants-list">
 
@@ -108,5 +132,71 @@ const props = defineProps<{
     filter: drop-shadow(0px 0px 15px rgba(0, 0, 0, 0.50));
     background-color: #EC9A29;
     border: none;
+}
+
+.info-banner {
+    display: flex;
+    padding: 62px 50px;
+    justify-content: center;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    align-self: stretch;
+    background: #EEE;
+}
+
+.info-content {
+    display: flex;
+    width: 625px;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.info-content h2 {
+    color: #EC9A29;
+    font-family: Bayon;
+    font-size: 50px;
+}
+
+.info-content p {
+    color: #000;
+    font-family: NotoSansTamil;
+    font-size: 20px;
+    text-align: justify;
+}
+
+.info-process {
+    display: flex;
+    align-items: flex-start;
+    gap: 35px;
+}
+
+.process-shapes {
+    width: 40px;
+    margin-top: 7px;
+}
+
+.process-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 40px;
+}
+
+.process-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.process-item i {
+    color: #EC9A29;
+    font-size: 40px;
+}
+
+.process-item p {
+    color: #EC9A29;
+    font-family: Bayon;
+    font-size: 40px;
+    margin: 0;
 }
 </style>
