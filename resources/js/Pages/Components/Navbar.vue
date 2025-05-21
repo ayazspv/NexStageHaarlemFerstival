@@ -79,7 +79,7 @@ fetchFestivals();
 </script>
 
 <template>
-    <div class="navbar-container">
+    <div :class="['navbar-container', $attrs.class]">
         <div class="navbar-options">
             <div class="navbar-option">
                 <!-- Logo here -->
