@@ -131,8 +131,14 @@ Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
 
 Route::get('/api/homepage/hero-image', function() {
     $content = \App\Models\HomepageContent::first();
+    $path = null;
+    
+    if ($content && $content->hero_image_path) {
+        $path = $content->hero_image_path;
+    }
+    
     return response()->json([
-        'path' => $content ? $content->hero_image_path : null
+        'path' => $path
     ]);
 });
 

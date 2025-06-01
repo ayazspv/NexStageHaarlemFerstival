@@ -148,7 +148,7 @@ const stripHtmlTags = (html) => {
     <AppLayout title="Home">
         <div class="container-fluid p-0">
             <!-- Hero Section -->
-            <section class="hero-section" :style="`background: url(${heroUrl}) center/cover no-repeat`">
+            <section class="hero-section" :style="`background: url('${heroUrl || '/images/default-hero.jpg'}') center/cover no-repeat`">
                 <div class="overlay"></div>
                 <div class="hero-content d-flex flex-column align-items-center gap-1">
                     <h1 class="hero-title-haarlem">
@@ -195,7 +195,11 @@ const stripHtmlTags = (html) => {
 
                             <!-- Festival Image -->
                             <div class="festival-image-container">
-                                <img :src="`/storage/${festival.image_path}`"
+                                <img :src="festival.image_path ? 
+                                        (festival.image_path.startsWith('/') ? 
+                                            festival.image_path : 
+                                            '/storage/' + festival.image_path) 
+                                        : '/images/default-festival.jpg'"
                                      :alt="festival.name"
                                      class="festival-image">
                             </div>
@@ -235,10 +239,10 @@ const stripHtmlTags = (html) => {
                 </section>
 
                 <!-- Schedule Section -->
-                <section class="schedule-section py-5">
-                    <div class="container">
-                        <div class="d-flex flex-column align-items-center mb-5">
-                            <h2 class="section-title text-center">Festival Schedule</h2>
+                <section class="mb-5 mt-5 w-75">
+                        <div class="d-flex flex-row align-items-center justify-content-center gap-5 mb-3 w-100">
+                            <div class="section-title-bars"></div>
+                            <h2 class="section-title">Festival Schedule</h2>
                             <div class="section-title-bars"></div>
                         </div>
                         
@@ -270,15 +274,15 @@ const stripHtmlTags = (html) => {
                                 <div v-if="day !== '27'" class="day-separator"></div>
                             </div>
                         </div>
-                    </div>
                 </section>
 
 
                 <!-- Locations(Map) Section -->
                 <section class="mb-5 mt-5 w-75">
-                    <div class="d-flex flex-column align-items-center justify-content-center">
-                        <h2 class="text-left section-title">Where are the festivals located?</h2>
-                        <p>Here below is a simple map of all the festival locations</p>
+                    <div class="d-flex flex-row align-items-center justify-content-center gap-5 mb-3">
+                        <div class="section-title-bars"></div>
+                        <h2 class="section-title">Where are the festivals located?</h2>
+                        <div class="section-title-bars"></div>
                     </div>
                     <div class="map-container">
                         <div id="festival-map" class="border rounded"></div>
