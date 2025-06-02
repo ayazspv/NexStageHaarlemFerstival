@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { ref, computed, onMounted } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { Festival } from '../../../models';
 import { cart, fetchCartItems, updateCartItem, clearCart } from '../../composables/cart';
@@ -8,9 +8,23 @@ import { wishlist, fetchWishlistItems, removeFromWishlist, clearWishlist } from 
 import CartSidebar from './CartSidebar.vue';
 import WishlistSidebar from './WishlistSidebar.vue';
 
+// Use the usePage hook to get auth data directly
+const page = usePage();
+const authUser = computed(() => page.props.auth?.user);
+
+// Keep props for backward compatibility
 const props = defineProps({
     auth: Object,
 });
+
+// Debug auth status on mount
+onMounted(() => {
+    console.log('Auth from props:', props.auth);
+    console.log('Auth from page:', page.props.auth);
+});
+
+// Choose most reliable auth source
+const user = computed(() => authUser.value || props.auth?.user);
 
 // URL friendly conversion function
 function urlFriendly(str: string) {
@@ -22,11 +36,29 @@ function urlFriendly(str: string) {
 }
 
 function logout() {
-    router.post('/logout');
+    // Get the CSRF token from Inertia page props
+    const token = page.props.csrf_token;
+    
+    fetch('/logout', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': token || '',
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (response.ok || response.redirected) {
+            window.location.href = '/'; // Redirect to home page after logout
+        }
+    })
+    .catch(error => {
+        console.error('Logout error:', error);
+    });
 }
 
 function navigateToDashboard() {
-    const userRole = props.auth?.user?.role;
+    const userRole = user.value?.role;
     
     switch(userRole) {
         case 'admin':
@@ -83,45 +115,53 @@ fetchFestivals();
 <template>
     <div class="navbar-container">
         <div class="navbar-options">
-            <div class="navbar-option">
-                <!-- Logo here -->
+            <!-- Left section - Logo -->
+            <div class="navbar-section logo-section">
                 <a href="/" class="logo-link">
                     <img class="navbar-logo" src="/storage/main/logo.png" width="64px" height="64px" alt="Logo">
                 </a>
             </div>
-            <div class="navbar-option d-flex flex-row gap-5">
-                <div class="navbar-suboption">
-                    <a href="/">Home</a>
-                </div>
-                <div class="navbar-suboption position-relative">
-                    <span class="cursor-pointer" @click="toggleFestivalMenu">
-                      Festival ⩒
-                    </span>
-                    <ul v-if="isFestivalMenuVisible" class="festival-dropdown">
-                        <li v-for="festival in festivals" :key="festival.id">
-                            <a :href="`/festivals/${urlFriendly(festival.name)}`">
-                                {{ festival.name }}
-                            </a>
-                        </li>
-                    </ul>
+            
+            <!-- Middle section - Navigation -->
+            <div class="navbar-section nav-section">
+                <div class="navbar-links">
+                    <div class="navbar-suboption">
+                        <a href="/">Home</a>
+                    </div>
+                    <div class="navbar-suboption position-relative">
+                        <span class="cursor-pointer" @click="toggleFestivalMenu">
+                          Festival ⩒
+                        </span>
+                        <ul v-if="isFestivalMenuVisible" class="festival-dropdown">
+                            <li v-for="festival in festivals" :key="festival.id">
+                                <a :href="`/festivals/${urlFriendly(festival.name)}`">
+                                    {{ festival.name }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-
-            <div class="navbar-option">
+            
+            <!-- Right section - User/Auth and icons -->
+            <div class="navbar-section user-section">
                 <div class="navbar-suboption">
-                    <template v-if="auth?.user">
-                        <span @click="navigateToDashboard"
-                              class="cursor-pointer user-name">
-                            {{ auth.user.firstName }}
-                        </span>
-                        <button type="button" class="btn btn-outline-danger logoutBtn" @click="logout">
-                            Log Out
-                        </button>
+                    <template v-if="user">
+                        <div class="auth-container">
+                            <span @click="navigateToDashboard"
+                                  class="cursor-pointer user-name">
+                                {{ user.firstName }}
+                            </span>
+                            <button type="button" class="btn btn-outline-danger logoutBtn" @click="logout">
+                                Log Out
+                            </button>
+                        </div>
                     </template>
                     <template v-else>
-                        <a href="/login">
+                        <button @click="() => router.visit('/login')" class="login-button">
                             <i class="bx bx-user"></i>
-                        </a>
+                            <span>Login</span>
+                        </button>
                     </template>
                     
                     <!-- Cart and Wishlist Icons -->
@@ -163,10 +203,37 @@ fetchFestivals();
 
 .navbar-options {
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     height: 100%;
+}
+
+/* Three-section layout */
+.navbar-section {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.logo-section {
+    width: 25%;
+    justify-content: flex-start;
+}
+
+.nav-section {
+    width: 50%;
+    justify-content: center;
+}
+
+.navbar-links {
+    display: flex;
+    gap: 3rem;
+    align-items: center;
+}
+
+.user-section {
+    width: 25%;
+    justify-content: flex-end;
 }
 
 .navbar-option {
@@ -290,5 +357,39 @@ fetchFestivals();
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* New styles for auth container and login button */
+.auth-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.login-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: white;
+    color: #2565c7;
+    padding: 8px 16px;
+    border: 1.5px solid #2565c7;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.login-button:hover {
+    background-color: #2565c7;
+    color: white;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.login-button i {
+    font-size: 16px;
 }
 </style>
