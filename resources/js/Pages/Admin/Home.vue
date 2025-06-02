@@ -24,7 +24,24 @@ interface DashboardProps {
         admins: number;
         latest: Array<{ id: number; firstName: string; lastName: string; role: string; created_at: string }>;
     };
-    tickets: { placeholder: boolean };
+    tickets: {
+        placeholder?: boolean;
+        total?: number;
+        revenue?: number;
+        byFestival?: Array<{ id: number; name: string; count: number; type: number }>;
+        recentSales?: Array<{ id: number; customer: string; quantity: number; created_at: string }>;
+    };
+}
+
+// Function to get appropriate Bootstrap class for progress bars based on festival type
+function getBarClass(festivalType: number): string {
+    switch(festivalType) {
+        case 0: return 'bg-primary'; // Jazz
+        case 1: return 'bg-success'; // Food
+        case 2: return 'bg-warning'; // History
+        case 3: return 'bg-danger';  // Teylers
+        default: return 'bg-info';
+    }
 }
 
 // Destructure the 'stats' prop, and allow adding more props later
@@ -236,24 +253,65 @@ async function uploadHero(e: Event) {
                     </div>
                 </div>
 
-                <!-- Tickets Column (Placeholder) -->
+                <!-- Tickets Column -->
                 <div class="col-md-4 mb-4">
                     <div class="card h-100">
                         <div class="card-header bg-info text-white">
                             <h5 class="card-title mb-0">Tickets</h5>
                         </div>
-                        <div class="card-body text-center">
-                            <div class="placeholder-content">
-                                <i class="fas fa-ticket-alt fa-4x text-info mb-3"></i>
-                                <h4>Coming Soon</h4>
-                                <p class="text-muted">Ticket management features will be available in future updates.</p>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <div class="stats-box">
+                                        <h3 class="text-info">{{ stats.tickets.total || 0 }}</h3>
+                                        <p class="text-muted">Total Sold</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stats-box">
+                                        <h3 class="text-info">€{{ stats.tickets.revenue || 0 }}</h3>
+                                        <p class="text-muted">Revenue</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 class="card-subtitle mb-3">Tickets by Festival</h6>
+                            <div class="festival-tickets-chart mb-3">
+                                <div v-for="festival in stats.tickets.byFestival" :key="festival.id" 
+                                     class="festival-ticket-bar">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>{{ festival.name }}</span>
+                                        <span>{{ festival.count }}</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar" :style="`width: ${(festival.count / stats.tickets.total) * 100}%`" 
+                                             :class="getBarClass(festival.type)"></div>
+                                    </div>
+                                </div>
+                                <div v-if="!stats.tickets.byFestival?.length" class="text-center text-muted py-3">
+                                    No tickets sold yet
+                                </div>
+                            </div>
+
+                            <h6 class="card-subtitle mb-3">Recent Sales</h6>
+                            <div class="latest-items">
+                                <div v-for="sale in stats.tickets.recentSales" :key="sale.id" class="latest-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{ sale.customer }}</span>
+                                        <span class="badge bg-info">{{ sale.quantity }} tickets</span>
+                                    </div>
+                                    <small class="text-muted">{{ new Date(sale.created_at).toLocaleDateString() }}</small>
+                                </div>
+                                <div v-if="!stats.tickets.recentSales?.length" class="text-center text-muted py-3">
+                                    No recent sales
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Main Content Editor -->
-                <div class="col-md-8 mb-4">
+                <div class="col-md-12 mb-4">
                     <div class="card h-100">
                         <div class="card-header bg-primary text-white">
                             <h5 class="card-title mb-0">Main Page Content</h5>
@@ -475,5 +533,19 @@ textarea:focus, input:focus {
         border-top: 1px solid #ddd;
         margin: 2rem 0;
     }
+}
+
+.festival-tickets-chart {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.festival-ticket-bar {
+    margin-bottom: 0.75rem;
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
 }
 </style>
