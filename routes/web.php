@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderExportController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\QrReaderController;
 use App\Models\CMS;
 use App\Models\Festival;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -171,6 +173,13 @@ Route::get('/api/homepage/hero-image', function() {
         'path' => $path
     ]);
 });
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/validate-qr-code', [QrReaderController::class, 'validateQrCode']);
+    Route::post('/api/fetch-ticket-details', [QrReaderController::class, 'fetchTicketDetails']);
+    Route::post('/api/redeem-ticket', [QrReaderController::class, 'redeemTicket']);
+});
+
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');

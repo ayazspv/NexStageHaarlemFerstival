@@ -1,3 +1,55 @@
+<script>
+
+export default {
+  data() {
+    return {
+      name: '',
+      email: '',
+      jsonOutput: null
+    };
+  },
+  methods: {
+    generateJson() {
+      // Generate a random cartId
+      const cartId = this.generateRandomId();
+
+
+      // Structure the JSON
+      const jsonData = {
+        cartId,
+        user: {
+          name: this.name,
+          email: this.email
+        },
+        success_url: '/success',
+        fail_url: '/failed'
+      };
+
+      this.jsonOutput = JSON.stringify(jsonData, null, 2);
+    },
+    generateRandomId() {
+      return 'cart_' + Math.random().toString(36).substr(2, 9);
+    },
+    downloadJson() {
+      const blob = new Blob([JSON.stringify(this.jsonOutput)], { type: 'application/json' });
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'cart_data.json';
+      link.click();
+    }
+  }
+};
+
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+const cartData = page.props.cartData;
+
+console.log("Received Data:", cartData);
+
+
+</script>
 <template>
     <div id="app" class="container">
         <h2 class="my-4">User Information</h2>
@@ -26,87 +78,6 @@
         </div>
     </div>
 </template>
-
-<script>
-
-
-/*  try {
-        const response = await fetch('/api/send-mail', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            body: JSON.stringify({
-                to: 'aron.lakatos123@gmail.com',
-                subject: 'New Item Added to Cart',
-                body: `An item with ID ${festivalId} and name ${festivalName} has been added to your cart.`,
-                altBody: `An item with ID ${festivalId} and name ${festivalName} has been added to your cart.`,
-                qrCodesNumber : ["1234"]
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to send email: ${response.statusText} (${response.body})`);
-        }
-
-        const result = await response.json();
-        console.log('Email sent successfully:', result.message);
-    } catch (error) {
-        console.error('Error sending email:', error);
-    } */
-
-
-export default {
-    data() {
-        return {
-            name: '',
-            email: '',
-            jsonOutput: null
-        };
-    },
-    methods: {
-        generateJson() {
-            // Generate a random cartId
-            const cartId = this.generateRandomId();
-
-
-            // Structure the JSON
-            const jsonData = {
-                cartId,
-                user: {
-                    name: this.name,
-                    email: this.email
-                },
-                success_url: '/success',
-                fail_url: '/failed'
-            };
-
-            this.jsonOutput = JSON.stringify(jsonData, null, 2);
-        },
-        generateRandomId() {
-            return 'cart_' + Math.random().toString(36).substr(2, 9);
-        },
-        downloadJson() {
-            const blob = new Blob([JSON.stringify(this.jsonOutput)], { type: 'application/json' });
-
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'cart_data.json';
-            link.click();
-        }
-    }
-};
-
-import { usePage } from '@inertiajs/vue3';
-
-const page = usePage();
-const cartData = page.props.cartData;
-
-console.log("Received Data:", cartData);
-
-
-</script>
 
 <style scoped>
 </style>
