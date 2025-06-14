@@ -83,6 +83,7 @@ function goToNextPage() {
         <div class="container mt-5">
             <h1 class="text-center mb-4">Your Cart</h1>
 
+            <!-- Display a message if the cart is empty -->
             <div v-if="cart.length === 0" class="alert alert-info text-center">
                 Your cart is empty.
             </div>
