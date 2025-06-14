@@ -8,8 +8,6 @@ use App\Http\Controllers\Admin\SlugsController;
 use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderExportController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\QrReaderController;
 use App\Models\CMS;
 use App\Models\Festival;
 use Illuminate\Support\Facades\Route;
@@ -27,7 +25,8 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Http\Controllers\PersonalProgramController;
+use App\Http\Controllers\TicketController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -131,35 +130,6 @@ Route::put('/api/events/{id}', [EventController::class, 'update']);
 Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
 
 
-// Payment routes
-Route::middleware(['auth'])->group(function () {
-    Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
-    Route::get('/payment/form', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
-});
-
-// Order routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-});
-
-// API routes for cart operations
-Route::middleware(['auth'])->group(function () {
-    Route::get('/api/cart/items', [CartController::class, 'getCartItems']);
-    Route::post('/api/cart/add', [CartController::class, 'addToCart']);
-    Route::put('/api/cart/items/{cartItem}', [CartController::class, 'updateCartItem']);
-    Route::delete('/api/cart/clear', [CartController::class, 'clearCart']);
-});
-
-
-// Payment routes (with authentication middleware)
-Route::middleware(['auth'])->group(function () {
-    Route::post('/api/create-payment-intent', [PaymentController::class, 'createPaymentIntent'])->name('payment.intent');
-    Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
-    Route::get('/payment/success/{order}', [PaymentController::class, 'showSuccess'])->name('payment.success');
-    Route::get('/payment/failed', [PaymentController::class, 'showFailed'])->name('payment.failed');
-});
-
 
 Route::get('/api/homepage/hero-image', function() {
     $content = \App\Models\HomepageContent::first();
@@ -175,14 +145,10 @@ Route::get('/api/homepage/hero-image', function() {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::post('/api/validate-qr-code', [QrReaderController::class, 'validateQrCode']);
-    Route::post('/api/fetch-ticket-details', [QrReaderController::class, 'fetchTicketDetails']);
-    Route::post('/api/redeem-ticket', [QrReaderController::class, 'redeemTicket']);
+    Route::get('/user/personal-program', [PersonalProgramController::class, 'index'])->name('user.program');
+    
+    // You might also need an API endpoint for processing special ticket types
+    Route::post('/api/tickets/day-pass', [TicketController::class, 'storeDayPass']);
+    Route::post('/api/tickets/full-pass', [TicketController::class, 'storeFullPass']);
 });
-
-
-Route::middleware(['auth'])->group(function () {
-    Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
-});
-
 
