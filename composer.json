@@ -7,7 +7,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "barryvdh/laravel-dompdf": "^3.1",
         "chillerlan/php-qrcode": "^5.0",
         "endroid/qr-code": "^5.0",
         "inertiajs/inertia-laravel": "^2.0",
@@ -15,7 +14,7 @@
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "3.1.59",
         "phpmailer/phpmailer": "^6.9",
-        "stripe/stripe-php": "^17.3",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "tightenco/ziggy": "^2.5"
     },
     "require-dev": {
