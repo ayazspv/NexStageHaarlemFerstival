@@ -5,15 +5,52 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Festival;
 use App\Models\HomepageContent;
 use App\Models\User;
+use App\Models\Order;
+use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class AdminPanelController
 {
     public function show(): Response
     {
+        // Get ticket statistics
+        $totalTickets = Ticket::count();
+        $totalRevenue = Order::where('status', 'completed')->sum('total_price');
+
+        // Get tickets by festival with proper aggregation
+        $ticketsByFestival = DB::table('tickets')
+            ->join('festivals', 'tickets.festival_id', '=', 'festivals.id')
+            ->select(
+                'festivals.id',
+                'festivals.name',
+                'festivals.festivalType',
+                DB::raw('COUNT(tickets.id) as count')
+            )
+            ->groupBy('festivals.id', 'festivals.name', 'festivals.festivalType')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+
+        // Get recent sales with customer information
+        $recentSales = Order::with(['tickets.festival'])
+            ->where('status', 'completed')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'customer' => $order->payment_details['customer_name'] ?? 'Unknown Customer',
+                    'quantity' => $order->tickets->count(),
+                    'total_amount' => $order->total_price,
+                    'created_at' => $order->created_at->toISOString(),
+                ];
+            });
+
         $stats = [
             'events' => [
                 'total' => Festival::count(),
@@ -31,17 +68,25 @@ class AdminPanelController
                     ->get()
             ],
             'tickets' => [
-                'placeholder' => true
+                'total' => $totalTickets,
+                'revenue' => round($totalRevenue, 2),
+                'byFestival' => $ticketsByFestival->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'count' => $item->count,
+                        'type' => $item->festivalType ?? 0
+                    ];
+                }),
+                'recentSales' => $recentSales
             ]
         ];
 
         $homepageContent = HomepageContent::first();
 
-        error_log($homepageContent);
-
         return Inertia::render('Admin/Home', [
             'stats' => $stats,
-            'homepageContent' => $homepageContent->content ? $homepageContent->content : null,
+            'homepageContent' => $homepageContent ? $homepageContent->content : null,
         ]);
     }
 
@@ -89,7 +134,7 @@ class AdminPanelController
 
         // Store new image
         $path = $request->file('hero')->store('festivals', 'public');
-        
+
         // Update the hero_image_path
         $homepageContent->update([
             'hero_image_path' => $path

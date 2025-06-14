@@ -6,25 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->decimal('total_price');
-            $table->string('status')->default('pending');
+            $table->decimal('total_price', 10, 2);
+            $table->enum('status', ['pending', 'completed', 'failed', 'cancelled'])->default('pending');
             $table->timestamp('ordered_at')->useCurrent();
+            $table->json('payment_details')->nullable(); // Store simulation payment details
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('orders');
     }

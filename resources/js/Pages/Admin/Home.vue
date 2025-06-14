@@ -277,14 +277,14 @@ async function uploadHero(e: Event) {
 
                             <h6 class="card-subtitle mb-3">Tickets by Festival</h6>
                             <div class="festival-tickets-chart mb-3">
-                                <div v-for="festival in stats.tickets.byFestival" :key="festival.id" 
+                                <div v-for="festival in stats.tickets.byFestival" :key="festival.id"
                                      class="festival-ticket-bar">
                                     <div class="d-flex justify-content-between mb-1">
                                         <span>{{ festival.name }}</span>
                                         <span>{{ festival.count }}</span>
                                     </div>
                                     <div class="progress">
-                                        <div class="progress-bar" :style="`width: ${(festival.count / stats.tickets.total) * 100}%`" 
+                                        <div class="progress-bar" :style="`width: ${(festival.count / stats.tickets.total) * 100}%`"
                                              :class="getBarClass(festival.type)"></div>
                                     </div>
                                 </div>

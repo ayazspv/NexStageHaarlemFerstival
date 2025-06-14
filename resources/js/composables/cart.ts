@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import {useForm, Link, router, usePage} from '@inertiajs/vue3';
+import { useForm, Link, router, usePage } from '@inertiajs/vue3';
 
 export const cart = ref<any[]>([]);
 
@@ -8,7 +8,6 @@ export function fetchCartItems() {
     cart.value = storedCart;
     cart.value = [...cart.value]; // Trigger reactivity update
 }
-
 
 export async function addToCart(festivalId: number, festivalName: string, festivalCost: number) {
     const existingItem = cart.value.find(item => item.festival_id === festivalId);
@@ -19,13 +18,6 @@ export async function addToCart(festivalId: number, festivalName: string, festiv
     }
     localStorage.setItem('cart', JSON.stringify(cart.value));
     cart.value = [...cart.value]; // Trigger reactivity update
-
-    const page = usePage();
-    const csrfToken = page.props.csrf_token as string || ""; 
-
-    
-
-   
 }
 
 export function updateCartItem(cartItemId: number, quantity: number) {
@@ -58,24 +50,31 @@ export function addAllToCart(items: { festival_id: number; name: string; quantit
     cart.value = [...cart.value]; // Trigger reactivity update
 }
 
+// New function to prepare data for checkout
+export function prepareCheckoutData() {
+    const items = cart.value.map(item => ({
+        festivalID: item.festival_id,
+        festivalName: item.festival_name,
+        festivalQuantity: item.quantity,
+        festivalCost: item.festival_cost,
+    }));
+
+    const totalAmount = cart.value.reduce((total, item) => total + (item.festival_cost * item.quantity), 0);
+
+    return {
+        totalAmount,
+        items,
+    };
+}
+
 export function useCart() {
     return {
         cart,
         fetchCartItems,
         addToCart,
-        addAllToCart, // Add the new function here
+        addAllToCart,
         updateCartItem,
         clearCart,
-        
+        prepareCheckoutData,
     };
 }
-
-// export function layerOneOutput(totalAmount: number, items: Array) {
-//     const storedData = JSON.parse(totalAmount, items)
-// }
-
-
-export function addOutputLayer1() {
-    
-}
-
