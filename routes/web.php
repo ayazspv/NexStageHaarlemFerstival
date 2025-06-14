@@ -151,5 +151,3 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/tickets/day-pass', [TicketController::class, 'storeDayPass']);
     Route::post('/api/tickets/full-pass', [TicketController::class, 'storeFullPass']);
 });
-
-
