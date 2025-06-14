@@ -15,6 +15,7 @@
         "maatwebsite/excel": "3.1.59",
         "phpmailer/phpmailer": "^6.9",
         "simplesoftwareio/simple-qrcode": "^4.2",
+        "stripe/stripe-php": "^17.3",
         "tightenco/ziggy": "^2.5"
     },
     "require-dev": {

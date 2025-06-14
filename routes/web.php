@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\SlugsController;
 use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderExportController;
+use App\Http\Controllers\PaymentController;
 use App\Models\CMS;
 use App\Models\Festival;
 use Illuminate\Support\Facades\Route;
@@ -128,18 +129,51 @@ Route::put('/api/events/{id}', [EventController::class, 'update']);
 Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
 
 
+// Payment routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
+    Route::get('/payment/form', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
+});
+
+// Order routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+});
+
+// API routes for cart operations
+Route::middleware(['auth'])->group(function () {
+    Route::get('/api/cart/items', [CartController::class, 'getCartItems']);
+    Route::post('/api/cart/add', [CartController::class, 'addToCart']);
+    Route::put('/api/cart/items/{cartItem}', [CartController::class, 'updateCartItem']);
+    Route::delete('/api/cart/clear', [CartController::class, 'clearCart']);
+});
+
+
+// Payment routes (with authentication middleware)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/create-payment-intent', [PaymentController::class, 'createPaymentIntent'])->name('payment.intent');
+    Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
+    Route::get('/payment/success/{order}', [PaymentController::class, 'showSuccess'])->name('payment.success');
+    Route::get('/payment/failed', [PaymentController::class, 'showFailed'])->name('payment.failed');
+});
+
 
 Route::get('/api/homepage/hero-image', function() {
     $content = \App\Models\HomepageContent::first();
     $path = null;
-    
+
     if ($content && $content->hero_image_path) {
         $path = $content->hero_image_path;
     }
-    
+
     return response()->json([
         'path' => $path
     ]);
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
 });
 
 
