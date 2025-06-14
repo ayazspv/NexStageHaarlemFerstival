@@ -134,11 +134,11 @@ Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
 Route::get('/api/homepage/hero-image', function() {
     $content = \App\Models\HomepageContent::first();
     $path = null;
-
+    
     if ($content && $content->hero_image_path) {
         $path = $content->hero_image_path;
     }
-
+    
     return response()->json([
         'path' => $path
     ]);
@@ -151,4 +151,3 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/tickets/day-pass', [TicketController::class, 'storeDayPass']);
     Route::post('/api/tickets/full-pass', [TicketController::class, 'storeFullPass']);
 });
-
