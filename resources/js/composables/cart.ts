@@ -6,26 +6,48 @@ export const cart = ref<any[]>([]);
 export function fetchCartItems() {
     const storedCart = JSON.parse(localStorage.getItem('cart') || '[]');
     cart.value = storedCart;
-    cart.value = [...cart.value]; // Trigger reactivity update
+    cart.value = [...cart.value];
 }
 
 
-export async function addToCart(festivalId: number, festivalName: string, festivalCost: number) {
-    const existingItem = cart.value.find(item => item.festival_id === festivalId);
+export async function addToCart(
+    festivalId: number, 
+    festivalName: string, 
+    festivalCost: number, 
+    quantity: number = 1, 
+    ticketType: string = 'standard', 
+    details: any = {}
+) {
+    // Generate a unique ID for special tickets
+    const itemId = festivalId > 0 ? festivalId : `${ticketType}_${JSON.stringify(details)}`;
+    
+    const existingItem = cart.value.find(item => {
+        if (ticketType === 'standard') {
+            return item.festival_id === festivalId;
+        } else {
+            return item.ticket_type === ticketType && 
+                   JSON.stringify(item.details) === JSON.stringify(details);
+        }
+    });
+
     if (existingItem) {
-        existingItem.quantity += 1;
+        existingItem.quantity += quantity;
     } else {
-        cart.value.push({ festival_id: festivalId, festival_name: festivalName, festival_cost: festivalCost, quantity: 1 });
+        cart.value.push({ 
+            festival_id: festivalId, 
+            festival_name: festivalName, 
+            festival_cost: festivalCost, 
+            quantity: quantity,
+            ticket_type: ticketType,
+            details: details
+        });
     }
+    
     localStorage.setItem('cart', JSON.stringify(cart.value));
-    cart.value = [...cart.value]; // Trigger reactivity update
+    cart.value = [...cart.value];
 
     const page = usePage();
-    const csrfToken = page.props.csrf_token as string || ""; 
-
-    
-
-   
+    const csrfToken = page.props.csrf_token as string || "";
 }
 
 export function updateCartItem(cartItemId: number, quantity: number) {
@@ -36,26 +58,26 @@ export function updateCartItem(cartItemId: number, quantity: number) {
             cart.value = cart.value.filter(item => item.festival_id !== cartItemId);
         }
         localStorage.setItem('cart', JSON.stringify(cart.value));
-        cart.value = [...cart.value]; // Trigger reactivity update
+        cart.value = [...cart.value];
     }
 }
 
 export function clearCart() {
-    cart.value = []; // Clear the cart
-    localStorage.setItem('cart', JSON.stringify(cart.value)); // Update localStorage
+    cart.value = [];
+    localStorage.setItem('cart', JSON.stringify(cart.value));
 }
 
 export function addAllToCart(items: { festival_id: number; name: string; quantity: number }[]) {
     items.forEach(item => {
         const existingItem = cart.value.find(cartItem => cartItem.festival_id === item.festival_id);
         if (existingItem) {
-            existingItem.quantity += item.quantity; // Update quantity if the item already exists
+            existingItem.quantity += item.quantity;
         } else {
             cart.value.push({ festival_id: item.festival_id, name: item.name, quantity: item.quantity });
         }
     });
-    localStorage.setItem('cart', JSON.stringify(cart.value)); // Update localStorage
-    cart.value = [...cart.value]; // Trigger reactivity update
+    localStorage.setItem('cart', JSON.stringify(cart.value));
+    cart.value = [...cart.value];
 }
 
 export function useCart() {
@@ -63,19 +85,8 @@ export function useCart() {
         cart,
         fetchCartItems,
         addToCart,
-        addAllToCart, // Add the new function here
+        addAllToCart,
         updateCartItem,
         clearCart,
-        
     };
 }
-
-// export function layerOneOutput(totalAmount: number, items: Array) {
-//     const storedData = JSON.parse(totalAmount, items)
-// }
-
-
-export function addOutputLayer1() {
-    
-}
-

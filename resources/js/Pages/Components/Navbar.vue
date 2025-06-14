@@ -65,11 +65,10 @@ function navigateToDashboard() {
             router.visit('/admin/dashboard');
             break;
         case 'user':
-            router.visit('/home');
+            router.visit('/user/personal-program');
             break;
         default:
             router.visit('/');
-            break;
     }
 }
 
@@ -391,5 +390,56 @@ fetchFestivals();
 
 .login-button i {
     font-size: 16px;
+}
+
+/* Dropdown menu styles */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: auto;
+    z-index: 1000;
+    display: none;
+    float: right;
+    min-width: 160px;
+    padding: 0.5rem 0;
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    color: #333;
+    text-align: inherit;
+    white-space: nowrap;
+    background: 0;
+    border: 0;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f5f5f5;
+}
+
+.dropdown-divider {
+    height: 0;
+    margin: 0.5rem 0;
+    overflow: hidden;
+    border-top: 1px solid #e9ecef;
 }
 </style>

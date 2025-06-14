@@ -25,6 +25,8 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
+use App\Http\Controllers\PersonalProgramController;
+use App\Http\Controllers\TicketController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -140,6 +142,14 @@ Route::get('/api/homepage/hero-image', function() {
     return response()->json([
         'path' => $path
     ]);
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/personal-program', [PersonalProgramController::class, 'index'])->name('user.program');
+    
+    // You might also need an API endpoint for processing special ticket types
+    Route::post('/api/tickets/day-pass', [TicketController::class, 'storeDayPass']);
+    Route::post('/api/tickets/full-pass', [TicketController::class, 'storeFullPass']);
 });
 
 
