@@ -181,7 +181,6 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/user/personal-program', [PersonalProgramController::class, 'index'])->name('user.program');
-
     Route::post('/api/tickets/day-pass', [TicketController::class, 'storeDayPass']);
     Route::post('/api/tickets/full-pass', [TicketController::class, 'storeFullPass']);
 });
