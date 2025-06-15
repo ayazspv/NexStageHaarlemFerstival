@@ -4,17 +4,13 @@ import { cart, fetchCartItems, addToCart } from '../composables/cart';
 import { wishlist, fetchWishlistItems, addToWishlist } from '../composables/wishlist';
 import { ref, computed, onMounted } from 'vue';
 import { Festival } from "../../models";
+import {parseToUrl} from "../../utils";
 
 const props = defineProps<{
     festivals: Festival[];
     heroUrl: string | null,
     homepageContent: string | null,
 }>();
-
-// URL-friendly
-const parseToUrl = (title: string) => {
-    return title.trim().toLowerCase().replace(/\s+/g, '-');
-};
 
 // Helper function to find festival by name (not in use)
 const findFestival = (name: string) => {

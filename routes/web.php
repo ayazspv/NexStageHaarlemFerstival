@@ -3,22 +3,15 @@
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\FestivalContentController;
 use App\Http\Controllers\Admin\GameCMSController;
-use App\Http\Controllers\Admin\JazzFestivalController;
 use App\Http\Controllers\Admin\SlugsController;
 use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\OrderExportController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\QrReaderController;
-use App\Models\CMS;
-use App\Models\Festival;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminPanelController;
 use App\Http\Controllers\Admin\FestivalController;
 use App\Http\Controllers\Admin\UserController;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MailController;
@@ -28,6 +21,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Http\Middleware\QrReaderAccess;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -107,10 +101,6 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart');
 
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
 
-Route::get('/qr-reader', function () {
-    return Inertia::render('QrReader/QrReader');
-})->name('qr-reader');
-
 Route::post('/api/send-reset-mail', [\App\Http\Controllers\ForgetPasswordController::class, 'sendResetMail'])
     ->name('send-reset-mail');
 
@@ -174,12 +164,16 @@ Route::get('/api/homepage/hero-image', function() {
     ]);
 });
 
-Route::middleware(['auth'])->group(function () {
+// QR Readers
+Route::middleware(['auth', 'qr.access'])->group(function () {
+    Route::get('/qr-reader', function () {
+        return Inertia::render('QrReader/QrReader');
+    })->name('qr-reader');
+
     Route::post('/api/validate-qr-code', [QrReaderController::class, 'validateQrCode']);
     Route::post('/api/fetch-ticket-details', [QrReaderController::class, 'fetchTicketDetails']);
     Route::post('/api/redeem-ticket', [QrReaderController::class, 'redeemTicket']);
 });
-
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
