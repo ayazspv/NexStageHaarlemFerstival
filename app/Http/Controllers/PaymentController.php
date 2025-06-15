@@ -26,12 +26,49 @@ class PaymentController
     public function createPaymentIntent(Request $request)
     {
         $validated = $request->validate([
-            'totalAmount' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
+            'items.*.festival_id' => 'required|integer|exists:festivals,id',
+            'items.*.quantity' => 'required|integer|min:1|max:10',
         ]);
 
         try {
-            $amountInCents = (int) ($validated['totalAmount'] * 100);
+            $totalAmount = 0;
+            $calculatedItems = [];
+
+            // Calculate server-side prices for security
+            foreach ($validated['items'] as $item) {
+                $festival = Festival::find($item['festival_id']);
+
+                if (!$festival) {
+                    return response()->json(['error' => "Festival with ID {$item['festival_id']} not found."], 400);
+                }
+
+                // Use festival price from database or default to 20.00
+                $pricePerTicket = $festival->price ?? 20.00;
+                $itemTotal = $pricePerTicket * $item['quantity'];
+                $totalAmount += $itemTotal;
+
+                $calculatedItems[] = [
+                    'festival_id' => $festival->id,
+                    'festival_name' => $festival->name,
+                    'quantity' => $item['quantity'],
+                    'price_per_ticket' => $pricePerTicket,
+                    'item_total' => $itemTotal,
+                ];
+            }
+
+            // Validate total amount
+            if ($totalAmount <= 0 || $totalAmount > 10000) {
+                return response()->json(['error' => 'Invalid total amount calculated.'], 400);
+            }
+
+            $amountInCents = (int) ($totalAmount * 100);
+
+            Log::info('Creating payment intent', [
+                'user_id' => auth()->id(),
+                'total_amount' => $totalAmount,
+                'calculated_items' => $calculatedItems
+            ]);
 
             $paymentIntent = PaymentIntent::create([
                 'amount' => $amountInCents,
@@ -41,19 +78,29 @@ class PaymentController
                 ],
                 'metadata' => [
                     'user_id' => auth()->id(),
-                    'items_count' => count($validated['items']),
+                    'items_count' => count($calculatedItems),
+                    'calculated_total' => $totalAmount,
                 ],
             ]);
+
+            // Store validation data in session for later verification
+            session(['payment_validation_' . $paymentIntent->id => [
+                'calculated_items' => $calculatedItems,
+                'total_amount' => $totalAmount,
+                'user_id' => auth()->id(),
+                'created_at' => now()->toISOString(),
+            ]]);
 
             return response()->json([
                 'client_secret' => $paymentIntent->client_secret,
                 'payment_intent_id' => $paymentIntent->id,
+                'calculated_total' => $totalAmount,
+                'calculated_items' => $calculatedItems,
             ]);
+
         } catch (\Exception $e) {
             Log::error('Payment Intent Creation Failed: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Failed to create payment intent: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Failed to create payment intent. Please try again.'], 500);
         }
     }
 
@@ -63,12 +110,6 @@ class PaymentController
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'required|email',
             'payment_intent_id' => 'required|string',
-            'totalAmount' => 'required|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.festivalID' => 'required|integer',
-            'items.*.festivalName' => 'required|string',
-            'items.*.festivalQuantity' => 'required|integer|min:1',
-            'items.*.festivalCost' => 'required|numeric|min:0',
         ]);
 
         try {
@@ -85,10 +126,44 @@ class PaymentController
                 ], 400);
             }
 
+            // Get stored validation data from session
+            $validationKey = 'payment_validation_' . $validated['payment_intent_id'];
+            $storedData = session($validationKey);
+
+            if (!$storedData) {
+                Log::error('Payment validation data not found in session');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment validation failed. Please try again.'
+                ], 400);
+            }
+
+            // Verify user owns this payment
+            if ($storedData['user_id'] !== auth()->id()) {
+                Log::error('User mismatch in payment processing');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized payment processing attempt.'
+                ], 403);
+            }
+
+            // Verify payment amount matches what we calculated
+            $expectedAmountInCents = (int) ($storedData['total_amount'] * 100);
+            if ($paymentIntent->amount !== $expectedAmountInCents) {
+                Log::error('Payment amount mismatch detected');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment amount verification failed.'
+                ], 400);
+            }
+
             Log::info('Payment verified successfully. Creating order...');
 
-            // Create order and send email
-            $order = $this->createOrderWithEmail($validated, $paymentIntent);
+            // Create order using stored validation data
+            $order = $this->createOrderWithEmail($validated, $paymentIntent, $storedData);
+
+            // Clear validation data from session
+            session()->forget($validationKey);
 
             Log::info('Order created successfully: ' . $order->id);
 
@@ -99,26 +174,27 @@ class PaymentController
 
         } catch (\Exception $e) {
             Log::error('Payment processing failed: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred: ' . $e->getMessage()
+                'message' => 'An error occurred during payment processing. Please try again.'
             ], 500);
         }
     }
 
-    private function createOrderWithEmail($data, $paymentIntent)
+    private function createOrderWithEmail($data, $paymentIntent, $storedData)
     {
         Log::info('Step 1: Creating order record in database');
 
-        // Step 1: Create order
+        // Create order using server-calculated amounts
         $order = Order::create([
             'user_id' => auth()->id(),
-            'total_price' => $data['totalAmount'],
+            'total_price' => $storedData['total_amount'],
             'status' => 'completed',
             'ordered_at' => now(),
             'payment_details' => [
                 'payment_intent_id' => $paymentIntent->id,
+                'stripe_amount' => $paymentIntent->amount,
+                'calculated_amount' => $storedData['total_amount'],
                 'customer_name' => $data['customer_name'],
                 'customer_email' => $data['customer_email'],
                 'payment_date' => now()->toISOString(),
@@ -127,30 +203,30 @@ class PaymentController
 
         Log::info('Order created with ID: ' . $order->id);
 
-        // Step 2: Create tickets
+        // Create tickets using stored validation data
         Log::info('Step 2: Creating tickets');
-        $this->createTickets($order, $data['items']);
+        $this->createTickets($order, $storedData['calculated_items']);
 
-        // Step 3: Send email with PDF
+        // Send email with PDF
         Log::info('Step 3: Sending confirmation email');
         $this->sendOrderConfirmationEmail($order);
 
         return $order;
     }
 
-    private function createTickets($order, $items)
+    private function createTickets($order, $calculatedItems)
     {
-        foreach ($items as $item) {
-            $festival = Festival::find($item['festivalID']);
+        foreach ($calculatedItems as $item) {
+            $festival = Festival::find($item['festival_id']);
 
             if (!$festival) {
-                Log::warning('Festival not found: ' . $item['festivalID']);
+                Log::warning('Festival not found during ticket creation: ' . $item['festival_id']);
                 continue;
             }
 
-            Log::info('Creating ' . $item['festivalQuantity'] . ' tickets for festival: ' . $festival->name);
+            Log::info('Creating ' . $item['quantity'] . ' tickets for festival: ' . $festival->name);
 
-            for ($i = 0; $i < $item['festivalQuantity']; $i++) {
+            for ($i = 0; $i < $item['quantity']; $i++) {
                 $qrCode = 'TKT-' . strtoupper(Str::random(8));
 
                 Ticket::create([
@@ -158,7 +234,7 @@ class PaymentController
                     'festival_id' => $festival->id,
                     'qr_code' => $qrCode,
                     'quantity' => 1,
-                    'price_per_ticket' => $item['festivalCost'],
+                    'price_per_ticket' => $item['price_per_ticket'],
                 ]);
 
                 Log::info('Ticket created: ' . $qrCode);
@@ -180,6 +256,7 @@ class PaymentController
             }
 
             Log::info('Order loaded with ' . $order->tickets->count() . ' tickets');
+            Log::info('Payment details: ' . json_encode($order->payment_details));
 
             // Generate PDF
             Log::info('Generating PDF...');
@@ -198,6 +275,7 @@ class PaymentController
         } catch (\Exception $e) {
             Log::error('Email sending failed for order ' . $order->id . ': ' . $e->getMessage());
             Log::error('Email error stack trace: ' . $e->getTraceAsString());
+            // Don't throw the exception, just log it so the order still completes
         }
     }
 
@@ -255,8 +333,16 @@ class PaymentController
     private function sendEmailWithPDF($order, $pdfContent)
     {
         try {
-            $customerEmail = $order->payment_details['customer_email'];
-            $customerName = $order->payment_details['customer_name'];
+            // Get customer details from payment_details array
+            $paymentDetails = $order->payment_details;
+            $customerEmail = $paymentDetails['customer_email'] ?? null;
+            $customerName = $paymentDetails['customer_name'] ?? null;
+
+            if (!$customerEmail) {
+                Log::error('Customer email not found in payment details for order: ' . $order->id);
+                Log::info('Payment details structure: ' . json_encode($paymentDetails));
+                return;
+            }
 
             Log::info('Sending email to: ' . $customerEmail);
 
@@ -269,11 +355,15 @@ class PaymentController
             // Send email using Mail::send
             Mail::send('emails.order-confirmation', ['order' => $order], function($message) use ($customerEmail, $customerName, $order, $tempPath) {
                 $message->to($customerEmail, $customerName)
-                    ->subject('🎪 Festival Tickets - Order #' . $order->id)
-                    ->attach($tempPath, [
+                    ->subject('🎪 Festival Tickets - Order #' . $order->id);
+
+                // Check if PDF file exists before attaching
+                if (file_exists($tempPath)) {
+                    $message->attach($tempPath, [
                         'as' => 'festival-tickets-order-' . $order->id . '.pdf',
                         'mime' => 'application/pdf'
                     ]);
+                }
             });
 
             // Clean up temporary file
@@ -286,7 +376,8 @@ class PaymentController
 
         } catch (\Exception $e) {
             Log::error('Failed to send email with PDF: ' . $e->getMessage());
-            throw $e;
+            Log::error('Email error stack trace: ' . $e->getTraceAsString());
+            // Don't throw the exception, just log it so the order still completes
         }
     }
 
