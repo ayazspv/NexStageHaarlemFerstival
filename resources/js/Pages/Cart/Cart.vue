@@ -1,3 +1,91 @@
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue';
+import { cart, fetchCartItems, updateCartItem } from '../../composables/cart';
+import { Inertia } from '@inertiajs/inertia';
+import { removeFromWishlist } from '../../composables/wishlist';
+
+
+onMounted(() => {
+    fetchCartItems();
+    console.log(cart.value);
+
+    const dataToSend = prepareDataForNextLayer();
+    passToLayer2(dataToSend);
+});
+
+const updateItemQuantity = (festivalId: number, newQuantity: number) => {
+    updateCartItem(festivalId, newQuantity);
+};
+
+const totalQuantity = computed(() => {
+    return cart.value.reduce((total, item) => total + item.quantity, 0);
+});
+
+const totalCost = computed(() => {
+    return cart.value.reduce((total, item) => total + (item.festival_cost * item.quantity), 0);
+});
+
+// const items = cart.value.map(item => ({
+//         festivalID: item.festival_id,
+//         festivalName: item.festival_name,
+//         festivalQuantity: item.quantity,
+//         festivalCost: item.festival_cost,
+//     }));
+
+const prepareDataForNextLayer = () => {
+    const items = cart.value.map(item => ({
+        festivalID: item.festival_id,
+        festivalName: item.festival_name,
+        festivalQuantity: item.quantity,
+        festivalCost: item.festival_cost,
+        qrCode: `${item.festival_id}-${Math.floor(100000 + Math.random() * 900000)}`,
+    }));
+
+    return {
+        totalAmount: totalCost.value,
+        items,
+    };
+};
+
+const passToLayer2 = (data: any) => {
+    console.log("Data passed to Layer 2:", data);
+};
+
+import { useForm, router, usePage } from "@inertiajs/vue3";
+
+const page = usePage();
+
+const csrfToken = page.props.csrf_token as string || "";
+
+const dataToSend = useForm(prepareDataForNextLayer());
+
+function passToNextLayer() {
+    Inertia.visit
+    dataToSend.get("/paymentCredentials", {
+        headers: {
+            "X-CSRF-TOKEN": csrfToken,
+        }
+    });
+}
+
+function goToNextPage() {
+    const data = prepareDataForNextLayer();
+
+    if (Object.keys(data).length === 0) {
+        console.error('No valid data to send');
+        return; // Prevent sending empty data
+    }
+
+    router.post('/paymentCredentials', data, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken, // CSRF token as a header
+        }
+    });
+}
+
+
+
+</script>
 <template>
     <div class="container mt-5">
         <h1 class="text-center mb-4">Your Cart</h1>
@@ -59,97 +147,6 @@
 
 
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { cart, fetchCartItems, updateCartItem } from '../../composables/cart';
-import { Inertia } from '@inertiajs/inertia';
-import { removeFromWishlist } from '../../composables/wishlist';
-
-
-onMounted(() => {
-    fetchCartItems();
-    console.log(cart.value);
-
-    const dataToSend = prepareDataForNextLayer();
-    passToLayer2(dataToSend);
-});
-
-const updateItemQuantity = (festivalId: number, newQuantity: number) => {
-    updateCartItem(festivalId, newQuantity);
-};
-
-const totalQuantity = computed(() => {
-    return cart.value.reduce((total, item) => total + item.quantity, 0);
-});
-
-const totalCost = computed(() => {
-    return cart.value.reduce((total, item) => total + (item.festival_cost * item.quantity), 0);
-});
-
-// const items = cart.value.map(item => ({
-//         festivalID: item.festival_id,
-//         festivalName: item.festival_name,
-//         festivalQuantity: item.quantity,
-//         festivalCost: item.festival_cost,
-//     }));
-
-const prepareDataForNextLayer = () => {
-    const items = cart.value.map(item => ({
-        festivalID: item.festival_id,
-        festivalName: item.festival_name,
-        festivalQuantity: item.quantity,
-        festivalCost: item.festival_cost,
-        qrCode: `${item.festival_id}-${Math.floor(100000 + Math.random() * 900000)}`,
-    }));
-
-    return {
-        totalAmount: totalCost.value, 
-        items,
-    };
-};
-
-const passToLayer2 = (data: any) => {
-    console.log("Data passed to Layer 2:", data);
-};
-
-import { useForm, router, usePage } from "@inertiajs/vue3";
-
-const page = usePage();
-
-const csrfToken = page.props.csrf_token as string || "";
-
-const dataToSend = useForm(prepareDataForNextLayer());
-
-function passToNextLayer() {
-    Inertia.visit
-    dataToSend.get("/paymentCredentials", {
-        headers: {
-            "X-CSRF-TOKEN": csrfToken,
-        }
-    });
-}
-
-function goToNextPage() {
-  const data = prepareDataForNextLayer();
-
-  if (Object.keys(data).length === 0) {
-    console.error('No valid data to send');
-    return; // Prevent sending empty data
-  }
-
-  router.post('/paymentCredentials', data, {
-    headers: {
-      'X-CSRF-TOKEN': csrfToken, // CSRF token as a header
-    }
-  });
-}
-
-
-
-</script>
-
-
 
 <style scoped>
 </style>
