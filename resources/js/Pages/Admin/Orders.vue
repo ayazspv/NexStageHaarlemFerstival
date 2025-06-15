@@ -1,11 +1,73 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { router } from '@inertiajs/vue3';
 import AdminAppLayout from "../Layouts/AdminAppLayout.vue";
 import { Order } from "../../../models";
 
 const props = defineProps<{
-    orders?: Order[]
+    orders?: {
+        data: Order[];
+        links: any[];
+        prev_page_url: string | null;
+        next_page_url: string | null;
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        from: number;
+        to: number;
+    };
+    filters?: {
+        search?: string;
+        status?: string;
+        date_from?: string;
+        date_to?: string;
+    };
+    statistics?: {
+        total_orders: number;
+        total_tickets: number;
+        total_revenue: number;
+        unique_customers: number;
+    };
 }>();
+
+// Search and filter states
+const searchQuery = ref(props.filters?.search || '');
+const statusFilter = ref(props.filters?.status || '');
+const dateFromFilter = ref(props.filters?.date_from || '');
+const dateToFilter = ref(props.filters?.date_to || '');
+
+// Watch for filter changes and apply them automatically with debounce
+watch([
+    () => searchQuery.value,
+    () => statusFilter.value,
+    () => dateFromFilter.value,
+    () => dateToFilter.value,
+], () => {
+    applyFilters();
+}, { debounce: 500 });
+
+// Export modal state
+const showExportModal = ref(false);
+const startDate = ref<string | null>(null);
+const endDate = ref<string | null>(null);
+const selectedFestivalType = ref<string | null>(null);
+const selectedFormat = ref<string>('xlsx');
+
+const festivalOptions = [
+    { label: 'All Festivals', value: null },
+    { label: 'Jazz Festival', value: '0' },
+    { label: 'Food Festival', value: '1' },
+    { label: 'History Festival', value: '2' },
+    { label: 'Night@Teylers', value: '3' }
+];
+
+const statusOptions = [
+    { label: 'All Statuses', value: '' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Cancelled', value: 'cancelled' }
+];
 
 function groupTickets(tickets: any[]) {
     const grouped: Record<string, { festival: any; count: number }> = {};
@@ -22,19 +84,27 @@ function groupTickets(tickets: any[]) {
     return Object.values(grouped);
 }
 
-const showExportModal = ref(false);
-const startDate = ref<string | null>(null);
-const endDate = ref<string | null>(null);
-const selectedFestivalType = ref<string | null>(null);
-const selectedFormat = ref<string>('xlsx'); // Added for format selection
+function applyFilters() {
+    const filters: any = {};
 
-const festivalOptions = [
-    { label: 'All Festivals', value: null },
-    { label: 'Jazz Festival', value: '0' },
-    { label: 'Food Festival', value: '1' },
-    { label: 'History Festival', value: '2' },
-    { label: 'Night@Teylers', value: '3' }
-];
+    if (searchQuery.value) filters.search = searchQuery.value;
+    if (statusFilter.value) filters.status = statusFilter.value;
+    if (dateFromFilter.value) filters.date_from = dateFromFilter.value;
+    if (dateToFilter.value) filters.date_to = dateToFilter.value;
+
+    router.get('/admin/orders', filters, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+}
+
+function clearFilters() {
+    searchQuery.value = '';
+    statusFilter.value = '';
+    dateFromFilter.value = '';
+    dateToFilter.value = '';
+    // Note: applyFilters() will be called automatically by the watcher
+}
 
 function clearDates() {
     startDate.value = null;
@@ -52,7 +122,6 @@ function generateExport() {
     if (selectedFestivalType.value !== null && selectedFestivalType.value !== '') {
         params.festivalType = selectedFestivalType.value;
     }
-    // Add format parameter
     params.format = selectedFormat.value;
 
     const queryString = new URLSearchParams(params).toString();
@@ -78,6 +147,20 @@ function getStatusBadgeClass(status: string) {
         default: return 'bg-secondary';
     }
 }
+
+function goToPage(url: string) {
+    if (url) {
+        router.visit(url, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
+}
+
+const paginationInfo = computed(() => {
+    if (!props.orders) return '';
+    return `Showing ${props.orders.from} to ${props.orders.to} of ${props.orders.total} results`;
+});
 </script>
 
 <template>
@@ -106,7 +189,7 @@ function getStatusBadgeClass(status: string) {
                                 </div>
                                 <div class="ms-3">
                                     <h6 class="card-title mb-1">Total Orders</h6>
-                                    <h4 class="mb-0">{{ orders?.length || 0 }}</h4>
+                                    <h4 class="mb-0">{{ statistics?.total_orders || 0 }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -121,7 +204,7 @@ function getStatusBadgeClass(status: string) {
                                 </div>
                                 <div class="ms-3">
                                     <h6 class="card-title mb-1">Total Tickets</h6>
-                                    <h4 class="mb-0">{{ orders?.reduce((sum, order) => sum + order.tickets.length, 0) || 0 }}</h4>
+                                    <h4 class="mb-0">{{ statistics?.total_tickets || 0 }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -136,7 +219,7 @@ function getStatusBadgeClass(status: string) {
                                 </div>
                                 <div class="ms-3">
                                     <h6 class="card-title mb-1">Total Revenue</h6>
-                                    <h4 class="mb-0">€{{ orders?.reduce((sum, order) => sum + parseFloat(order.total_price), 0).toFixed(2) || '0.00' }}</h4>
+                                    <h4 class="mb-0">€{{ Number(statistics?.total_revenue || 0).toFixed(2) }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -151,8 +234,61 @@ function getStatusBadgeClass(status: string) {
                                 </div>
                                 <div class="ms-3">
                                     <h6 class="card-title mb-1">Unique Customers</h6>
-                                    <h4 class="mb-0">{{ new Set(orders?.map(order => order.user?.id)).size || 0 }}</h4>
+                                    <h4 class="mb-0">{{ statistics?.unique_customers || 0 }}</h4>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Search & Filter
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Search Orders</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    v-model="searchQuery"
+                                    placeholder="Search by ID, customer name, email..."
+                                >
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" v-model="statusFilter">
+                                <option :value="option.value" v-for="option in statusOptions" :key="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">From Date</label>
+                            <input type="date" class="form-control" v-model="dateFromFilter">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">To Date</label>
+                            <input type="date" class="form-control" v-model="dateToFilter">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary flex-fill" @click="clearFilters">
+                                    <i class="fas fa-times me-1"></i>
+                                    Clear
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -257,11 +393,14 @@ function getStatusBadgeClass(status: string) {
 
             <!-- Orders Table -->
             <div class="card">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-list me-2"></i>
                         Orders List
                     </h5>
+                    <div class="text-muted small">
+                        {{ paginationInfo }}
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -279,7 +418,7 @@ function getStatusBadgeClass(status: string) {
                             </tr>
                             </thead>
                             <tbody>
-                            <tr v-for="order in orders" :key="order.id" class="order-row">
+                            <tr v-for="order in orders?.data" :key="order.id" class="order-row">
                                 <td>
                                     <span class="badge bg-light text-dark">#{{ order.id }}</span>
                                 </td>
@@ -321,10 +460,66 @@ function getStatusBadgeClass(status: string) {
                         </table>
 
                         <!-- Empty State -->
-                        <div v-if="!orders || orders.length === 0" class="empty-state">
+                        <div v-if="!orders?.data || orders.data.length === 0" class="empty-state">
                             <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">No Orders Found</h5>
-                            <p class="text-muted">There are no orders to display at the moment.</p>
+                            <p class="text-muted">
+                                {{ filters?.search ? 'No orders match your search criteria.' : 'There are no orders to display at the moment.' }}
+                            </p>
+                            <button v-if="filters?.search" class="btn btn-outline-primary" @click="clearFilters">
+                                Clear Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div v-if="orders && orders.last_page > 1" class="pagination-wrapper">
+                        <nav aria-label="Orders pagination">
+                            <ul class="pagination justify-content-center mb-0">
+                                <!-- Previous Page -->
+                                <li class="page-item" :class="{ disabled: !orders.prev_page_url }">
+                                    <button
+                                        class="page-link"
+                                        @click="goToPage(orders.prev_page_url)"
+                                        :disabled="!orders.prev_page_url"
+                                        aria-label="Previous">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                </li>
+
+                                <!-- Page Numbers -->
+                                <li
+                                    v-for="link in orders.links.slice(1, -1)"
+                                    :key="link.label"
+                                    class="page-item"
+                                    :class="{ active: link.active }">
+                                    <button
+                                        class="page-link"
+                                        @click="goToPage(link.url)"
+                                        :disabled="!link.url"
+                                        v-html="link.label">
+                                    </button>
+                                </li>
+
+                                <!-- Next Page -->
+                                <li class="page-item" :class="{ disabled: !orders.next_page_url }">
+                                    <button
+                                        class="page-link"
+                                        @click="goToPage(orders.next_page_url)"
+                                        :disabled="!orders.next_page_url"
+                                        aria-label="Next">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+
+                        <!-- Pagination Info -->
+                        <div class="pagination-info text-center mt-3">
+                            <small class="text-muted">
+                                Page {{ orders.current_page }} of {{ orders.last_page }}
+                                ({{ orders.total }} total orders)
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -354,6 +549,12 @@ function getStatusBadgeClass(status: string) {
     justify-content: center;
     color: white;
     font-size: 1.2rem;
+}
+
+/* Search and Filter Section */
+.input-group-text {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
 }
 
 /* Modal Styles */
@@ -551,6 +752,96 @@ function getStatusBadgeClass(status: string) {
     padding: 3rem;
 }
 
+/* Pagination Styles */
+.pagination-wrapper {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.pagination {
+    --bs-pagination-padding-x: 0.75rem;
+    --bs-pagination-padding-y: 0.5rem;
+    --bs-pagination-font-size: 0.875rem;
+    --bs-pagination-color: #6c757d;
+    --bs-pagination-bg: #fff;
+    --bs-pagination-border-width: 1px;
+    --bs-pagination-border-color: #dee2e6;
+    --bs-pagination-border-radius: 0.375rem;
+    --bs-pagination-hover-color: #495057;
+    --bs-pagination-hover-bg: #f8f9fa;
+    --bs-pagination-hover-border-color: #dee2e6;
+    --bs-pagination-focus-color: #495057;
+    --bs-pagination-focus-bg: #f8f9fa;
+    --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    --bs-pagination-active-color: #fff;
+    --bs-pagination-active-bg: #007bff;
+    --bs-pagination-active-border-color: #007bff;
+    --bs-pagination-disabled-color: #6c757d;
+    --bs-pagination-disabled-bg: #fff;
+    --bs-pagination-disabled-border-color: #dee2e6;
+}
+
+.page-link {
+    position: relative;
+    display: block;
+    padding: var(--bs-pagination-padding-y) var(--bs-pagination-padding-x);
+    font-size: var(--bs-pagination-font-size);
+    color: var(--bs-pagination-color);
+    text-decoration: none;
+    background-color: var(--bs-pagination-bg);
+    border: var(--bs-pagination-border-width) solid var(--bs-pagination-border-color);
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.page-link:hover {
+    z-index: 2;
+    color: var(--bs-pagination-hover-color);
+    background-color: var(--bs-pagination-hover-bg);
+    border-color: var(--bs-pagination-hover-border-color);
+}
+
+.page-link:focus {
+    z-index: 3;
+    color: var(--bs-pagination-focus-color);
+    background-color: var(--bs-pagination-focus-bg);
+    outline: 0;
+    box-shadow: var(--bs-pagination-focus-box-shadow);
+}
+
+.page-item:not(:first-child) .page-link {
+    margin-left: -1px;
+}
+
+.page-item:first-child .page-link {
+    border-top-left-radius: var(--bs-pagination-border-radius);
+    border-bottom-left-radius: var(--bs-pagination-border-radius);
+}
+
+.page-item:last-child .page-link {
+    border-top-right-radius: var(--bs-pagination-border-radius);
+    border-bottom-right-radius: var(--bs-pagination-border-radius);
+}
+
+.page-item.active .page-link {
+    z-index: 3;
+    color: var(--bs-pagination-active-color);
+    background-color: var(--bs-pagination-active-bg);
+    border-color: var(--bs-pagination-active-border-color);
+}
+
+.page-item.disabled .page-link {
+    color: var(--bs-pagination-disabled-color);
+    pointer-events: none;
+    background-color: var(--bs-pagination-disabled-bg);
+    border-color: var(--bs-pagination-disabled-border-color);
+}
+
+.pagination-info {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .format-options {
@@ -571,6 +862,23 @@ function getStatusBadgeClass(status: string) {
         text-align: center;
         gap: 0.5rem;
     }
+
+    .pagination {
+        --bs-pagination-padding-x: 0.5rem;
+        --bs-pagination-padding-y: 0.375rem;
+        --bs-pagination-font-size: 0.75rem;
+    }
+
+    .pagination-wrapper {
+        margin-top: 1rem;
+        padding-top: 1rem;
+    }
+
+    /* Stack search filters on mobile */
+    .row.g-3 > .col-md-4,
+    .row.g-3 > .col-md-2 {
+        margin-bottom: 1rem;
+    }
 }
 
 /* Card styling */
@@ -588,5 +896,63 @@ function getStatusBadgeClass(status: string) {
 .badge {
     font-size: 0.75rem;
     padding: 0.375rem 0.75rem;
+}
+
+/* Search input focus styles */
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Filter section styling */
+.card-body .row.g-3 {
+    align-items: end;
+}
+
+/* Button styling improvements */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    border: none;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+/* Loading states */
+.table-responsive {
+    position: relative;
+}
+
+/* Smooth transitions */
+* {
+    transition: all 0.15s ease-in-out;
 }
 </style>
