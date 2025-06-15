@@ -81,7 +81,7 @@ function getStatusBadgeClass(status: string) {
 </script>
 
 <template>
-    <AdminAppLayout title="Orders Management">
+    <AdminAppLayout title="Manage Orders">
         <div class="container-fluid p-4">
             <!-- Header Section -->
             <div class="d-flex justify-content-between align-items-center mb-4">

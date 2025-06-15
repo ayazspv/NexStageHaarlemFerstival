@@ -30,7 +30,7 @@ const handleGameSelect = (game: Game) => {
 
 <template>
     <AppLayout :festival="props.festival" :title="props.festival.name">
-        <div class="mobile-wrapper">
+        <div class="mobile-wrapper mt-10">
             <div class="mobile-display">
                 <Navbar :festival="props.festival" />
 
@@ -40,10 +40,10 @@ const handleGameSelect = (game: Game) => {
                 <Games
                     v-else-if="currentView === 'games'"
                     :festival="props.festival"
-                    :games="props.games"
+                    :games="props.games as Game[]"
                     @selectGame="handleGameSelect" />
                 <Map v-else-if="currentView === 'map'" :festival="props.festival" />
-                <Stamps v-else-if="currentView === 'stamps'" :games="games" :festival="props.festival" />
+                <Stamps v-else-if="currentView === 'stamps'" :games="games as Game[]" :festival="props.festival" />
                 <GameQuestion
                     v-else-if="currentView === 'gamequestion'"
                     :festival="props.festival"
