@@ -31,7 +31,7 @@ export default {
       return 'cart_' + Math.random().toString(36).substr(2, 9);
     },
     downloadJson() {
-      const blob = new Blob([JSON.stringify(this.jsonOutput)], {type: 'application/json'});
+      const blob = new Blob([JSON.stringify(this.jsonOutput)], { type: 'application/json' });
 
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -41,7 +41,7 @@ export default {
   }
 };
 
-import {usePage} from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 
 const page = usePage();
 const cartData = page.props.cartData;
@@ -56,12 +56,12 @@ console.log("Received Data:", cartData);
     <form @submit.prevent="generateJson" class="bg-light p-4 rounded shadow-sm">
       <div class="form-group">
         <label for="name">Name:</label>
-        <input type="text" v-model="name" id="name" class="form-control" required/>
+        <input type="text" v-model="name" id="name" class="form-control" required />
       </div>
 
       <div class="form-group">
         <label for="email">Email:</label>
-        <input type="email" v-model="email" id="email" class="form-control" required/>
+        <input type="email" v-model="email" id="email" class="form-control" required />
       </div>
 
       <button type="submit" class="btn btn-primary btn-block">

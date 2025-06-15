@@ -43,7 +43,7 @@ onMounted(async () => {
 const initializeStripe = async () => {
     try {
         // Get the Stripe public key from your Laravel config
-        const stripeKey = document.querySelector('meta[name="stripe-key"]')?.getAttribute('content') || 'pk_test_your_key_here';
+        const stripeKey = document.querySelector('meta[name="stripe-key"]')?.getAttribute('content') || 'pk_test_51RZwCtIbeSxsd8TjkREnTSK2Hqv2FWjpw5B7SCJeO8CRrtRFCIUg6I8jPVxLVEyAiAWLyTb0N0Utqyq3kqRqSIZs00Dx8g8heY';
 
         stripe.value = await loadStripe(stripeKey);
 
