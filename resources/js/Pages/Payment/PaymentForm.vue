@@ -51,32 +51,32 @@ console.log("Received Data:", cartData);
 
 </script>
 <template>
-    <div id="app" class="container">
-        <h2 class="my-4">User Information</h2>
-        <form @submit.prevent="generateJson" class="bg-light p-4 rounded shadow-sm">
-            <div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" v-model="name" id="name" class="form-control" required />
-            </div>
+  <div id="app" class="container">
+    <h2 class="my-4">User Information</h2>
+    <form @submit.prevent="generateJson" class="bg-light p-4 rounded shadow-sm">
+      <div class="form-group">
+        <label for="name">Name:</label>
+        <input type="text" v-model="name" id="name" class="form-control" required />
+      </div>
 
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" v-model="email" id="email" class="form-control" required />
-            </div>
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" v-model="email" id="email" class="form-control" required />
+      </div>
 
-            <button type="submit" class="btn btn-primary btn-block">
-                Submit
-            </button>
-        </form>
+      <button type="submit" class="btn btn-primary btn-block">
+        Submit
+      </button>
+    </form>
 
-        <div v-if="jsonOutput" class="mt-4">
-            <h4>Generated JSON:</h4>
-            <pre class="bg-light p-3 rounded">{{ jsonOutput }}</pre>
-            <button class="btn btn-success" @click="downloadJson">
-                Download JSON
-            </button>
-        </div>
+    <div v-if="jsonOutput" class="mt-4">
+      <h4>Generated JSON:</h4>
+      <pre class="bg-light p-3 rounded">{{ jsonOutput }}</pre>
+      <button class="btn btn-success" @click="downloadJson">
+        Download JSON
+      </button>
     </div>
+  </div>
 </template>
 
 <style scoped>
