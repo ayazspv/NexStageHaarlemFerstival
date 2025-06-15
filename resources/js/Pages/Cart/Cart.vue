@@ -2,8 +2,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { cart, fetchCartItems, updateCartItem } from '../../composables/cart';
 import { Inertia } from '@inertiajs/inertia';
-import { removeFromWishlist } from '../../composables/wishlist';
-
+import { useForm, router, usePage } from "@inertiajs/vue3";
+import AppLayout from "../Layouts/AppLayout.vue";
 
 onMounted(() => {
     fetchCartItems();
@@ -25,13 +25,6 @@ const totalCost = computed(() => {
     return cart.value.reduce((total, item) => total + (item.festival_cost * item.quantity), 0);
 });
 
-// const items = cart.value.map(item => ({
-//         festivalID: item.festival_id,
-//         festivalName: item.festival_name,
-//         festivalQuantity: item.quantity,
-//         festivalCost: item.festival_cost,
-//     }));
-
 const prepareDataForNextLayer = () => {
     const items = cart.value.map(item => ({
         festivalID: item.festival_id,
@@ -50,8 +43,6 @@ const prepareDataForNextLayer = () => {
 const passToLayer2 = (data: any) => {
     console.log("Data passed to Layer 2:", data);
 };
-
-import { useForm, router, usePage } from "@inertiajs/vue3";
 
 const page = usePage();
 
@@ -73,12 +64,12 @@ function goToNextPage() {
 
     if (Object.keys(data).length === 0) {
         console.error('No valid data to send');
-        return; // Prevent sending empty data
+        return;
     }
 
     router.post('/paymentCredentials', data, {
         headers: {
-            'X-CSRF-TOKEN': csrfToken, // CSRF token as a header
+            'X-CSRF-TOKEN': csrfToken,
         }
     });
 }
@@ -86,19 +77,20 @@ function goToNextPage() {
 
 
 </script>
+
 <template>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">Your Cart</h1>
+    <AppLayout title="Cart">
+        <div class="container mt-5">
+            <h1 class="text-center mb-4">Your Cart</h1>
 
-        <!-- Display a message if the cart is empty -->
-        <div v-if="cart.length === 0" class="alert alert-info text-center">
-            Your cart is empty.
-        </div>
+            <div v-if="cart.length === 0" class="alert alert-info text-center">
+                Your cart is empty.
+            </div>
 
-        <!-- Display a table of cart items if available -->
-        <div v-else class="mt-4">
-            <table class="table table-striped">
-                <thead>
+            <!-- Display a table of cart items if available -->
+            <div v-else class="mt-4">
+                <table class="table table-striped">
+                    <thead>
                     <tr>
                         <th scope="col">Festival ID</th>
                         <th scope="col">Festival Name</th>
@@ -106,8 +98,8 @@ function goToNextPage() {
                         <th scope="col">Quantity</th>
                         <th scope="col">Actions</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     <tr v-for="item in cart" :key="item.festival_id">
                         <!-- Log the item for debugging -->
                         <td>{{ item.festival_id }}</td>
@@ -117,36 +109,34 @@ function goToNextPage() {
                         <td>
                             <!-- Decrease and Increase buttons -->
                             <button @click="updateItemQuantity(item.festival_id, item.quantity - 1)"
-                                class="btn btn-danger btn-sm me-2" >
+                                    class="btn btn-danger btn-sm me-2" >
                                 Decrease
                             </button>
                             <button @click="updateItemQuantity(item.festival_id, item.quantity + 1)"
-                                class="btn btn-primary btn-sm">
+                                    class="btn btn-primary btn-sm">
                                 Increase
                             </button>
                         </td>
                     </tr>
-                </tbody>
-            </table>
-            <div class="d-flex justify mb-3">
-                <strong>Total Items: </strong> <span> {{ cart.length }}</span>
-            </div>
-            <div class="d-flex justify mb-3">
-                <strong>Total Quantity: </strong> <span> {{ totalQuantity }}</span>
-            </div>
-            <div class="d-flex justify mb-3">
-                <strong>Total To Pay: </strong> <span> €{{ totalCost }}</span>
-            </div>
-            <div class="text-center">
-                <button class="btn btn-success btn-lg" @click="goToNextPage()">Proceed to Checkout</button>
+                    </tbody>
+                </table>
+                <div class="d-flex justify mb-3">
+                    <strong>Total Items: </strong> <span> {{ cart.length }}</span>
+                </div>
+                <div class="d-flex justify mb-3">
+                    <strong>Total Quantity: </strong> <span> {{ totalQuantity }}</span>
+                </div>
+                <div class="d-flex justify mb-3">
+                    <strong>Total To Pay: </strong> <span> €{{ totalCost }}</span>
+                </div>
+                <div class="text-center">
+                    <button class="btn btn-success btn-lg" @click="goToNextPage()">Proceed to Checkout</button>
+                </div>
             </div>
         </div>
-    </div>
-
-
-
-
+    </AppLayout>
 </template>
+
 
 <style scoped>
 </style>
