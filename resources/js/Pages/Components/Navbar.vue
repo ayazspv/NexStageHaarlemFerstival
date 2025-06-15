@@ -7,6 +7,7 @@ import { cart, fetchCartItems, updateCartItem, clearCart } from '../../composabl
 import { wishlist, fetchWishlistItems, removeFromWishlist, clearWishlist } from '../../composables/wishlist';
 import CartSidebar from './CartSidebar.vue';
 import WishlistSidebar from './WishlistSidebar.vue';
+import {parseToUrl} from "../../../utils";
 
 // Use the usePage hook to get auth data directly
 const page = usePage();
@@ -38,7 +39,7 @@ function urlFriendly(str: string) {
 function logout() {
     // Get the CSRF token from Inertia page props
     const token = page.props.csrf_token;
-    
+
     fetch('/logout', {
         method: 'POST',
         headers: {
@@ -59,10 +60,13 @@ function logout() {
 
 function navigateToDashboard() {
     const userRole = user.value?.role;
-    
+
     switch(userRole) {
         case 'admin':
             router.visit('/admin/dashboard');
+            break;
+        case 'employee':
+            router.visit('/qr-reader');
             break;
         case 'user':
             router.visit('/user/personal-program');
@@ -120,7 +124,7 @@ fetchFestivals();
                     <img class="navbar-logo" src="/storage/main/logo.png" width="64px" height="64px" alt="Logo">
                 </a>
             </div>
-            
+
             <!-- Middle section - Navigation -->
             <div class="navbar-section nav-section">
                 <div class="navbar-links">
@@ -133,7 +137,7 @@ fetchFestivals();
                         </span>
                         <ul v-if="isFestivalMenuVisible" class="festival-dropdown">
                             <li v-for="festival in festivals" :key="festival.id">
-                                <a :href="`/festivals/${urlFriendly(festival.name)}`">
+                                <a :href="`/festivals/${parseToUrl(festival.name)}`">
                                     {{ festival.name }}
                                 </a>
                             </li>
@@ -141,7 +145,7 @@ fetchFestivals();
                     </div>
                 </div>
             </div>
-            
+
             <!-- Right section - User/Auth and icons -->
             <div class="navbar-section user-section">
                 <div class="navbar-suboption">
@@ -162,14 +166,14 @@ fetchFestivals();
                             <span>Login</span>
                         </button>
                     </template>
-                    
+
                     <!-- Cart and Wishlist Icons -->
                     <div class="icon-group">
                         <button @click="toggleWishlistSidebar" class="icon-button" :class="{ active: isWishlistSidebarOpen }">
                             <i class="bx bx-heart"></i>
                             <span v-if="wishlist.length > 0" class="icon-badge">{{ wishlist.length }}</span>
                         </button>
-                        
+
                         <button @click="toggleCartSidebar" class="icon-button" :class="{ active: isCartSidebarOpen }">
                             <i class="bx bx-cart"></i>
                             <span v-if="cart.length > 0" class="icon-badge">{{ cart.length }}</span>

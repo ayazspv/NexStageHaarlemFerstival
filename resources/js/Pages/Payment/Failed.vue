@@ -1,3 +1,11 @@
+<script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+const message = page.props.message;
+const error_code = page.props.error_code;
+</script>
+
 <template>
   <div class="container mt-5">
     <div class="row justify-content-center">
@@ -48,15 +56,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
-
-const page = usePage();
-const message = page.props.message;
-const error_code = page.props.error_code;
-</script>
-
 <style scoped>
 .card-header {
   border-bottom: 2px solid #dc3545;

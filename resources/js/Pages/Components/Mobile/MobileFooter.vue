@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import {Festival} from "../../../../models";
-import {urlFriendly, route} from "../../../../utils"
+import {route} from "../../../../utils"
 
 const props = defineProps<{
     festival: Festival,
