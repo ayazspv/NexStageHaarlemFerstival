@@ -16,7 +16,7 @@ createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent<DefineComponent>(`./Pages/${name}.vue`, import.meta.glob<false, '', DefineComponent>('./Pages/**/*.vue')),
     progress: {
-        color: '#ffc814',
+        color: '#2565c7;',
     },
     setup: ({el, App, props, plugin}) => {
         createApp({render: () => h(App, props)})

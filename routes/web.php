@@ -11,7 +11,7 @@ use App\Http\Controllers\QrReaderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminPanelController;
 use App\Http\Controllers\Admin\FestivalController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AdminUserController;
 use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MailController;
@@ -56,16 +56,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::put('/festivals/{festival}/details', [FestivalController::class, 'updateDetails'])
         ->name('admin.festivals.update-details');
 
-    Route::get('/users', [UserController::class, 'index'])->name('admin.users');
-    Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
-    Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users');
+    Route::post('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
 
     // Orders
     Route::get('/orders', [AdminOrderController::class, 'show'])->name('admin.orders.show');
-
-    // Orders Export
-    Route::get('/orders/export', [\App\Http\Controllers\Admin\OrderAdminController::class, 'export']);
+    Route::get('/orders/export', [AdminOrderController::class, 'export']);
 
     //CMS
     Route::get('/festivals/cms/manage/{festivalId}', [FestivalContentController::class, 'show'])->name('admin.festivals.show');
@@ -183,7 +181,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/user/personal-program', [PersonalProgramController::class, 'index'])->name('user.program');
-    
+
     Route::post('/api/tickets/day-pass', [TicketController::class, 'storeDayPass']);
     Route::post('/api/tickets/full-pass', [TicketController::class, 'storeFullPass']);
 });
