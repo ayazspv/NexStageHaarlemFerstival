@@ -389,7 +389,7 @@ async function uploadHero(e: Event) {
                             </div>
                         </div>
                         <div class="w-90 m-3">
-                            <EditorContent v-if="editor" :editor="editor" class="editor-content tiptap border-1 border-black"/>
+                            <EditorContent v-if="editor" :editor="editor as Editor" class="editor-content tiptap border-1 border-black"/>
                         </div>
 
                         <!-- Feedback messages -->
