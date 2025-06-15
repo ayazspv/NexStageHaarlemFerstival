@@ -7,6 +7,7 @@ use Illuminate\Session\Middleware\StartSession;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\QrReaderAccess;
 use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -22,9 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
 
-        // Register middleware alias
+        // Register middleware aliases
         $middleware->alias([
             'admin' => AdminMiddleware::class,
+            'qr.access' => QrReaderAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

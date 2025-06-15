@@ -38,6 +38,18 @@ class DatabaseSeeder extends Seeder
             'role' => 'user',
         ]);
 
+        // Employee user
+        User::create([
+            'firstName' => 'Ashley',
+            'lastName' => 'James',
+            'username' => 'ashleyjames',
+            'email' => 'ashleyjames@example.com',
+            'password' => Hash::make('!AshleyJames2025'),
+            'phoneNumber' => '323232323',
+            'role' => 'employee',
+        ]);
+
+
         // Festivals details
         $festivals = [
             [
@@ -46,7 +58,7 @@ class DatabaseSeeder extends Seeder
                 'image_path' => 'festivals/jazz.jpg',
                 'festivalType' => 0,
                 'ticket_amount' => 250,
-                'time_slot' => '18:00 - 22:00',  
+                'time_slot' => '18:00 - 22:00',
             ],
             [
                 'name' => 'Food Festival',
@@ -54,7 +66,7 @@ class DatabaseSeeder extends Seeder
                 'image_path' => 'festivals/food.jpg',
                 'festivalType' => 1,
                 'ticket_amount' => 150,
-                'time_slot' => '16:00 - 18:00',  
+                'time_slot' => '16:00 - 18:00',
             ],
             [
                 'name' => 'A Stroll Through History',
@@ -62,7 +74,7 @@ class DatabaseSeeder extends Seeder
                 'image_path' => 'festivals/historic.jpg',
                 'festivalType' => 2,
                 'ticket_amount' => 100,
-                'time_slot' => '10:00 - 16:00',  
+                'time_slot' => '10:00 - 16:00',
             ],
             [
                 'name' => 'Night@Teylers',
