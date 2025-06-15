@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import {ref, onMounted, computed} from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { prepareCheckoutData } from '../../composables/cart';
 import { loadStripe } from '@stripe/stripe-js';
@@ -16,9 +16,15 @@ const paymentIntentId = ref('');
 // Get cart data from props or prepare it from localStorage
 const cartData = ref(page.props.cartData || prepareCheckoutData());
 
+const authUser = computed(() => page.props.auth?.user);
+const user = computed(() => authUser.value || props.auth?.user);
+const userName = computed(() => {
+    return `${user.value.firstName} ${user.value.lastName}`
+})
+
 const form = ref({
-    customer_name: '',
-    customer_email: '',
+    customer_name: userName,
+    customer_email: user.value.email,
 });
 
 onMounted(async () => {
