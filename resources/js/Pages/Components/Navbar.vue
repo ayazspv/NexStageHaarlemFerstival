@@ -187,6 +187,14 @@ fetchFestivals();
     <!-- New Sidebar Components -->
     <CartSidebar :is-open="isCartSidebarOpen" @close="isCartSidebarOpen = false" />
     <WishlistSidebar :is-open="isWishlistSidebarOpen" @close="isWishlistSidebarOpen = false" />
+
+    <!-- User Dropdown Menu -->
+    <div class="dropdown-menu" aria-labelledby="userDropdown">
+        <Link class="dropdown-item" href="/user/personal-program">My Program</Link>
+        <!-- Existing menu items like profile, orders, etc. -->
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="#" @click.prevent="logout">Logout</a>
+    </div>
 </template>
 
 <style scoped>

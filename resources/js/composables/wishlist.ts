@@ -14,12 +14,14 @@ export function addToWishlist(
     ticketType: string = 'standard', 
     details: any = {}
 ) {
+    // Generate a unique ID for special tickets
     const itemId = festivalId > 0 ? festivalId : `${ticketType}_${JSON.stringify(details)}`;
     
     const existingItem = wishlist.value.find(item => {
         if (ticketType === 'standard') {
             return item.festival_id === festivalId;
         } else {
+            // For special tickets, compare the type and details
             return item.ticket_type === ticketType && 
                    JSON.stringify(item.details) === JSON.stringify(details);
         }
