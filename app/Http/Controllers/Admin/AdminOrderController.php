@@ -11,14 +11,94 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AdminOrderController
 {
-    public function show()
+    public function show(Request $request)
     {
-        $orders = Order::with('user')
-            ->with('tickets.festival')
-            ->get();
+        $query = Order::with('user', 'tickets.festival');
+
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('id', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                        $userQuery->where('firstName', 'like', "%{$searchTerm}%")
+                            ->orWhere('lastName', 'like', "%{$searchTerm}%")
+                            ->orWhere('email', 'like', "%{$searchTerm}%");
+                    })
+                    ->orWhere('status', 'like', "%{$searchTerm}%")
+                    ->orWhere('total_price', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // Status filter
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        // Date range filter
+        if ($request->has('date_from') && !empty($request->date_from)) {
+            $query->whereDate('ordered_at', '>=', $request->date_from);
+        }
+
+        if ($request->has('date_to') && !empty($request->date_to)) {
+            $query->whereDate('ordered_at', '<=', $request->date_to);
+        }
+
+        // Sort by most recent orders first
+        $query->orderBy('ordered_at', 'desc');
+
+        // Pagination with 20 orders per page
+        $orders = $query->paginate(20)->withQueryString();
+
+        // Calculate statistics for all orders (not just paginated)
+        $allOrdersQuery = Order::with('user', 'tickets.festival');
+
+        // Apply same filters for statistics
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $allOrdersQuery->where(function ($q) use ($searchTerm) {
+                $q->where('id', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                        $userQuery->where('firstName', 'like', "%{$searchTerm}%")
+                            ->orWhere('lastName', 'like', "%{$searchTerm}%")
+                            ->orWhere('email', 'like', "%{$searchTerm}%");
+                    })
+                    ->orWhere('status', 'like', "%{$searchTerm}%")
+                    ->orWhere('total_price', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        if ($request->has('status') && !empty($request->status)) {
+            $allOrdersQuery->where('status', $request->status);
+        }
+
+        if ($request->has('date_from') && !empty($request->date_from)) {
+            $allOrdersQuery->whereDate('ordered_at', '>=', $request->date_from);
+        }
+
+        if ($request->has('date_to') && !empty($request->date_to)) {
+            $allOrdersQuery->whereDate('ordered_at', '<=', $request->date_to);
+        }
+
+        $allOrders = $allOrdersQuery->get();
 
         return Inertia::render('Admin/Orders', [
             'orders' => $orders,
+            'filters' => [
+                'search' => $request->search,
+                'status' => $request->status,
+                'date_from' => $request->date_from,
+                'date_to' => $request->date_to,
+            ],
+            'statistics' => [
+                'total_orders' => $allOrders->count(),
+                'total_tickets' => $allOrders->sum(function ($order) {
+                    return $order->tickets->count();
+                }),
+                'total_revenue' => $allOrders->sum('total_price'),
+                'unique_customers' => $allOrders->pluck('user_id')->unique()->count(),
+            ]
         ]);
     }
 
