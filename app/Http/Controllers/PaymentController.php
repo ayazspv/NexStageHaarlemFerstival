@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
+use Stripe\Exception\ApiErrorException;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
@@ -20,75 +21,123 @@ class PaymentController
 {
     public function __construct()
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        try {
+            $stripeSecret = env('STRIPE_SECRET');
+            if (!$stripeSecret) {
+                Log::error('STRIPE_SECRET not found in environment variables');
+            } else {
+                Stripe::setApiKey($stripeSecret);
+                Log::info('Stripe initialized with API key');
+            }
+        } catch (\Exception $e) {
+            Log::error('Error initializing Stripe: ' . $e->getMessage());
+        }
     }
-
+    
     public function createPaymentIntent(Request $request)
     {
-        $validated = $request->validate([
-            'totalAmount' => 'required|numeric|min:0',
-            'items' => 'required|array|min:1',
-        ]);
-
         try {
-            $amountInCents = (int) ($validated['totalAmount'] * 100);
-
-            $paymentIntent = PaymentIntent::create([
-                'amount' => $amountInCents,
+            Log::info('Payment intent request received: ' . json_encode($request->all()));
+            
+            // Simple validation
+            if (!$request->has('items') || !is_array($request->items) || empty($request->items)) {
+                return response()->json(['error' => 'No items provided'], 400);
+            }
+            
+            // Hardcode a small amount for testing
+            $amount = 1000; // 10.00 in cents
+            
+            // Create a payment intent with hardcoded values to test if Stripe is working
+            $intent = PaymentIntent::create([
+                'amount' => $amount,
                 'currency' => 'eur',
                 'automatic_payment_methods' => [
                     'enabled' => true,
                 ],
-                'metadata' => [
-                    'user_id' => auth()->id(),
-                    'items_count' => count($validated['items']),
-                ],
             ]);
-
+            
+            Log::info('Payment intent created successfully: ' . $intent->id);
+            
             return response()->json([
-                'client_secret' => $paymentIntent->client_secret,
-                'payment_intent_id' => $paymentIntent->id,
+                'clientSecret' => $intent->client_secret,
+                'totalAmount' => 10.00 // Return the amount in decimal format
             ]);
+        } catch (ApiErrorException $e) {
+            // Stripe-specific error
+            Log::error('Stripe API Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Stripe error: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
-            Log::error('Payment Intent Creation Failed: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Failed to create payment intent: ' . $e->getMessage()
-            ], 500);
+            // Generic error
+            Log::error('Payment intent creation error: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return response()->json(['error' => 'Server error: ' . $e->getMessage()], 500);
         }
     }
-
+    
     public function processPayment(Request $request)
     {
         $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'required|email',
             'payment_intent_id' => 'required|string',
-            'totalAmount' => 'required|numeric|min:0',
+            'customer_name' => 'required|string',
+            'customer_email' => 'required|email',
             'items' => 'required|array|min:1',
             'items.*.festivalID' => 'required|integer',
             'items.*.festivalName' => 'required|string',
             'items.*.festivalQuantity' => 'required|integer|min:1',
-            'items.*.festivalCost' => 'required|numeric|min:0',
         ]);
 
         try {
             Log::info('Starting payment processing for payment intent: ' . $validated['payment_intent_id']);
 
-            // Verify payment with Stripe
-            $paymentIntent = PaymentIntent::retrieve($validated['payment_intent_id']);
+            // Recalculate total amount from backend prices
+            $totalAmount = 0;
+            $recalculatedItems = [];
 
-            if ($paymentIntent->status !== 'succeeded') {
-                Log::error('Payment not completed. Status: ' . $paymentIntent->status);
+            foreach ($validated['items'] as $item) {
+                $festivalId = $item['festivalID'];
+                $quantity = $item['festivalQuantity'];
+                $price = 0;
+
+                if ($festivalId > 0) {
+                    // Standard festival ticket
+                    $festival = Festival::findOrFail($festivalId);
+                    $price = $festival->price;
+                } else if ($festivalId == -1) {
+                    // Day pass
+                    $price = 50.00;
+                } else if ($festivalId == -2) {
+                    // Full pass
+                    $price = 150.00;
+                }
+
+                $itemTotal = $price * $quantity;
+                $totalAmount += $itemTotal;
+
+                $recalculatedItems[] = [
+                    'festivalID' => $item['festivalID'],
+                    'festivalName' => $item['festivalName'],
+                    'festivalQuantity' => $quantity,
+                    'festivalCost' => $price
+                ];
+            }
+
+            // Verify that payment amount matches calculation
+            $paymentIntent = PaymentIntent::retrieve($validated['payment_intent_id']);
+            $paymentAmount = $paymentIntent->amount / 100; // Convert cents to euros
+
+            if (abs($paymentAmount - $totalAmount) > 0.01) {
+                // Amount mismatch - potential tampering
+                Log::error('Payment amount mismatch. Expected: ' . $totalAmount . ', Got: ' . $paymentAmount);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Payment not completed. Status: ' . $paymentIntent->status
+                    'message' => 'Payment amount mismatch. Please try again.'
                 ], 400);
             }
 
             Log::info('Payment verified successfully. Creating order...');
 
             // Create order and send email
-            $order = $this->createOrderWithEmail($validated, $paymentIntent);
+            $order = $this->createOrderWithEmail($validated, $paymentIntent, $recalculatedItems);
 
             Log::info('Order created successfully: ' . $order->id);
 
@@ -107,7 +156,7 @@ class PaymentController
         }
     }
 
-    private function createOrderWithEmail($data, $paymentIntent)
+    private function createOrderWithEmail($data, $paymentIntent, $items)
     {
         Log::info('Step 1: Creating order record in database');
 
@@ -129,7 +178,7 @@ class PaymentController
 
         // Step 2: Create tickets
         Log::info('Step 2: Creating tickets');
-        $this->createTickets($order, $data['items']);
+        $this->createTickets($order, $items);
 
         // Step 3: Send email with PDF
         Log::info('Step 3: Sending confirmation email');

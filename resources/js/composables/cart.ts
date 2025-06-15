@@ -12,11 +12,36 @@ export function fetchCartItems() {
 export async function addToCart(
     festivalId: number, 
     festivalName: string, 
-    festivalCost: number, 
     quantity: number = 1, 
     ticketType: string = 'standard', 
     details: any = {}
 ) {
+    let festivalCost = 0;
+    
+    try {
+        if (ticketType === 'standard' && festivalId > 0) {
+            // Always fetch price from API
+            const response = await fetch(`/api/festivals/${festivalId}/price`);
+            if (response.ok) {
+                const data = await response.json();
+                festivalCost = data.price ?? 0;
+            }
+        } else {
+            // Get special ticket prices from API
+            const response = await fetch('/api/special-tickets/prices');
+            if (response.ok) {
+                const data = await response.json();
+                if (ticketType === 'day_pass') {
+                    festivalCost = data.day_pass ?? 0;
+                } else if (ticketType === 'full_pass') {
+                    festivalCost = data.full_pass ?? 0;
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching price:', error);
+    }
+
     // Generate a unique ID for special tickets
     const itemId = festivalId > 0 ? festivalId : `${ticketType}_${JSON.stringify(details)}`;
     
@@ -24,20 +49,20 @@ export async function addToCart(
         if (ticketType === 'standard') {
             return item.festival_id === festivalId;
         } else {
-            // For special tickets, compare the type and details
             return item.ticket_type === ticketType && 
                    JSON.stringify(item.details) === JSON.stringify(details);
         }
     });
 
+    // Clear any potential duplicate event bindings
     if (existingItem) {
-        existingItem.quantity += quantity;
+        existingItem.quantity = existingItem.quantity + 1;
     } else {
-        cart.value.push({ 
-            festival_id: festivalId, 
-            festival_name: festivalName, 
-            festival_cost: festivalCost, 
-            quantity: quantity,
+        cart.value.push({
+            festival_id: festivalId,
+            festival_name: festivalName,
+            festival_cost: festivalCost,
+            quantity: 1,
             ticket_type: ticketType,
             details: details
         });
