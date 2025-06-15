@@ -9,13 +9,40 @@ export function fetchCartItems() {
     cart.value = [...cart.value]; // Trigger reactivity update
 }
 
-export async function addToCart(festivalId: number, festivalName: string, festivalCost: number) {
-    const existingItem = cart.value.find(item => item.festival_id === festivalId);
+export async function addToCart(
+    festivalId: number, 
+    festivalName: string, 
+    festivalCost: number, 
+    quantity: number = 1, 
+    ticketType: string = 'standard', 
+    details: any = {}
+) {
+    // Generate a unique ID for special tickets
+    const itemId = festivalId > 0 ? festivalId : `${ticketType}_${JSON.stringify(details)}`;
+    
+    const existingItem = cart.value.find(item => {
+        if (ticketType === 'standard') {
+            return item.festival_id === festivalId;
+        } else {
+            // For special tickets, compare the type and details
+            return item.ticket_type === ticketType && 
+                   JSON.stringify(item.details) === JSON.stringify(details);
+        }
+    });
+
     if (existingItem) {
-        existingItem.quantity += 1;
+        existingItem.quantity += quantity;
     } else {
-        cart.value.push({ festival_id: festivalId, festival_name: festivalName, festival_cost: festivalCost, quantity: 1 });
+        cart.value.push({ 
+            festival_id: festivalId, 
+            festival_name: festivalName, 
+            festival_cost: festivalCost, 
+            quantity: quantity,
+            ticket_type: ticketType,
+            details: details
+        });
     }
+    
     localStorage.setItem('cart', JSON.stringify(cart.value));
     cart.value = [...cart.value]; // Trigger reactivity update
 }

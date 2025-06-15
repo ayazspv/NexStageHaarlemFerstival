@@ -27,6 +27,8 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
+use App\Http\Controllers\PersonalProgramController;
+use App\Http\Controllers\TicketController;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -183,6 +185,13 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/personal-program', [PersonalProgramController::class, 'index'])->name('user.program');
+    
+    Route::post('/api/tickets/day-pass', [TicketController::class, 'storeDayPass']);
+    Route::post('/api/tickets/full-pass', [TicketController::class, 'storeFullPass']);
 });
 
 
