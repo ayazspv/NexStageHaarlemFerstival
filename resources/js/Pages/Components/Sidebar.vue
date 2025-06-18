@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import {Link, usePage} from '@inertiajs/vue3';
+import axios from "axios";
+import {route} from "../../../utils";
 
+const page = usePage();
+const token = page.props.csrf_token;
 const isOpen = ref(false);
 
 const toggleSidebar = () => {
@@ -15,8 +19,29 @@ const navItems = [
     { name: 'Events', icon: 'bx bxs-calendar', link: '/admin/events' },
     { name: 'Users', icon: 'bx bxs-user-detail', link: '/admin/users' },
     { name: 'Orders', icon: 'bx bxs-receipt', link: '/admin/orders' },
-    { name: 'Administrator', icon: 'bx bxs-cog', link: '/admin/administrator' },
 ];
+
+function logout() {
+    // Get the CSRF token from Inertia page props
+
+
+    fetch('/logout', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': token || '',
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
+        .then(response => {
+            if (response.ok || response.redirected) {
+                window.location.href = '/login'; // Redirect to home page after logout
+            }
+        })
+        .catch(error => {
+            console.error('Logout error:', error);
+        });
+}
 </script>
 
 <template>
@@ -39,7 +64,7 @@ const navItems = [
             </ul>
 
             <!-- Logout Button -->
-            <a href="/logout" class="logout">
+            <a class="logout" @click="logout">
                 <div class="logout">
                     <i class="bx bx-log-out" id="logout"></i>
                 </div>

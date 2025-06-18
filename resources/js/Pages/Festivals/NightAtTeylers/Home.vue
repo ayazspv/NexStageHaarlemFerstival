@@ -11,7 +11,7 @@ const emit = defineEmits<{ (e: 'changeView', view: string): void }>();
 </script>
 
 <template>
-    <div class="mobile-content">
+    <div class="mobile-content mt-10">
         <div class="d-flex flex-column mt-10 w-100">
             <div class="w-75 mx-auto">
                 <p>{{ festival.description }}</p>

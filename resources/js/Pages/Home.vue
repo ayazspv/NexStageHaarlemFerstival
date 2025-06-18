@@ -4,17 +4,13 @@ import { cart, fetchCartItems, addToCart } from '../composables/cart';
 import { wishlist, fetchWishlistItems, addToWishlist } from '../composables/wishlist';
 import { ref, computed, onMounted } from 'vue';
 import { Festival } from "../../models";
+import {parseToUrl} from "../../utils";
 
 const props = defineProps<{
     festivals: Festival[];
     heroUrl: string | null,
     homepageContent: string | null,
 }>();
-
-// URL-friendly
-const parseToUrl = (title: string) => {
-    return title.trim().toLowerCase().replace(/\s+/g, '-');
-};
 
 // Helper function to find festival by name (not in use)
 const findFestival = (name: string) => {
@@ -27,6 +23,41 @@ const festivalTypeClassMap = {
     1: 'yummy-event',    // Food
     2: 'history-event',  // History
     3: 'teylers-event'   // Night@Teylers
+};
+
+// Helper function to get availability status class
+const getAvailabilityStatusClass = (status: string) => {
+    switch (status) {
+        case 'critical': return 'ticket-badge-critical';
+        case 'warning': return 'ticket-badge-warning';
+        case 'available': return 'ticket-badge-available';
+        default: return 'ticket-badge-default';
+    }
+};
+
+// Helper function to get availability text
+const getAvailabilityText = (festival: Festival) => {
+    if (!festival.total_tickets || festival.total_tickets <= 0) {
+        return 'Unlimited tickets available';
+    }
+
+    if (festival.is_sold_out) {
+        return 'SOLD OUT';
+    }
+
+    if (festival.tickets_available === 1) {
+        return '1 ticket left';
+    }
+
+    if (festival.availability_percentage <= 10) {
+        return `Only ${festival.tickets_available} tickets left!`;
+    }
+
+    if (festival.availability_percentage <= 50) {
+        return `${festival.tickets_available} tickets remaining`;
+    }
+
+    return `${festival.tickets_available} tickets available`;
 };
 
 // Schedule data
@@ -139,8 +170,8 @@ fetchWishlistItems();
 
 // Add this function to strip HTML tags from descriptions
 const stripHtmlTags = (html) => {
-  if (!html) return '';
-  return html.replace(/<\/?[^>]+(>|$)/g, "");
+    if (!html) return '';
+    return html.replace(/<\/?[^>]+(>|$)/g, "");
 };
 </script>
 
@@ -148,7 +179,7 @@ const stripHtmlTags = (html) => {
     <AppLayout title="Home">
         <div class="container-fluid p-0">
             <!-- Hero Section -->
-            <section class="hero-section" :style="`background: url(${heroUrl}) center/cover no-repeat`">
+            <section class="hero-section" :style="`background: url('${heroUrl || '/images/default-hero.jpg'}') center/cover no-repeat`">
                 <div class="overlay"></div>
                 <div class="hero-content d-flex flex-column align-items-center gap-1">
                     <h1 class="hero-title-haarlem">
@@ -195,14 +226,34 @@ const stripHtmlTags = (html) => {
 
                             <!-- Festival Image -->
                             <div class="festival-image-container">
-                                <img :src="`/storage/${festival.image_path}`"
+                                <img :src="festival.image_path ?
+                                        (festival.image_path.startsWith('/') ?
+                                            festival.image_path :
+                                            '/storage/' + festival.image_path)
+                                        : '/images/default-festival.jpg'"
                                      :alt="festival.name"
                                      class="festival-image">
                             </div>
 
                             <!-- Festival Content -->
                             <div class="festival-content">
-                                <h3 class="festival-title">{{ festival.name }}</h3>
+                                <div class="festival-header">
+                                    <h3 class="festival-title">{{ festival.name }}</h3>
+                                    <!-- Ticket availability badge in header - only show for festivals with limited tickets -->
+                                    <div v-if="festival.total_tickets && festival.total_tickets > 0" class="ticket-badge-header">
+                                        <span class="ticket-count-small" :class="`ticket-status-${festival.availability_status}`">
+                                            <i class="fas fa-ticket-alt me-1"></i>
+                                            {{ festival.tickets_available }} left
+                                        </span>
+                                        <div class="availability-progress-small">
+                                            <div class="progress-bar-small"
+                                                 :class="`progress-${festival.availability_status}`"
+                                                 :style="`width: ${festival.availability_percentage}%`">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Apply the stripHtmlTags function to remove HTML tags -->
                                 <p class="festival-description">{{ stripHtmlTags(festival.description) || 'Join us for this amazing festival experience!' }}</p>
 
@@ -217,17 +268,12 @@ const stripHtmlTags = (html) => {
                                     <a :href="`/festivals/${parseToUrl(festival.name)}`" class="btn btn-outline-primary me-2">
                                         <i class="fas fa-info-circle me-1"></i> View Details
                                     </a>
-                                    <button class="btn btn-outline-secondary" @click.prevent="addToCart(festival.id, festival.name, 20)">
-                                        <i class="fas fa-heart"></i> Add to Cart
+                                    <button class="btn btn-outline-secondary me-2" @click.prevent="addToCart(festival.id, festival.name, 20)">
+                                        <i class="fas fa-shopping-cart"></i> Add to Cart
                                     </button>
                                     <button class="btn btn-outline-warning" @click.prevent="addToWishlist(festival.id, festival.name)">
                                         <i class="fas fa-heart"></i> Add to Wishlist
                                     </button>
-                                </div>
-
-                                <!-- Availability Badge -->
-                                <div class="ticket-badge" v-if="festival.ticket_amount">
-                                    {{ festival.ticket_amount }} tickets available
                                 </div>
                             </div>
                         </div>
@@ -235,40 +281,39 @@ const stripHtmlTags = (html) => {
                 </section>
 
                 <!-- Schedule Section -->
-                <section class="schedule-section py-5">
-                    <div class="container">
-                        <div class="d-flex flex-column align-items-center mb-5">
-                            <h2 class="section-title text-center">Festival Schedule</h2>
-                            <div class="section-title-bars"></div>
-                        </div>
-                        
-                        <div class="custom-schedule">
-                            <div v-for="day in ['24', '25', '26', '27']" :key="day" class="schedule-item">
-                                <div class="schedule-day">
-                                    <div class="day-number">
-                                        {{ day }}<span class="month-display">JULY</span>
-                                    </div>
-                                    <div class="vertical-line"></div>
-                                    <div class="schedule-content">
-                                        <div class="time-column">
-                                            <div v-for="festival in festivals" :key="`${day}-${festival.id}-time`"
-                                                 class="time-item" 
-                                                 :class="festivalTypeClassMap[festival.festivalType]">
-                                                {{ festival.time_slot }}
-                                            </div>
+                <section class="mb-5 mt-5 w-75">
+                    <div class="d-flex flex-row align-items-center justify-content-center gap-5 mb-3 w-100">
+                        <div class="section-title-bars"></div>
+                        <h2 class="section-title">Festival Schedule</h2>
+                        <div class="section-title-bars"></div>
+                    </div>
+
+                    <div class="custom-schedule">
+                        <div v-for="day in ['24', '25', '26', '27']" :key="day" class="schedule-item">
+                            <div class="schedule-day">
+                                <div class="day-number">
+                                    {{ day }}<span class="month-display">JULY</span>
+                                </div>
+                                <div class="vertical-line"></div>
+                                <div class="schedule-content">
+                                    <div class="time-column">
+                                        <div v-for="festival in festivals" :key="`${day}-${festival.id}-time`"
+                                             class="time-item"
+                                             :class="festivalTypeClassMap[festival.festivalType]">
+                                            {{ festival.time_slot }}
                                         </div>
-                                        <div class="vertical-separator"></div>
-                                        <div class="name-column">
-                                            <div v-for="festival in festivals" :key="`${day}-${festival.id}-name`"
-                                                 class="name-item" 
-                                                 :class="festivalTypeClassMap[festival.festivalType]">
-                                                {{ festival.name.toUpperCase() }}
-                                            </div>
+                                    </div>
+                                    <div class="vertical-separator"></div>
+                                    <div class="name-column">
+                                        <div v-for="festival in festivals" :key="`${day}-${festival.id}-name`"
+                                             class="name-item"
+                                             :class="festivalTypeClassMap[festival.festivalType]">
+                                            {{ festival.name.toUpperCase() }}
                                         </div>
                                     </div>
                                 </div>
-                                <div v-if="day !== '27'" class="day-separator"></div>
                             </div>
+                            <div v-if="day !== '27'" class="day-separator"></div>
                         </div>
                     </div>
                 </section>
@@ -276,9 +321,10 @@ const stripHtmlTags = (html) => {
 
                 <!-- Locations(Map) Section -->
                 <section class="mb-5 mt-5 w-75">
-                    <div class="d-flex flex-column align-items-center justify-content-center">
-                        <h2 class="text-left section-title">Where are the festivals located?</h2>
-                        <p>Here below is a simple map of all the festival locations</p>
+                    <div class="d-flex flex-row align-items-center justify-content-center gap-5 mb-3">
+                        <div class="section-title-bars"></div>
+                        <h2 class="section-title">Where are the festivals located?</h2>
+                        <div class="section-title-bars"></div>
                     </div>
                     <div class="map-container">
                         <div id="festival-map" class="border rounded"></div>
@@ -302,6 +348,104 @@ const stripHtmlTags = (html) => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Bayon&display=swap');
+
+/* Festival header with ticket info */
+.festival-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    gap: 15px;
+}
+
+.festival-title {
+    margin: 0;
+    flex: 1;
+}
+
+.ticket-badge-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.ticket-count-small {
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.ticket-status-available {
+    color: #28a745;
+}
+
+.ticket-status-warning {
+    color: #ffc107;
+}
+
+.ticket-status-critical {
+    color: #dc3545;
+}
+
+.availability-progress-small {
+    width: 80px;
+    height: 4px;
+    background-color: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar-small {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+}
+
+.progress-available {
+    background: linear-gradient(90deg, #28a745, #20c997);
+}
+
+.progress-warning {
+    background: linear-gradient(90deg, #ffc107, #fd7e14);
+}
+
+.progress-critical {
+    background: linear-gradient(90deg, #dc3545, #e74c3c);
+}
+
+/* Simple festival actions */
+.festival-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .festival-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ticket-badge-header {
+        align-items: flex-start;
+        min-width: auto;
+    }
+
+    .availability-progress-small {
+        width: 100px;
+    }
+}
+
+/* Sold out overlay for images */
+.festival-image-container {
+    position: relative;
+}
 
 /* Map styles */
 #festival-map {

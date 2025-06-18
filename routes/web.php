@@ -3,20 +3,15 @@
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\FestivalContentController;
 use App\Http\Controllers\Admin\GameCMSController;
-use App\Http\Controllers\Admin\JazzFestivalController;
 use App\Http\Controllers\Admin\SlugsController;
 use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\OrderExportController;
-use App\Models\CMS;
-use App\Models\Festival;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\QrReaderController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminPanelController;
 use App\Http\Controllers\Admin\FestivalController;
-use App\Http\Controllers\Admin\UserController;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
+use App\Http\Controllers\Admin\AdminUserController;
 use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MailController;
@@ -25,6 +20,10 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
+use App\Http\Controllers\PersonalProgramController;
+use App\Http\Controllers\TicketController;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Http\Middleware\QrReaderAccess;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -57,16 +56,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::put('/festivals/{festival}/details', [FestivalController::class, 'updateDetails'])
         ->name('admin.festivals.update-details');
 
-    Route::get('/users', [UserController::class, 'index'])->name('admin.users');
-    Route::post('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
-    Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users');
+    Route::post('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
 
     // Orders
     Route::get('/orders', [AdminOrderController::class, 'show'])->name('admin.orders.show');
-
-    // Orders Export
-    Route::get('/orders/export', [\App\Http\Controllers\Admin\OrderAdminController::class, 'export']);
+    Route::get('/orders/export', [AdminOrderController::class, 'export']);
 
     //CMS
     Route::get('/festivals/cms/manage/{festivalId}', [FestivalContentController::class, 'show'])->name('admin.festivals.show');
@@ -104,10 +101,6 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart');
 
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
 
-Route::get('/qr-reader', function () {
-    return Inertia::render('QrReader/QrReader');
-})->name('qr-reader');
-
 Route::post('/api/send-reset-mail', [\App\Http\Controllers\ForgetPasswordController::class, 'sendResetMail'])
     ->name('send-reset-mail');
 
@@ -128,12 +121,68 @@ Route::put('/api/events/{id}', [EventController::class, 'update']);
 Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
 
 
+// Payment routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
+    Route::get('/payment/form', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
+});
+
+// Order routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+});
+
+// API routes for cart operations
+Route::middleware(['auth'])->group(function () {
+    Route::get('/api/cart/items', [CartController::class, 'getCartItems']);
+    Route::post('/api/cart/add', [CartController::class, 'addToCart']);
+    Route::put('/api/cart/items/{cartItem}', [CartController::class, 'updateCartItem']);
+    Route::delete('/api/cart/clear', [CartController::class, 'clearCart']);
+});
+
+
+// Payment routes (with authentication middleware)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/create-payment-intent', [PaymentController::class, 'createPaymentIntent'])->name('payment.intent');
+    Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
+    Route::get('/payment/success/{order}', [PaymentController::class, 'showSuccess'])->name('payment.success');
+    Route::get('/payment/failed', [PaymentController::class, 'showFailed'])->name('payment.failed');
+});
+
 
 Route::get('/api/homepage/hero-image', function() {
     $content = \App\Models\HomepageContent::first();
+    $path = null;
+
+    if ($content && $content->hero_image_path) {
+        $path = $content->hero_image_path;
+    }
+
     return response()->json([
-        'path' => $content ? $content->hero_image_path : null
+        'path' => $path
     ]);
+});
+
+// QR Readers
+Route::middleware(['auth', 'qr.access'])->group(function () {
+    Route::get('/qr-reader', function () {
+        return Inertia::render('QrReader/QrReader');
+    })->name('qr-reader');
+
+    Route::post('/api/validate-qr-code', [QrReaderController::class, 'validateQrCode']);
+    Route::post('/api/fetch-ticket-details', [QrReaderController::class, 'fetchTicketDetails']);
+    Route::post('/api/redeem-ticket', [QrReaderController::class, 'redeemTicket']);
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/personal-program', [PersonalProgramController::class, 'index'])->name('user.program');
+    Route::post('/api/tickets/day-pass', [TicketController::class, 'storeDayPass']);
+    Route::post('/api/tickets/full-pass', [TicketController::class, 'storeFullPass']);
 });
 
 

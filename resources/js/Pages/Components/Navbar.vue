@@ -1,51 +1,86 @@
 <script setup lang="ts">
-import { router, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { Festival } from '../../../models';
 import { cart, fetchCartItems, updateCartItem, clearCart } from '../../composables/cart';
-import { wishlist, fetchWishlistItems, addToWishlist, removeFromWishlist } from '../../composables/wishlist';
-import {Festival} from "../../../models";
-import axios from "axios";
-import {urlFriendly} from "../../../utils";
+import { wishlist, fetchWishlistItems, removeFromWishlist, clearWishlist } from '../../composables/wishlist';
+import CartSidebar from './CartSidebar.vue';
+import WishlistSidebar from './WishlistSidebar.vue';
+import {parseToUrl} from "../../../utils";
 
-// Define TypeScript interface for User
-interface User {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
+// Use the usePage hook to get auth data directly
+const page = usePage();
+const authUser = computed(() => page.props.auth?.user);
+
+// Keep props for backward compatibility
+const props = defineProps({
+    auth: Object,
+});
+
+// Debug auth status on mount
+onMounted(() => {
+    console.log('Auth from props:', props.auth);
+    console.log('Auth from page:', page.props.auth);
+});
+
+// Choose most reliable auth source
+const user = computed(() => authUser.value || props.auth?.user);
+
+// URL friendly conversion function
+function urlFriendly(str: string) {
+    return str
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 }
 
-// Get auth data from Inertia
-const page = usePage();
-const auth = computed(() => page.props.auth as { user: User | null });
-
-const csrfToken = page.props.csrf_token as string || "";
 function logout() {
-    router.post("/logout", {}, { headers: { "X-CSRF-TOKEN": csrfToken } });
+    // Get the CSRF token from Inertia page props
+    const token = page.props.csrf_token;
+
+    fetch('/logout', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': token || '',
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (response.ok || response.redirected) {
+            window.location.href = '/'; // Redirect to home page after logout
+        }
+    })
+    .catch(error => {
+        console.error('Logout error:', error);
+    });
 }
 
 function navigateToDashboard() {
-    if (auth.value.user) {
-        switch (auth.value.user.role) {
-            case 'admin':
-                router.visit('/admin/dashboard'); // Fixed path for admin dashboard
-                break;
-            case 'user':
-                router.visit('/home'); // Regular user dashboard
-                break;
-            default:
-                router.visit('/'); // Fallback to homepage
-                break;
-        }
+    const userRole = user.value?.role;
+
+    switch(userRole) {
+        case 'admin':
+            router.visit('/admin/dashboard');
+            break;
+        case 'employee':
+            router.visit('/qr-reader');
+            break;
+        case 'user':
+            router.visit('/user/personal-program');
+            break;
+        default:
+            router.visit('/');
     }
 }
 
-// Popup menu visibility
-const festivals = ref<Festival[]>([]);
-const isCartMenuVisible = ref(false);
-const isWishlistMenuVisible = ref(false);
+// Sidebar visibility states
+const isCartSidebarOpen = ref(false);
+const isWishlistSidebarOpen = ref(false);
 const isFestivalMenuVisible = ref(false);
+const festivals = ref<Festival[]>([]);
 
 async function fetchFestivals() {
     try {
@@ -56,166 +91,166 @@ async function fetchFestivals() {
     }
 }
 
-function toggleCartMenu() {
-    isCartMenuVisible.value = !isCartMenuVisible.value;
-    isWishlistMenuVisible.value = false;
+function toggleCartSidebar() {
+    isCartSidebarOpen.value = !isCartSidebarOpen.value;
+    if (isCartSidebarOpen.value) {
+        isWishlistSidebarOpen.value = false;
+    }
 }
 
-function toggleWishlistMenu() {
-    isWishlistMenuVisible.value = !isWishlistMenuVisible.value;
-    isCartMenuVisible.value = false;
+function toggleWishlistSidebar() {
+    isWishlistSidebarOpen.value = !isWishlistSidebarOpen.value;
+    if (isWishlistSidebarOpen.value) {
+        isCartSidebarOpen.value = false;
+    }
 }
 
 function toggleFestivalMenu() {
     isFestivalMenuVisible.value = !isFestivalMenuVisible.value;
-    isCartMenuVisible.value     = false;
-    isWishlistMenuVisible.value = false;
 }
 
+// Initialize data
 fetchCartItems();
 fetchWishlistItems();
 fetchFestivals();
-
 </script>
 
 <template>
     <div :class="['navbar-container', $attrs.class]">
         <div class="navbar-options">
-            <div class="navbar-option">
-                <!-- Logo here -->
+            <!-- Left section - Logo -->
+            <div class="navbar-section logo-section">
                 <a href="/" class="logo-link">
                     <img class="navbar-logo" src="/storage/main/logo.png" width="64px" height="64px" alt="Logo">
                 </a>
             </div>
-            <div class="navbar-option d-flex flex-row gap-5">
-                <div class="navbar-suboption">
-                    <a href="/">Home</a>
-                </div>
-                <div class="navbar-suboption">
-                    <a href="#">Wishlist</a>
-                </div>
-                <div class="navbar-suboption position-relative">
-                    <span class="cursor-pointer" @click="toggleFestivalMenu">
-                      Festival ⩒
-                    </span>
-                    <ul v-if="isFestivalMenuVisible" class="festival-dropdown">
-                        <li v-for="festival in festivals" :key="festival.id">
-                            <a :href="`/festivals/${urlFriendly(festival.name)}`">
-                                {{ festival.name }}
-                            </a>
-                        </li>
-                    </ul>
+
+            <!-- Middle section - Navigation -->
+            <div class="navbar-section nav-section">
+                <div class="navbar-links">
+                    <div class="navbar-suboption">
+                        <a href="/">Home</a>
+                    </div>
+                    <div class="navbar-suboption position-relative">
+                        <span class="cursor-pointer" @click="toggleFestivalMenu">
+                          Festival ⩒
+                        </span>
+                        <ul v-if="isFestivalMenuVisible" class="festival-dropdown">
+                            <li v-for="festival in festivals" :key="festival.id">
+                                <a :href="`/festivals/${parseToUrl(festival.name)}`">
+                                    {{ festival.name }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <div class="navbar-option">
+            <!-- Right section - User/Auth and icons -->
+            <div class="navbar-section user-section">
                 <div class="navbar-suboption">
-                    <template v-if="auth.user">
-                        <span @click="navigateToDashboard"
-                              class="cursor-pointer user-name">
-                            {{ auth.user.firstName }}
-                        </span>
-                        <button type="button" class="btn btn-outline-danger logoutBtn" @click="logout">
-                            Log Out
-                        </button>
+                    <template v-if="user">
+                        <div class="auth-container">
+                            <span @click="navigateToDashboard"
+                                  class="cursor-pointer user-name">
+                                {{ user.firstName }}
+                            </span>
+                            <button type="button" class="btn btn-outline-danger logoutBtn" @click="logout">
+                                Log Out
+                            </button>
+                        </div>
                     </template>
                     <template v-else>
-                        <a href="/login">
+                        <button @click="() => router.visit('/login')" class="login-button">
                             <i class="bx bx-user"></i>
-                        </a>
+                            <span>Login</span>
+                        </button>
                     </template>
-                    <a href="/cart" @click.prevent="toggleCartMenu">
-                        <i class="bx bx-cart"></i>
-                    </a>
-                    <a href="/wishlist" @click.prevent="toggleWishlistMenu">
-                        <i class="bx bx-heart"></i>
-                    </a>
+
+                    <!-- Cart and Wishlist Icons -->
+                    <div class="icon-group">
+                        <button @click="toggleWishlistSidebar" class="icon-button" :class="{ active: isWishlistSidebarOpen }">
+                            <i class="bx bx-heart"></i>
+                            <span v-if="wishlist.length > 0" class="icon-badge">{{ wishlist.length }}</span>
+                        </button>
+
+                        <button @click="toggleCartSidebar" class="icon-button" :class="{ active: isCartSidebarOpen }">
+                            <i class="bx bx-cart"></i>
+                            <span v-if="cart.length > 0" class="icon-badge">{{ cart.length }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Cart Popup Menu -->
-    <div v-if="isCartMenuVisible" class="cart-popup-menu">
-        <div v-if="cart.length">
-            <div v-for="item in cart" :key="item.festival_id" class="cart-item">
-                <span>{{ item.festival_name }}</span> <!-- Changed from Festival ID to Festival Name -->
-                <span>Quantity: {{ item.quantity }}</span>
-                <button @click="updateCartItem(item.festival_id, item.quantity - 1)">-</button>
-                <button @click="updateCartItem(item.festival_id, item.quantity + 1)">+</button>
-            </div>
-            <!-- Add Remove Items and Checkout buttons -->
-            <div class="cart-actions">
-                <button class="btn btn-danger" @click="clearCart()">Remove Items</button>
-               <a href="/cart" class="btn btn-primary">Checkout</a>
-            </div>
-        </div>
-        <div v-else class="text-center">
-            <p>No tickets in cart.</p>
-        </div>
-    </div>
+    <!-- New Sidebar Components -->
+    <CartSidebar :is-open="isCartSidebarOpen" @close="isCartSidebarOpen = false" />
+    <WishlistSidebar :is-open="isWishlistSidebarOpen" @close="isWishlistSidebarOpen = false" />
 
-    <!-- Wishlist Popup Menu -->
-    <div v-if="isWishlistMenuVisible" class="wishlist-popup-menu">
-        <div v-if="wishlist.length">
-            <div v-for="item in wishlist" :key="item.festival_id" class="wishlist-item">
-                <span>{{ item.name }}</span> <!-- Changed from Festival ID to Festival Name -->
-                <button @click="removeFromWishlist(item.festival_id)">Remove</button>
-            </div>
-            <a href="/wishlist" class="view-wishlist-btn">View Wishlist</a>
-        </div>
-        <div v-else class="text-center">
-            <p>No favorites in wishlist.</p>
-        </div>
+    <!-- User Dropdown Menu -->
+    <div class="dropdown-menu" aria-labelledby="userDropdown">
+        <Link class="dropdown-item" href="/user/personal-program">My Program</Link>
+        <!-- Existing menu items like profile, orders, etc. -->
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="#" @click.prevent="logout">Logout</a>
     </div>
 </template>
 
 <style scoped>
 /* Importing Google Fonts and Boxicons */
 @import "https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap";
-@import "https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css";
-
-* {
-    background-color: transparent;
-}
 
 .navbar-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    top: 0;
-    width: 100%;
     height: 70px;
-    background-color: #fff;
-    border-bottom: solid 1px rgba(204, 204, 204, 255);
-    text-decoration: none;
+    width: 100%;
+    padding: 0 2rem;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .navbar-options {
     display: flex;
-    flex-direction: row;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 0 20px;
+    height: 100%;
 }
 
-.navbar-option {
-    flex: 1;
+/* Three-section layout */
+.navbar-section {
     display: flex;
-    justify-content: center;
     align-items: center;
-    min-height: 70px;
+    height: 100%;
 }
 
-.navbar-option:last-child {
+.logo-section {
+    width: 25%;
+    justify-content: flex-start;
+}
+
+.nav-section {
+    width: 50%;
+    justify-content: center;
+}
+
+.navbar-links {
+    display: flex;
+    gap: 3rem;
+    align-items: center;
+}
+
+.user-section {
+    width: 25%;
     justify-content: flex-end;
 }
 
-.navbar-option i {
-    font-size: 24px;
-    color: black !important;
+.navbar-option {
+    display: flex;
+    align-items: center;
+    height: 100%;
 }
 
 .navbar-option a {
@@ -249,106 +284,9 @@ fetchFestivals();
 }
 
 .logoutBtn {
-    min-width: 100px; /* Make the button wider */
+    min-width: 100px;
     padding: 6px 15px;
     font-weight: 500;
-}
-
-.cart-popup-menu {
-    position: absolute;
-    top: 70px;  /* Adjust based on your navbar height */
-    right: 20px;
-    background-color: white;
-    border: 1px solid #ccc;
-    padding: 10px;
-    width: 250px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-}
-
-.cart-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0; /* Increase padding for better spacing */
-    margin-bottom: 15px; /* Add more margin between cart items */
-    border-bottom: 1px solid #ddd; /* Optional: Add a separator between items */
-}
-
-.cart-item span {
-    flex: 1; /* Allow the name and quantity to take up available space */
-    margin-right: 10px; /* Add spacing between the name and quantity */
-}
-
-.cart-item button {
-    margin: 0 8px; /* Add more spacing between the buttons */
-}
-
-.cart-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-}
-
-.cart-actions .btn {
-    padding: 8px 12px;
-    font-size: 14px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.cart-actions .btn-danger {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-}
-
-.cart-actions .btn-primary {
-    background-color: #007bff;
-    color: white;
-    border: none;
-}
-
-.view-cart-btn {
-    margin-top: 10px;
-    padding: 8px 12px;
-    background-color: #007bff;
-    color: white;
-    text-align: center;
-    border-radius: 5px;
-    text-decoration: none;
-}
-
-.wishlist-popup-menu {
-    position: absolute;
-    top: 70px;  /* Adjust based on your navbar height */
-    right: 20px;
-    background-color: white;
-    border: 1px solid #ccc;
-    padding: 10px;
-    width: 250px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-}
-
-.wishlist-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-.view-wishlist-btn {
-    margin-top: 10px;
-    padding: 8px 12px;
-    background-color: #007bff;
-    color: white;
-    text-align: center;
-    border-radius: 5px;
-    text-decoration: none;
 }
 
 .navbar-suboption.position-relative {
@@ -372,16 +310,148 @@ fetchFestivals();
 
 .festival-dropdown li {
     margin: 0;
+    padding: 0;
 }
 
 .festival-dropdown li a {
     display: block;
     padding: 0.5rem 1rem;
     color: #333;
+    font-size: 14px !important;
     text-decoration: none;
+    transition: background-color 0.2s;
 }
 
 .festival-dropdown li a:hover {
-    background-color: #f8f9fa;
+    background-color: #f5f5f5;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Icon group for cart and wishlist */
+.icon-group {
+    display: flex;
+    gap: 1rem;
+    margin-left: 1rem;
+}
+
+.icon-button {
+    position: relative;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    transition: color 0.2s;
+}
+
+.icon-button:hover, .icon-button.active {
+    color: #2565c7;
+}
+
+.icon-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.7rem;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* New styles for auth container and login button */
+.auth-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.login-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: white;
+    color: #2565c7;
+    padding: 8px 16px;
+    border: 1.5px solid #2565c7;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.login-button:hover {
+    background-color: #2565c7;
+    color: white;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.login-button i {
+    font-size: 16px;
+}
+
+/* Dropdown menu styles */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: auto;
+    z-index: 1000;
+    display: none;
+    float: right;
+    min-width: 160px;
+    padding: 0.5rem 0;
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    color: #333;
+    text-align: inherit;
+    white-space: nowrap;
+    background: 0;
+    border: 0;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f5f5f5;
+}
+
+.dropdown-divider {
+    height: 0;
+    margin: 0.5rem 0;
+    overflow: hidden;
+    border-top: 1px solid #e9ecef;
 }
 </style>

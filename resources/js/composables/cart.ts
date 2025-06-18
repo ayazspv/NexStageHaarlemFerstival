@@ -1,81 +1,138 @@
 import { ref } from 'vue';
-import {useForm, Link, router, usePage} from '@inertiajs/vue3';
 
-export const cart = ref<any[]>([]);
+// Simple localStorage-based cart (no database)
+export const cart = ref([]);
 
-export function fetchCartItems() {
-    const storedCart = JSON.parse(localStorage.getItem('cart') || '[]');
-    cart.value = storedCart;
-    cart.value = [...cart.value]; // Trigger reactivity update
-}
-
-
-export async function addToCart(festivalId: number, festivalName: string, festivalCost: number) {
-    const existingItem = cart.value.find(item => item.festival_id === festivalId);
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        cart.value.push({ festival_id: festivalId, festival_name: festivalName, festival_cost: festivalCost, quantity: 1 });
-    }
-    localStorage.setItem('cart', JSON.stringify(cart.value));
-    cart.value = [...cart.value]; // Trigger reactivity update
-
-    const page = usePage();
-    const csrfToken = page.props.csrf_token as string || ""; 
-
-    
-
-   
-}
-
-export function updateCartItem(cartItemId: number, quantity: number) {
-    const item = cart.value.find(item => item.festival_id === cartItemId);
-    if (item) {
-        item.quantity = quantity;
-        if (item.quantity <= 0) {
-            cart.value = cart.value.filter(item => item.festival_id !== cartItemId);
-        }
-        localStorage.setItem('cart', JSON.stringify(cart.value));
-        cart.value = [...cart.value]; // Trigger reactivity update
-    }
-}
-
-export function clearCart() {
-    cart.value = []; // Clear the cart
-    localStorage.setItem('cart', JSON.stringify(cart.value)); // Update localStorage
-}
-
-export function addAllToCart(items: { festival_id: number; name: string; quantity: number }[]) {
-    items.forEach(item => {
-        const existingItem = cart.value.find(cartItem => cartItem.festival_id === item.festival_id);
-        if (existingItem) {
-            existingItem.quantity += item.quantity; // Update quantity if the item already exists
+// Load cart from localStorage
+export const fetchCartItems = () => {
+    try {
+        const stored = localStorage.getItem('cart');
+        if (stored) {
+            cart.value = JSON.parse(stored);
         } else {
-            cart.value.push({ festival_id: item.festival_id, name: item.name, quantity: item.quantity });
+            cart.value = [];
         }
-    });
-    localStorage.setItem('cart', JSON.stringify(cart.value)); // Update localStorage
-    cart.value = [...cart.value]; // Trigger reactivity update
-}
+        console.log('Cart loaded from localStorage:', cart.value);
+    } catch (error) {
+        console.error('Error loading cart:', error);
+        cart.value = [];
+    }
+};
 
-export function useCart() {
+// Save cart to localStorage
+const saveCart = () => {
+    try {
+        localStorage.setItem('cart', JSON.stringify(cart.value));
+    } catch (error) {
+        console.error('Error saving cart:', error);
+    }
+};
+
+// Add item to cart
+export const addToCart = (festivalId: number, festivalName: string, festivalCost: number, quantity: number = 1) => {
+    try {
+        // Check if item already exists
+        const existingItem = cart.value.find(item => item.festival_id === festivalId);
+
+        if (existingItem) {
+            // Update quantity (max 10 per festival)
+            const newQuantity = existingItem.quantity + quantity;
+            if (newQuantity > 10) {
+                alert('Maximum 10 tickets allowed per festival');
+                return;
+            }
+            existingItem.quantity = newQuantity;
+        } else {
+            // Add new item
+            cart.value.push({
+                festival_id: festivalId,
+                festival_name: festivalName,
+                festival_cost: festivalCost,
+                quantity: quantity
+            });
+        }
+
+        saveCart();
+    } catch (error) {
+        console.error('Error adding to cart:', error);
+    }
+};
+
+// Update cart item quantity
+export const updateCartItem = (festivalId: number, newQuantity: number) => {
+    try {
+        if (newQuantity < 1) {
+            removeCartItem(festivalId);
+            return;
+        }
+
+        if (newQuantity > 10) {
+            alert('Maximum 10 tickets allowed per festival');
+            return;
+        }
+
+        const item = cart.value.find(item => item.festival_id === festivalId);
+        if (item) {
+            item.quantity = newQuantity;
+            saveCart();
+        }
+    } catch (error) {
+        console.error('Error updating cart item:', error);
+        alert('Failed to update item');
+    }
+};
+
+// Remove item from cart
+export const removeCartItem = (festivalId: number) => {
+    try {
+        cart.value = cart.value.filter(item => item.festival_id !== festivalId);
+        saveCart();
+    } catch (error) {
+        console.error('Error removing cart item:', error);
+        alert('Failed to remove item');
+    }
+};
+
+// Clear entire cart
+export const clearCart = () => {
+    try {
+        cart.value = [];
+        localStorage.removeItem('cart');
+        console.log('Cart cleared successfully');
+    } catch (error) {
+        console.error('Error clearing cart:', error);
+        alert('Failed to clear cart');
+    }
+};
+
+// Prepare checkout data for payment
+export const prepareCheckoutData = () => {
+    const totalAmount = cart.value.reduce((total, item) => total + (item.festival_cost * item.quantity), 0);
+
+    const items = cart.value.map(item => ({
+        festival_id: item.festival_id,
+        festivalName: item.festival_name,
+        quantity: item.quantity,
+        festivalCost: item.festival_cost,
+        // Legacy format for compatibility
+        festivalID: item.festival_id,
+        festivalQuantity: item.quantity,
+    }));
+
     return {
-        cart,
-        fetchCartItems,
-        addToCart,
-        addAllToCart, // Add the new function here
-        updateCartItem,
-        clearCart,
-        
+        totalAmount,
+        items,
     };
-}
+};
 
-// export function layerOneOutput(totalAmount: number, items: Array) {
-//     const storedData = JSON.parse(totalAmount, items)
-// }
+// Get cart totals
+export const getCartTotals = () => {
+    const totalQuantity = cart.value.reduce((total, item) => total + item.quantity, 0);
+    const totalCost = cart.value.reduce((total, item) => total + (item.festival_cost * item.quantity), 0);
 
-
-export function addOutputLayer1() {
-    
-}
-
+    return {
+        totalQuantity,
+        totalCost,
+        itemCount: cart.value.length,
+    };
+};
