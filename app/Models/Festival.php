@@ -19,6 +19,7 @@ class Festival extends Model
         'festivalType',
         'ticket_amount',
         'time_slot',
+        'price',
     ];
 
     protected $casts = [

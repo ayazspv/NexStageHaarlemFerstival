@@ -4,7 +4,6 @@ import { Festival } from "../../../models";
 import { ref, computed } from 'vue';
 import '../../../css/jazz.css';
 import FestivalHeader from "./Jazz/components/FestivalHeader.vue";
-import FestivalInfo from "./Jazz/components/FestivalInfo.vue";
 import PerformanceSchedule from "./Jazz/components/PerformanceSchedule.vue";
 import ArtistList from "./Jazz/components/ArtistList.vue";
 import ArtistDetailsModal from "./Jazz/components/ArtistDetailsModal.vue";
@@ -39,9 +38,6 @@ const { selectedBand, showBandDetails, closeBandDetails } = useBandDetails();
     <AppLayout :title="festival?.name || 'Jazz Festival'">
         <!-- Festival Header Section -->
         <FestivalHeader :festival="festival" />
-
-        <!-- Festival Info Section -->
-        <FestivalInfo :festival="festival" />
 
         <!-- Schedule Section -->
         <PerformanceSchedule 

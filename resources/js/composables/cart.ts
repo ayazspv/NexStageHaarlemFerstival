@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 // Simple localStorage-based cart (no database)
 export const cart = ref([]);
@@ -28,9 +28,57 @@ const saveCart = () => {
     }
 };
 
+// Clear cart
+export const clearCart = () => {
+    cart.value = [];
+    saveCart();
+    console.log('Cart cleared');
+};
+
+// Update item quantity in cart
+export const updateCartItem = (festivalId: number, newQuantity: number, eventId: number = null) => {
+    // Find the item with consistent criteria
+    const itemIndex = cart.value.findIndex(item => {
+        if (eventId && item.ticket_type === 'jazz_event') {
+            return item.event_id === eventId;
+        }
+        return item.festival_id === festivalId && !item.event_id;
+    });
+    
+    if (itemIndex !== -1) {
+        if (newQuantity <= 0) {
+            // Remove the item
+            cart.value.splice(itemIndex, 1);
+        } else if (newQuantity > 10) {
+            // Limit to maximum 10 tickets
+            cart.value[itemIndex].quantity = 10;
+        } else {
+            // Update quantity
+            cart.value[itemIndex].quantity = newQuantity;
+        }
+        saveCart();
+    }
+};
+
 // Add item to cart
-export const addToCart = (festivalId: number, festivalName: string, festivalCost: number, quantity: number = 1) => {
+export const addToCart = async (festivalId: number, festivalName: string, festivalCost: number, quantity: number = 1, ticketType: string = 'standard') => {
     try {
+        if (ticketType === 'standard' && festivalId > 0) {
+            // Fetch price from API for standard festival tickets
+            const response = await fetch(`/api/festivals/${festivalId}/price`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Price data from API:', data); // Debugging
+                
+                // Use nullish coalescing instead of logical OR
+                festivalCost = data.price ?? 25.00; 
+            } else {
+                console.error('Error fetching price:', response.status);
+                festivalCost = 25.00; // Default price if API fails
+            }
+        }
+
         // Check if item already exists
         const existingItem = cart.value.find(item => item.festival_id === festivalId);
 
@@ -58,81 +106,129 @@ export const addToCart = (festivalId: number, festivalName: string, festivalCost
     }
 };
 
-// Update cart item quantity
-export const updateCartItem = (festivalId: number, newQuantity: number) => {
+// Add jazz event to cart
+export const addJazzEventToCart = async (
+    festivalId: number,
+    eventId: number, 
+    artistName: string,
+    performanceDay: number,
+    performanceTime: string,
+    quantity: number = 1
+) => {
     try {
-        if (newQuantity < 1) {
-            removeCartItem(festivalId);
-            return;
+        // Always fetch the current price from the API for consistency
+        let ticketPrice = 25.00; // Default fallback price
+        
+        try {
+            const response = await fetch(`/api/jazz-events/${eventId}/price`);
+            if (response.ok) {
+                const data = await response.json();
+                ticketPrice = data.price ?? 25.00;
+                console.log(`Fetched price for artist ${artistName}: €${ticketPrice}`);
+            }
+        } catch (error) {
+            console.error('Error fetching price:', error);
         }
-
-        if (newQuantity > 10) {
-            alert('Maximum 10 tickets allowed per festival');
-            return;
+        
+        // Check if this jazz event is already in cart
+        const existingItem = cart.value.find(item => 
+            item.event_id === eventId && item.ticket_type === 'jazz_event'
+        );
+        
+        if (existingItem) {
+            // Update quantity (max 10)
+            const newQuantity = existingItem.quantity + quantity;
+            existingItem.quantity = Math.min(newQuantity, 10);
+        } else {
+            // Add new item with standardized structure
+            cart.value.push({
+                festival_id: festivalId,
+                festival_name: artistName, // Use artist name instead of 'Jazz Festival'
+                event_id: eventId,
+                ticket_type: 'jazz_event',
+                artist_name: artistName,
+                performance_day: performanceDay,
+                performance_time: performanceTime,
+                festival_cost: ticketPrice, // Use the fetched price
+                quantity: quantity
+            });
         }
-
-        const item = cart.value.find(item => item.festival_id === festivalId);
-        if (item) {
-            item.quantity = newQuantity;
-            saveCart();
-        }
-    } catch (error) {
-        console.error('Error updating cart item:', error);
-        alert('Failed to update item');
-    }
-};
-
-// Remove item from cart
-export const removeCartItem = (festivalId: number) => {
-    try {
-        cart.value = cart.value.filter(item => item.festival_id !== festivalId);
+        
         saveCart();
     } catch (error) {
-        console.error('Error removing cart item:', error);
-        alert('Failed to remove item');
+        console.error('Error adding jazz event to cart:', error);
     }
 };
 
-// Clear entire cart
-export const clearCart = () => {
-    try {
-        cart.value = [];
-        localStorage.removeItem('cart');
-        console.log('Cart cleared successfully');
-    } catch (error) {
-        console.error('Error clearing cart:', error);
-        alert('Failed to clear cart');
+// Consolidate jazz events
+export function consolidateJazzEvents() {
+    const seenArtists = {};
+    const newCart = [];
+    
+    cart.value.forEach(item => {
+        if (item.ticket_type === 'jazz_event') {
+            // Clean artist name for comparison
+            const artistKey = (item.artist_name || item.name || "")
+                .replace(/^Jazz\s*-\s*/i, '')
+                .trim()
+                .toLowerCase();
+                
+            if (seenArtists[artistKey]) {
+                // Add quantity to existing item
+                seenArtists[artistKey].quantity += item.quantity;
+                // Cap at 10
+                seenArtists[artistKey].quantity = Math.min(seenArtists[artistKey].quantity, 10);
+                
+                // Very important: use the same price for consistency
+                seenArtists[artistKey].festival_cost = Math.max(
+                    seenArtists[artistKey].festival_cost,
+                    item.festival_cost || 0
+                );
+            } else {
+                // First time seeing this artist
+                seenArtists[artistKey] = {...item};
+                newCart.push(item);
+            }
+        } else {
+            // Non-jazz events pass through unchanged
+            newCart.push(item);
+        }
+    });
+    
+    cart.value = newCart;
+    saveCart();
+}
+
+// Prepare data for checkout
+export function prepareCheckoutData() {
+    // Make sure cart is loaded
+    if (cart.value.length === 0) {
+        fetchCartItems();
     }
-};
-
-// Prepare checkout data for payment
-export const prepareCheckoutData = () => {
-    const totalAmount = cart.value.reduce((total, item) => total + (item.festival_cost * item.quantity), 0);
-
+    
+    // Calculate total cost
+    const totalAmount = cart.value.reduce(
+        (total, item) => total + (item.festival_cost * item.quantity), 
+        0
+    );
+    
+    // Format items for checkout
     const items = cart.value.map(item => ({
         festival_id: item.festival_id,
-        festivalName: item.festival_name,
+        festivalID: item.festival_id,
+        festivalName: item.artist_name || item.festival_name || 'Festival Ticket',
+        festivalQuantity: item.quantity,
         quantity: item.quantity,
         festivalCost: item.festival_cost,
-        // Legacy format for compatibility
-        festivalID: item.festival_id,
-        festivalQuantity: item.quantity,
+        event_id: item.event_id || null,
+        ticket_type: item.ticket_type || 'standard',
+        artist_name: item.artist_name || null,
+        performance_day: item.performance_day || null,
+        performance_time: item.performance_time || null,
     }));
 
     return {
         totalAmount,
         items,
     };
-};
-
-// Get cart totals
-export const getCartTotals = () => {
-    const totalQuantity = cart.value.reduce((total, item) => total + item.quantity, 0);
-    const totalCost = cart.value.reduce((total, item) => total + (item.festival_cost * item.quantity), 0);
-
-    return {
-        totalQuantity,
-        totalCost,
-        itemCount: cart.value.length,
-    };
-};
+}
