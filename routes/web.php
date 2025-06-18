@@ -10,7 +10,8 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\QrReaderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminPanelController;
-use App\Http\Controllers\Admin\FestivalController;
+use App\Http\Controllers\Admin\FestivalController as AdminFestivalController;
+use App\Http\Controllers\Api\FestivalController as ApiFestivalController;
 use App\Http\Controllers\Admin\AdminUserController;
 use Inertia\Inertia;
 use App\Http\Controllers\LoginController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
 use App\Http\Controllers\PersonalProgramController;
+use App\Http\Controllers\Admin\JazzFestivalController;
 use App\Http\Controllers\TicketController;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Middleware\QrReaderAccess;
@@ -46,14 +48,14 @@ Route::get('/paymentCredentials', [CartController::class, 'paymentCredentialsRen
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     Route::get('/dashboard', [AdminPanelController::class, 'show'])->name('admin.dashboard');
-    Route::get('/events', [FestivalController::class, 'index'])->name('admin.events');
+    Route::get('/events', [AdminFestivalController::class, 'index'])->name('admin.events');
 
-    Route::post('/festivals', [FestivalController::class, 'store'])->name('admin.festivals.store');
-    Route::put('/festivals/{festival}', [FestivalController::class, 'update'])->name('admin.festivals.update');
-    Route::delete('/festivals/{festival}', [FestivalController::class, 'destroy'])->name('admin.festivals.destroy');
-    Route::resource('festivals', FestivalController::class);
+    Route::post('/festivals', [AdminFestivalController::class, 'store'])->name('admin.festivals.store');
+    Route::put('/festivals/{festival}', [AdminFestivalController::class, 'update'])->name('admin.festivals.update');
+    Route::delete('/festivals/{festival}', [AdminFestivalController::class, 'destroy'])->name('admin.festivals.destroy');
+    Route::resource('festivals', AdminFestivalController::class);
 
-    Route::put('/festivals/{festival}/details', [FestivalController::class, 'updateDetails'])
+    Route::put('/festivals/{festival}/details', [AdminFestivalController::class, 'updateDetails'])
         ->name('admin.festivals.update-details');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users');
@@ -93,7 +95,6 @@ Route::get('/api/styles', [StyleController::class, 'index'])
 Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->where('path', '.*')
     ->name('festivals.show');
-Route::get('/api/festivals', [FestivalController::class, 'getFestivals']);
 
 Route::post('/api/send-mail', [MailController::class, 'sendMail']);
 
@@ -185,4 +186,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/tickets/full-pass', [TicketController::class, 'storeFullPass']);
 });
 
-
+Route::prefix('api')->group(function () {
+    Route::get('festivals', [ApiFestivalController::class, 'getFestivals']);
+    Route::get('festivals/{id}/price', [ApiFestivalController::class, 'getFestivalPrice']);
+    Route::get('special-tickets/prices', [ApiFestivalController::class, 'getSpecialTicketPrices']);
+    Route::post('create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
+    Route::post('process-payment', [PaymentController::class, 'processPayment']);
+    Route::get('jazz-events/{id}/price', [JazzFestivalController::class, 'getEventPrice']);
+});

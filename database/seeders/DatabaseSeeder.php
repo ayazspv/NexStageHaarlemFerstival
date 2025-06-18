@@ -59,6 +59,7 @@ class DatabaseSeeder extends Seeder
                 'festivalType' => 0,
                 'ticket_amount' => 250,
                 'time_slot' => '18:00 - 22:00',
+                'price' => 35.00,
             ],
             [
                 'name' => 'Food Festival',
@@ -67,6 +68,7 @@ class DatabaseSeeder extends Seeder
                 'festivalType' => 1,
                 'ticket_amount' => 150,
                 'time_slot' => '16:00 - 18:00',
+                'price' => 45.00,
             ],
             [
                 'name' => 'A Stroll Through History',
@@ -75,6 +77,7 @@ class DatabaseSeeder extends Seeder
                 'festivalType' => 2,
                 'ticket_amount' => 100,
                 'time_slot' => '10:00 - 16:00',
+                'price' => 25.00,
             ],
             [
                 'name' => 'Night@Teylers',
@@ -83,6 +86,7 @@ class DatabaseSeeder extends Seeder
                 'isGame' => true,
                 'festivalType' => 3,
                 'time_slot' => '10:00 - 17:00',
+                'price' => 0.00,
             ],
         ];
 

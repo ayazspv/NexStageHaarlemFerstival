@@ -85,6 +85,74 @@ function goToNextPage() {
 function goToLogin() {
     router.visit('/login');
 }
+
+// Add this function to get unique keys for cart items
+function getCartItemKey(item) {
+    if (item.ticket_type === 'jazz_event' && item.event_id) {
+        return `jazz_${item.event_id}`;
+    }
+    return item.festival_id;
+}
+
+// Add this function to your script setup section
+function getIconForTicketType(ticketType) {
+    switch(ticketType) {
+        case 'jazz_event':
+            return 'fas fa-music';
+        case 'day_pass':
+            return 'fas fa-calendar-day';
+        case 'full_pass':
+            return 'fas fa-ticket-alt';
+        default:
+            return 'fas fa-ticket-alt';
+    }
+}
+
+// Format display name consistently
+function formatItemName(item) {
+    if (item.ticket_type === 'jazz_event') {
+        return `Jazz - ${item.artist_name}`;
+    }
+    return item.festival_name;
+}
+
+// Add this function to clean up duplicates on page load
+function consolidateJazzEventsInCart() {
+    const seenArtists = {};
+    const newCart = [];
+    
+    cart.value.forEach(item => {
+        if (item.ticket_type === 'jazz_event') {
+            // Clean artist name for comparison
+            const artistKey = (item.artist_name || item.name || "")
+                .replace(/^Jazz\s*-\s*/i, '')
+                .trim()
+                .toLowerCase();
+                
+            if (seenArtists[artistKey]) {
+                // Add quantity to existing item
+                seenArtists[artistKey].quantity += item.quantity;
+                // Cap at 10
+                seenArtists[artistKey].quantity = Math.min(seenArtists[artistKey].quantity, 10);
+            } else {
+                // First time seeing this artist
+                seenArtists[artistKey] = item;
+                newCart.push(item);
+            }
+        } else {
+            // Non-jazz events pass through unchanged
+            newCart.push(item);
+        }
+    });
+    
+    cart.value = newCart;
+    localStorage.setItem('cart', JSON.stringify(cart.value));
+}
+
+onMounted(() => {
+    fetchCartItems();
+    consolidateJazzEventsInCart();
+});
 </script>
 
 <template>
@@ -137,15 +205,23 @@ function goToLogin() {
                                             <h5 class="mb-0">Festival Tickets</h5>
                                         </div>
                                         <div class="cart-items-list">
-                                            <div v-for="item in cart" :key="item.festival_id" class="cart-item">
+                                            <div v-for="item in cart" :key="getCartItemKey(item)" class="cart-item">
                                                 <div class="item-info">
-                                                    <div class="festival-icon">
-                                                        <i class="fas fa-ticket-alt"></i>
+                                                    <div class="festival-icon" :class="{'jazz': item.ticket_type === 'jazz_event' || item.artist_name}">
+                                                        <i :class="getIconForTicketType(item.ticket_type || (item.artist_name ? 'jazz_event' : 'standard'))"></i>
                                                     </div>
                                                     <div class="festival-details">
-                                                        <h6 class="festival-name">{{ item.festival_name }}</h6>
+                                                        <h6 class="festival-name">
+                                                            {{ formatItemName(item) }}
+                                                        </h6>
                                                         <div class="festival-meta">
                                                             <span class="festival-price">€{{ item.festival_cost.toFixed(2) }} each</span>
+                                                            
+                                                            <span v-if="item.performance_day || (item.details && item.details.performanceDay)" class="event-time">
+                                                                <i class="far fa-calendar-alt"></i>
+                                                                July {{ item.performance_day || item.details?.performanceDay || '' }},
+                                                                {{ item.performance_time || item.details?.performanceTime || '' }}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -155,21 +231,21 @@ function goToLogin() {
                                                         <label class="quantity-label">Quantity</label>
                                                         <div class="quantity-controls">
                                                             <button
-                                                                @click="updateItemQuantity(item.festival_id, item.quantity - 1)"
+                                                                @click="updateItemQuantity(item.festival_id, item.quantity - 1, item.event_id)"
                                                                 class="btn btn-outline-secondary btn-sm quantity-btn"
                                                                 :disabled="item.quantity <= 1">
                                                                 <i class="fas fa-minus"></i>
                                                             </button>
                                                             <span class="quantity-display">{{ item.quantity }}</span>
                                                             <button
-                                                                @click="updateItemQuantity(item.festival_id, item.quantity + 1)"
+                                                                @click="updateItemQuantity(item.festival_id, item.quantity + 1, item.event_id)"
                                                                 class="btn btn-outline-secondary btn-sm quantity-btn">
                                                                 <i class="fas fa-plus"></i>
                                                             </button>
                                                         </div>
                                                     </div>
 
-                                                    <div class="item-total">
+                                                    <div class="item-total text-center">
                                                         <span class="total-label">Total</span>
                                                         <span class="total-amount">€{{ (item.festival_cost * item.quantity).toFixed(2) }}</span>
                                                     </div>
@@ -365,8 +441,21 @@ function goToLogin() {
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
+.festival-icon.jazz {
+    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+}
+
+.festival-icon.day-pass {
+    background: linear-gradient(135deg, #fd7e14 0%, #e67e22 100%);
+}
+
+.festival-icon.full-pass {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
 .festival-details {
     flex: 1;
+    margin-left: 1rem;
 }
 
 .festival-name {
@@ -374,21 +463,43 @@ function goToLogin() {
     font-weight: 600;
     color: #2c3e50;
     font-size: 1.1rem;
+    text-align: left; /* Change from center to left */
+    width: 100%;
 }
 
 .festival-meta {
     display: flex;
-    gap: 1rem;
-    font-size: 0.9rem;
-}
-
-.festival-id {
-    color: #6c757d;
+    flex-direction: column;
+    align-items: flex-start; /* Change from center to left */
+    justify-content: flex-start;
+    width: 100%;
 }
 
 .festival-price {
+    margin-bottom: 2px;
     color: #28a745;
     font-weight: 500;
+}
+
+/* Update the event-time styling to remove the fixed flex property */
+.event-time {
+    display: inline-flex;
+    align-items: center;
+    padding: 0px 6px;
+    height: 22px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #495057;
+    margin-top: 3px;
+    max-width: fit-content;
+    flex: 0 0 auto !important; /* Override any fixed width setting */
+    width: auto !important;    /* Ensure width is auto */
+}
+
+.event-time i {
+    font-size: 0.7rem;  /* Make the icon slightly smaller */
+    margin-right: 4px;
 }
 
 /* Item Controls */
@@ -439,7 +550,9 @@ function goToLogin() {
 }
 
 .item-total {
-    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .total-label {

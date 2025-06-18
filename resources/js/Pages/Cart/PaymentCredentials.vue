@@ -124,10 +124,22 @@ const createPaymentIntent = async () => {
         console.log('Cart data:', cartData.value);
 
         // Send cart items to server for price validation and calculation
-        const cartItemsForValidation = cartData.value.items.map(item => ({
-            festival_id: item.festival_id || item.festivalID, // Support both formats
-            quantity: item.quantity || item.festivalQuantity,
-        }));
+        const cartItemsForValidation = cartData.value.items.map(item => {
+            // Basic item properties
+            const validationItem = {
+                festival_id: item.festival_id || item.festivalID, 
+                quantity: item.quantity || item.festivalQuantity,
+            };
+            
+            // Add jazz event specific data if this is a jazz event
+            if (item.ticket_type === 'jazz_event' || item.event_id) {
+                validationItem.ticket_type = 'jazz_event';
+                validationItem.event_id = item.event_id;
+                validationItem.artist_name = item.artist_name;
+            }
+            
+            return validationItem;
+        });
 
         console.log('Sending items for server validation:', cartItemsForValidation);
 

@@ -12,9 +12,12 @@ class Ticket extends Model
     protected $fillable = [
         'order_id',
         'festival_id',
+        'event_id',      // For specific events
         'qr_code',
         'quantity',
         'price_per_ticket',
+        'ticket_type',    // 'standard', 'day_pass', 'full_pass', 'jazz_event'
+        'ticket_details', // JSON field for additional details
         'is_used',
         'used_at',
         'redeemed_by',
@@ -24,6 +27,7 @@ class Ticket extends Model
         'price_per_ticket' => 'decimal:2',
         'is_used' => 'boolean',
         'used_at' => 'datetime',
+        'ticket_details' => 'array',
     ];
 
     public function order()
@@ -55,5 +59,11 @@ class Ticket extends Model
             'used_at' => now(),
             'redeemed_by' => $redeemedBy,
         ]);
+    }
+
+    // Add new relationship to JazzFestival
+    public function jazzEvent()
+    {
+        return $this->belongsTo(JazzFestival::class, 'event_id');
     }
 }

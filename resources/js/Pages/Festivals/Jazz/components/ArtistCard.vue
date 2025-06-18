@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { addToWishlist } from '@/composables/wishlist';
+import { addJazzEventToCart } from '@/composables/cart';
+import { addJazzEventToWishlist } from '@/composables/wishlist';
 
 const props = defineProps<{
     band: any;
@@ -22,6 +23,28 @@ const formatPrice = (price) => {
     if (price === undefined || price === null) return '0.00';
     return typeof price === 'number' ? price.toFixed(2) : Number(price).toFixed(2);
 };
+
+// Add this function to book a jazz event
+function bookJazzEvent(band) {
+    addJazzEventToCart(
+        band.festival_id,
+        band.id, // Event ID
+        band.band_name,
+        band.performance_day,
+        band.start_time || formatTime(band.performance_datetime),
+        1 // Add just 1 ticket at a time
+    );
+}
+
+function addToWishlistHandler(band) {
+    addJazzEventToWishlist(
+        band.festival_id,
+        band.id, // Event ID
+        band.band_name,
+        band.performance_day,
+        band.start_time || formatTime(band.performance_datetime)
+    );
+}
 </script>
 
 <template>
@@ -57,8 +80,11 @@ const formatPrice = (price) => {
                 <button @click="emit('show-details', band)" class="btn btn-outline-primary me-2">
                     <i class="fas fa-info-circle me-1"></i> View Details
                 </button>
-                <button class="btn btn-outline-secondary" @click.prevent="addToWishlist(band.id)">
-                    <i class="fas fa-heart"></i> Add to Wishlist
+                <button class="btn btn-outline-secondary me-2" @click.prevent="bookJazzEvent(band)">
+                    <i class="fas fa-ticket-alt"></i> Book Tickets
+                </button>
+                <button class="btn btn-outline-warning" @click.prevent="addToWishlistHandler(band)">
+                    <i class="fas fa-heart"></i> Wishlist
                 </button>
             </div>
         </div>
