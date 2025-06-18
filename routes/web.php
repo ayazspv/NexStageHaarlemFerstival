@@ -22,6 +22,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
 use App\Http\Controllers\PersonalProgramController;
+use App\Http\Controllers\Admin\JazzFestivalController;
 use App\Http\Controllers\TicketController;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Middleware\QrReaderAccess;
@@ -191,4 +192,5 @@ Route::prefix('api')->group(function () {
     Route::get('special-tickets/prices', [ApiFestivalController::class, 'getSpecialTicketPrices']);
     Route::post('create-payment-intent', [PaymentController::class, 'createPaymentIntent']);
     Route::post('process-payment', [PaymentController::class, 'processPayment']);
+    Route::get('jazz-events/{id}/price', [JazzFestivalController::class, 'getEventPrice']);
 });

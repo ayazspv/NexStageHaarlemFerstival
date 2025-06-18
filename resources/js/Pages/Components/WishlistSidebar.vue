@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { wishlist, removeFromWishlist, clearWishlist } from '../../composables/wishlist';
-import { addToCart } from '../../composables/cart';
+import { addToCart, addJazzEventToCart } from '../../composables/cart';
 import { Link } from '@inertiajs/vue3';
 
 const props = defineProps<{
@@ -9,16 +9,34 @@ const props = defineProps<{
 
 const emit = defineEmits(['close']);
 
-function addItemToCart(festivalId: number, name: string) {
-  addToCart(festivalId, name, 1);
-  removeFromWishlist(festivalId);
+function addItemToCart(item) {
+  if (item.ticket_type === 'jazz_event') {
+    // For jazz events, use proper method with all details
+    addJazzEventToCart(
+      item.festival_id,
+      item.event_id,
+      item.artist_name,
+      item.performance_day,
+      item.performance_time,
+      1
+    );
+    
+    // Remove this specific jazz event, using both festival_id and event_id
+    removeFromWishlist(item.festival_id, item.event_id);
+  } else {
+    // For regular events
+    addToCart(item.festival_id, item.name, 1);
+    
+    // Remove only this specific item
+    removeFromWishlist(item.festival_id);
+  }
 }
 
 function addAllToCart() {
   wishlist.value.forEach(item => {
-    addToCart(item.festival_id, item.name, 1);
+    addItemToCart(item);
   });
-  clearWishlist();
+  // Don't clear the wishlist here - each item is removed individually
 }
 </script>
 
@@ -42,14 +60,14 @@ function addAllToCart() {
       <div v-else>
         <div v-for="item in wishlist" :key="item.festival_id" class="wishlist-item">
           <div class="item-details">
-            <h4>{{ item.name }}</h4>
+            <h4>{{ item.artist_name || item.name }}</h4>
           </div>
           
           <div class="item-actions">
-            <button class="action-button add-cart" @click="addItemToCart(item.festival_id, item.name)">
+            <button class="action-button add-cart" @click="addItemToCart(item)">
               <i class="fas fa-shopping-cart"></i>
             </button>
-            <button class="action-button remove" @click="removeFromWishlist(item.festival_id)">
+            <button class="action-button remove" @click="item.event_id ? removeFromWishlist(item.festival_id, item.event_id) : removeFromWishlist(item.festival_id)">
               <i class="fas fa-trash"></i>
             </button>
           </div>

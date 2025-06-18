@@ -268,12 +268,15 @@ const stripHtmlTags = (html) => {
                                     <a :href="`/festivals/${parseToUrl(festival.name)}`" class="btn btn-outline-primary me-2">
                                         <i class="fas fa-info-circle me-1"></i> View Details
                                     </a>
-                                    <button class="btn btn-outline-secondary me-2" @click.prevent="addToCart(festival.id, festival.name, 1)">
-                                        <i class="fas fa-shopping-cart"></i> Add to Cart
-                                    </button>
-                                    <button class="btn btn-outline-warning" @click.prevent="addToWishlist(festival.id, festival.name)">
-                                        <i class="fas fa-heart"></i> Add to Wishlist
-                                    </button>
+                                    <!-- Only show these buttons for non-Jazz festivals -->
+                                    <template v-if="festival.festivalType !== 0">
+                                        <button class="btn btn-outline-secondary me-2" @click.prevent="addToCart(festival.id, festival.name, 1)">
+                                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                                        </button>
+                                        <button class="btn btn-outline-warning" @click.prevent="addToWishlist(festival.id, festival.name)">
+                                            <i class="fas fa-heart"></i> Add to Wishlist
+                                        </button>
+                                    </template>
                                 </div>
                             </div>
                         </div>

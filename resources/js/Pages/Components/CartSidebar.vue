@@ -33,6 +33,13 @@ const goToLogin = () => {
     emit('close');
     router.visit('/login');
 };
+
+function getCartItemKey(item) {
+    if (item.ticket_type === 'jazz_event' && item.event_id) {
+        return `jazz_${item.event_id}`;
+    }
+    return item.festival_id;
+}
 </script>
 
 <template>
@@ -53,18 +60,28 @@ const goToLogin = () => {
             </div>
 
             <div v-else>
-                <div v-for="item in cart" :key="item.festival_id" class="cart-item">
+                <div v-for="item in cart" :key="getCartItemKey(item)" class="cart-item">
+                    <!-- Display for jazz events -->
                     <div class="item-details">
-                        <h4>{{ item.festival_name }}</h4>
-                        <p class="item-price">€{{ item.festival_cost }} × {{ item.quantity }}</p>
+                        <h4>
+                            <span v-if="item.ticket_type === 'jazz_event'">
+                                <i class="fas fa-music text-primary me-2"></i>Jazz - {{ item.artist_name }}
+                            </span>
+                            <span v-else>{{ item.festival_name }}</span>
+                        </h4>
+                        
+                        <p class="item-price">€{{ item.festival_cost.toFixed(2) }} × {{ item.quantity }}</p>
                     </div>
 
+                    <!-- Update the quantity controls -->
                     <div class="item-controls">
-                        <button class="quantity-button" @click="updateCartItem(item.festival_id, item.quantity - 1)">
+                        <button class="quantity-button" 
+                                @click="updateCartItem(item.festival_id, item.quantity - 1, item.event_id)">
                             <i class="fas fa-minus"></i>
                         </button>
                         <span class="quantity">{{ item.quantity }}</span>
-                        <button class="quantity-button" @click="updateCartItem(item.festival_id, item.quantity + 1)">
+                        <button class="quantity-button" 
+                                @click="updateCartItem(item.festival_id, item.quantity + 1, item.event_id)">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
@@ -189,18 +206,49 @@ const goToLogin = () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 0;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
     border-bottom: 1px solid #eee;
+    text-align: left; /* Change from center to left */
+}
+
+.item-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Change from center to left */
+    justify-content: flex-start;
+    margin-right: 0.75rem;
 }
 
 .item-details h4 {
-    margin: 0 0 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Change from center to left */
     font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: #212529;
+    font-weight: 600;
+    text-align: left; /* Change from center to left */
+    width: 100%;
 }
 
 .item-price {
-    color: #666;
-    margin: 0;
+    font-weight: 500;
+    color: #28a745;
+    text-align: left; /* Change from center to left */
+    margin-top: 0.25rem;
+}
+
+.item-time {
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #495057;
+    background-color: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    text-align: center;  /* Center time info */
 }
 
 .item-controls {

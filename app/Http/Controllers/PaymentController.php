@@ -259,27 +259,53 @@ class PaymentController
     private function createTickets($order, $calculatedItems)
     {
         foreach ($calculatedItems as $item) {
-            $festival = Festival::find($item['festival_id']);
+            // Determine which type of ticket to create
+            if ($item['ticket_type'] === 'jazz_event') {
+                // Create a specific jazz event ticket
+                for ($i = 0; $i < $item['quantity']; $i++) {
+                    $qrCode = 'TKT-' . strtoupper(Str::random(8));
+                    
+                    Ticket::create([
+                        'order_id' => $order->id,
+                        'festival_id' => $item['festival_id'],
+                        'event_id' => $item['event_id'],
+                        'qr_code' => $qrCode,
+                        'quantity' => 1,
+                        'price_per_ticket' => $item['price_per_ticket'],
+                        'ticket_type' => 'jazz_event',
+                        'ticket_details' => json_encode([
+                            'artist_name' => $item['artist_name'],
+                            'performance_day' => $item['performance_day'],
+                            'performance_time' => $item['performance_time']
+                        ]),
+                    ]);
+                    
+                    Log::info('Jazz event ticket created: ' . $qrCode);
+                }
+            } else {
+                // Handle other ticket types (standard, day_pass, full_pass)
+                $festival = Festival::find($item['festival_id']);
 
-            if (!$festival) {
-                Log::warning('Festival not found during ticket creation: ' . $item['festival_id']);
-                continue;
-            }
+                if (!$festival) {
+                    Log::warning('Festival not found during ticket creation: ' . $item['festival_id']);
+                    continue;
+                }
 
-            Log::info('Creating ' . $item['quantity'] . ' tickets for festival: ' . $festival->name);
+                Log::info('Creating ' . $item['quantity'] . ' tickets for festival: ' . $festival->name);
 
-            for ($i = 0; $i < $item['quantity']; $i++) {
-                $qrCode = 'TKT-' . strtoupper(Str::random(8));
+                for ($i = 0; $i < $item['quantity']; $i++) {
+                    $qrCode = 'TKT-' . strtoupper(Str::random(8));
 
-                Ticket::create([
-                    'order_id' => $order->id,
-                    'festival_id' => $festival->id,
-                    'qr_code' => $qrCode,
-                    'quantity' => 1,
-                    'price_per_ticket' => $item['price_per_ticket'],
-                ]);
+                    Ticket::create([
+                        'order_id' => $order->id,
+                        'festival_id' => $festival->id,
+                        'qr_code' => $qrCode,
+                        'quantity' => 1,
+                        'price_per_ticket' => $item['price_per_ticket'],
+                    ]);
 
-                Log::info('Ticket created: ' . $qrCode);
+                    Log::info('Ticket created: ' . $qrCode);
+                }
             }
         }
     }
