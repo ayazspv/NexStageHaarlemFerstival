@@ -269,7 +269,7 @@ const stripHtmlTags = (html) => {
                                         <i class="fas fa-info-circle me-1"></i> View Details
                                     </a>
                                     <!-- Only show these buttons for non-Jazz festivals -->
-                                    <template v-if="festival.festivalType !== 0">
+                                    <template v-if="festival.festivalType !== 0 && festival.festivalType !== 3">
                                         <button class="btn btn-outline-secondary me-2" @click.prevent="addToCart(festival.id, festival.name, 1)">
                                             <i class="fas fa-shopping-cart"></i> Add to Cart
                                         </button>
