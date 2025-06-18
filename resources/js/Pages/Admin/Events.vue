@@ -43,7 +43,7 @@ const submit = () => {
         formData.append('time_slot', form.time_slot || '');
         formData.append('price', form.price.toString());
         formData.append('_token', csrfToken);
-        
+
         router.post(`/admin/festivals/${editingFestival.value.id}`, formData, {
             forceFormData: true,
             onSuccess: () => {
@@ -87,7 +87,7 @@ const manageEvent = (festivalId: number) => {
 </script>
 
 <template>
-    <AdminAppLayout :title="'Manage Events'">
+    <AdminAppLayout title="Manage Events">
         <div class="container-fluid p-4">
             <div class="mb-4">
                 <h2>Manage Events</h2>
@@ -100,7 +100,7 @@ const manageEvent = (festivalId: number) => {
                     <form @submit.prevent="submit">
                         <input type="hidden" name="_token" :value="csrfToken">
                         <input type="hidden" name="_method" value="PUT">
-                        
+
                         <div class="mb-3">
                             <label for="name" class="form-label">Name</label>
                             <input v-model="form.name"
@@ -183,7 +183,7 @@ const manageEvent = (festivalId: number) => {
                                     <th>Name</th>
                                     <th>Image</th>
                                     <th>Game</th>
-                                    <th>Time Slot</th> 
+                                    <th>Time Slot</th>
                                     <th>Available Tickets</th>
                                     <th>Price</th>
                                     <th>Actions</th>
@@ -193,7 +193,7 @@ const manageEvent = (festivalId: number) => {
                                 <tr v-for="festival in festivals" :key="festival.id">
                                     <td>{{ festival.name }}</td>
                                     <td>
-                                        <img v-if="festival.image_path" 
+                                        <img v-if="festival.image_path"
                                              :src="`/storage/${festival.image_path}`"
                                              :alt="festival.name"
                                              class="img-thumbnail"
