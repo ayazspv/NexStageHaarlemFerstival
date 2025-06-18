@@ -38,8 +38,10 @@ class PaymentController
     {
         $validated = $request->validate([
             'items' => 'required|array|min:1',
-            'items.*.festival_id' => 'required|integer|exists:festivals,id',
+            'items.*.festival_id' => 'required|integer',
             'items.*.quantity' => 'required|integer|min:1|max:10',
+            'items.*.ticket_type' => 'nullable|string',
+            'items.*.event_id' => 'nullable|integer',
         ]);
 
         try {
@@ -48,24 +50,56 @@ class PaymentController
 
             // Calculate server-side prices for security
             foreach ($validated['items'] as $item) {
-                $festival = Festival::find($item['festival_id']);
+                $festivalId = $item['festival_id'];
+                $quantity = $item['quantity'];
+                $price = 0;
 
-                if (!$festival) {
-                    return response()->json(['error' => "Festival with ID {$item['festival_id']} not found."], 400);
+                // Check if this is a jazz event ticket
+                if (isset($item['ticket_type']) && $item['ticket_type'] === 'jazz_event' && isset($item['event_id'])) {
+                    // Get jazz event price from database
+                    $jazzEvent = \App\Models\JazzFestival::where('id', $item['event_id'])->first();
+                    
+                    if ($jazzEvent) {
+                        // Use artist's specific ticket price
+                        $price = $jazzEvent->ticket_price ?? 20.00;
+                    } else {
+                        // Fallback to festival price
+                        $festival = Festival::find($festivalId);
+                        $price = $festival->price ?? 20.00;
+                    }
+                } else if ($festivalId > 0) {
+                    // Standard festival ticket
+                    $festival = Festival::find($festivalId);
+                    $price = $festival->price ?? 20.00;
+                } else if ($festivalId == -1) {
+                    // Day pass
+                    $price = 50.00;
+                } else if ($festivalId == -2) {
+                    // Full pass
+                    $price = 150.00;
                 }
 
-                // Use festival price from database or default to 20.00
-                $pricePerTicket = $festival->price ?? 20.00;
-                $itemTotal = $pricePerTicket * $item['quantity'];
+                $itemTotal = $price * $quantity;
                 $totalAmount += $itemTotal;
 
-                $calculatedItems[] = [
-                    'festival_id' => $festival->id,
-                    'festival_name' => $festival->name,
-                    'quantity' => $item['quantity'],
-                    'price_per_ticket' => $pricePerTicket,
+                // Add artist_name for jazz events
+                $itemData = [
+                    'festival_id' => $festivalId,
+                    'festival_name' => isset($item['ticket_type']) && $item['ticket_type'] === 'jazz_event' ? 
+                        ($item['artist_name'] ?? 'Jazz Artist') : 
+                        (Festival::find($festivalId)->name ?? 'Festival Ticket'),
+                    'quantity' => $quantity,
+                    'price_per_ticket' => $price,
                     'item_total' => $itemTotal,
                 ];
+
+                // Add jazz event specific data
+                if (isset($item['ticket_type']) && $item['ticket_type'] === 'jazz_event') {
+                    $itemData['ticket_type'] = 'jazz_event';
+                    $itemData['event_id'] = $item['event_id'] ?? null;
+                }
+
+                $calculatedItems[] = $itemData;
             }
 
             // Validate total amount

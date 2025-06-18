@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 // Simple localStorage-based cart (no database)
 export const cart = ref([]);
@@ -106,7 +106,7 @@ export const addToCart = async (festivalId: number, festivalName: string, festiv
     }
 };
 
-// Simplified addJazzEventToCart function
+// Add jazz event to cart
 export const addJazzEventToCart = async (
     festivalId: number,
     eventId: number, 
@@ -124,13 +124,11 @@ export const addJazzEventToCart = async (
             if (response.ok) {
                 const data = await response.json();
                 ticketPrice = data.price ?? 25.00;
+                console.log(`Fetched price for artist ${artistName}: €${ticketPrice}`);
             }
         } catch (error) {
             console.error('Error fetching price:', error);
         }
-        
-        // Create a unique identifier for this jazz event
-        const eventKey = `jazz_${eventId}`;
         
         // Check if this jazz event is already in cart
         const existingItem = cart.value.find(item => 
@@ -145,13 +143,13 @@ export const addJazzEventToCart = async (
             // Add new item with standardized structure
             cart.value.push({
                 festival_id: festivalId,
-                festival_name: 'Jazz Festival',
+                festival_name: artistName, // Use artist name instead of 'Jazz Festival'
                 event_id: eventId,
                 ticket_type: 'jazz_event',
                 artist_name: artistName,
                 performance_day: performanceDay,
                 performance_time: performanceTime,
-                festival_cost: ticketPrice,
+                festival_cost: ticketPrice, // Use the fetched price
                 quantity: quantity
             });
         }
@@ -162,7 +160,7 @@ export const addJazzEventToCart = async (
     }
 };
 
-// Make the consolidateJazzEvents function exportable
+// Consolidate jazz events
 export function consolidateJazzEvents() {
     const seenArtists = {};
     const newCart = [];
@@ -199,4 +197,38 @@ export function consolidateJazzEvents() {
     
     cart.value = newCart;
     saveCart();
+}
+
+// Prepare data for checkout
+export function prepareCheckoutData() {
+    // Make sure cart is loaded
+    if (cart.value.length === 0) {
+        fetchCartItems();
+    }
+    
+    // Calculate total cost
+    const totalAmount = cart.value.reduce(
+        (total, item) => total + (item.festival_cost * item.quantity), 
+        0
+    );
+    
+    // Format items for checkout
+    const items = cart.value.map(item => ({
+        festival_id: item.festival_id,
+        festivalID: item.festival_id,
+        festivalName: item.artist_name || item.festival_name || 'Festival Ticket',
+        festivalQuantity: item.quantity,
+        quantity: item.quantity,
+        festivalCost: item.festival_cost,
+        event_id: item.event_id || null,
+        ticket_type: item.ticket_type || 'standard',
+        artist_name: item.artist_name || null,
+        performance_day: item.performance_day || null,
+        performance_time: item.performance_time || null,
+    }));
+
+    return {
+        totalAmount,
+        items,
+    };
 }

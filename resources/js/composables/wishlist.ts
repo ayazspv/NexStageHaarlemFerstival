@@ -42,19 +42,18 @@ export function addToWishlist(
 // Standardized addJazzEventToWishlist function
 export function addJazzEventToWishlist(
     festivalId: number,
-    eventId: number,
+    eventId: number, 
     artistName: string,
     performanceDay: number,
     performanceTime: string
 ) {
-    // Check if this jazz event is already in wishlist
-    const existingItem = wishlist.value.find(item => 
-        item.event_id === eventId && item.ticket_type === 'jazz_event'
+    // Check if this event is already in the wishlist
+    const isAlreadyInWishlist = wishlist.value.some(
+        item => item.event_id === eventId && item.ticket_type === 'jazz_event'
     );
-    
-    if (!existingItem) {
-        // Store with the exact same structure needed for cart
-        wishlist.value.push({ 
+
+    if (!isAlreadyInWishlist) {
+        wishlist.value.push({
             festival_id: festivalId,
             event_id: eventId,
             ticket_type: 'jazz_event',
