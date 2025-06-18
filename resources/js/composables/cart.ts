@@ -29,8 +29,24 @@ const saveCart = () => {
 };
 
 // Add item to cart
-export const addToCart = (festivalId: number, festivalName: string, festivalCost: number, quantity: number = 1) => {
+export const addToCart = async (festivalId: number, festivalName: string, festivalCost: number, quantity: number = 1, ticketType: string = 'standard') => {
     try {
+        if (ticketType === 'standard' && festivalId > 0) {
+            // Fetch price from API for standard festival tickets
+            const response = await fetch(`/api/festivals/${festivalId}/price`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Price data from API:', data); // Debugging
+                
+                // Use nullish coalescing instead of logical OR
+                festivalCost = data.price ?? 25.00; 
+            } else {
+                console.error('Error fetching price:', response.status);
+                festivalCost = 25.00; // Default price if API fails
+            }
+        }
+
         // Check if item already exists
         const existingItem = cart.value.find(item => item.festival_id === festivalId);
 

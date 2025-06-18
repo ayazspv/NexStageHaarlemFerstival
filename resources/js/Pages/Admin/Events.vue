@@ -84,6 +84,11 @@ const deleteFestival = (id: number) => {
 const manageEvent = (festivalId: number) => {
     router.get(`/admin/festivals/cms/manage/${festivalId}`);
 };
+
+const formatPrice = (price) => {
+    if (price === undefined || price === null) return '0.00';
+    return typeof price === 'number' ? price.toFixed(2) : (Number(price) || 0).toFixed(2);
+};
 </script>
 
 <template>
@@ -207,7 +212,7 @@ const manageEvent = (festivalId: number) => {
                                     </td>
                                     <td>{{ festival.time_slot || 'Not specified' }}</td>
                                     <td>{{ festival.ticket_amount }}</td>
-                                    <td>{{ festival.price.toFixed(2) }} €</td>
+                                    <td>{{ formatPrice(festival.price) }} €</td>
                                     <td>
                                         <div class="btn-group gap-2">
                                             <button @click="manageEvent(festival.id)"
