@@ -25,7 +25,7 @@
                                 class="btn btn-danger btn-sm me-2">
                                 Remove
                             </button>
-                            <button @click="addToCart(item.festival_id, item.name, 20)"
+                            <button @click="addToCart(item.festival_id, item.name, 1)"
                                 class="btn btn-primary btn-sm">
                                 Add to Cart
                             </button>
@@ -59,7 +59,7 @@ onMounted(() => {
 
 function handleAddAllToCart() {
     wishlist.value.forEach(item => {
-        addToCart(item.festival_id, item.name, 20); // Add each wishlist item to the cart
+        addToCart(item.festival_id, item.name, 1); // Add each wishlist item to the cart
     });
     clearWishlist(); // Clear the wishlist after adding items to the cart
 }

@@ -10,13 +10,13 @@ const props = defineProps<{
 const emit = defineEmits(['close']);
 
 function addItemToCart(festivalId: number, name: string) {
-  addToCart(festivalId, name, 20); // Assuming default price of 20
+  addToCart(festivalId, name, 1);
   removeFromWishlist(festivalId);
 }
 
 function addAllToCart() {
   wishlist.value.forEach(item => {
-    addToCart(item.festival_id, item.name, 20);
+    addToCart(item.festival_id, item.name, 1);
   });
   clearWishlist();
 }

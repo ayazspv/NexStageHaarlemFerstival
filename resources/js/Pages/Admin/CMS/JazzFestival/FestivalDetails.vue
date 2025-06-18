@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue';
+import { reactive, onMounted, ref } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
-import { Editor, EditorContent } from '@tiptap/vue-3';
-import StarterKit from '@tiptap/starter-kit';
 import { usePage } from '@inertiajs/vue3';
 import { Festival } from '../../../../../models';
 
@@ -14,45 +12,37 @@ const props = defineProps<{
     festival: Festival
 }>();
 
+// Add success message state
+const saveSuccess = ref(false);
+
+// Add image preview URL
+const imagePreviewUrl = ref<string | null>(null);
+
 // Festival editing functionality
 const festivalForm = reactive({
     name: props.festival.name || '',
-    description: props.festival.description || '',
     image: null as File | null,
 });
 
-// Initialize (Tiptap) festival description editor
-const festivalDescriptionEditor = new Editor({
-    content: props.festival.description || '<p>Enter festival description...</p>', // Initial content
-    extensions: [StarterKit], //very basic editing features
-    onUpdate: ({ editor }) => {
-        festivalForm.description = editor.getHTML();
-        console.log("Editor content updated:", festivalForm.description);
-    }, //not working (I removed the preview of how it would look like)
-});
-
-// Handle festival image upload
+// Handle festival image upload with live preview
 const handleFestivalImage = (e: Event) => {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
         festivalForm.image = input.files[0];
+        // Create a preview URL for the selected image
+        imagePreviewUrl.value = URL.createObjectURL(input.files[0]);
     }
 };
 
 // Save festival general details using the new endpoint
 const saveFestivalDetails = () => {
-    // Ensure we have the latest editor content
-    festivalForm.description = festivalDescriptionEditor.getHTML();
-    
     console.log('Submitting festival details:', {
         name: festivalForm.name,
-        descriptionLength: festivalForm.description?.length || 0,
         hasImage: !!festivalForm.image
     });
     
     const formData = new FormData();
     formData.append('name', festivalForm.name);
-    formData.append('description', festivalForm.description);
     formData.append('_method', 'PUT');
     
     // Only include image if there is one selected
@@ -60,15 +50,17 @@ const saveFestivalDetails = () => {
         formData.append('image', festivalForm.image);
     }
     
-    // Use the new endpoint for updating only festival details
+    // Use the endpoint for updating festival details
     Inertia.post(`/admin/festivals/${props.festival.id}/details`, formData, {
         headers: { 'X-CSRF-TOKEN': csrfToken },
         onSuccess: () => {
-            alert('Festival details updated successfully!'); //notify user
-            // Reload the page to show updated data
-            window.location.reload();
+            // Show success message and hide after 3 seconds
+            saveSuccess.value = true;
+            setTimeout(() => {
+                saveSuccess.value = false;
+            }, 3000);
         },
-        onError: (errors) => { // Error handling
+        onError: (errors) => {
             console.error('Error updating festival details:', errors);
             alert('Failed to update festival details. Please check console for errors.');
         }
@@ -78,12 +70,11 @@ const saveFestivalDetails = () => {
 onMounted(() => {
     // Set initial form values from props
     festivalForm.name = props.festival.name || '';
-    festivalForm.description = props.festival.description || '';
     
-    // Set initial editor content
-    festivalDescriptionEditor.commands.setContent(
-        props.festival.description || '<p>Enter festival description...</p>'
-    );
+    // Set initial image preview URL
+    if (props.festival.image_path) {
+        imagePreviewUrl.value = `/storage/${props.festival.image_path}`;
+    }
 });
 </script>
 
@@ -92,12 +83,17 @@ onMounted(() => {
         <!-- Festival Info Card -->
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">Festival Information</h3>
+                <h3 class="mb-0">Festival Header Settings</h3>
             </div>
             <div class="card-body">
+                <!-- Success message alert -->
+                <div v-if="saveSuccess" class="alert alert-success mb-3" role="alert">
+                    <i class="fas fa-check-circle me-2"></i> Festival header updated successfully!
+                </div>
+                
                 <form @submit.prevent="saveFestivalDetails">
                     <div class="mb-3">
-                        <label for="festivalName" class="form-label">Festival Name</label>
+                        <label for="festivalName" class="form-label">Festival Title</label>
                         <input 
                             type="text" 
                             class="form-control" 
@@ -105,10 +101,11 @@ onMounted(() => {
                             v-model="festivalForm.name" 
                             required
                         >
+                        <small class="form-text text-muted">This title will be displayed in the hero banner.</small>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="festivalImage" class="form-label">Festival Image</label>
+                        <label for="festivalImage" class="form-label">Hero Banner Image</label>
                         <input 
                             type="file" 
                             class="form-control" 
@@ -116,38 +113,37 @@ onMounted(() => {
                             @change="handleFestivalImage"
                             accept="image/*"
                         >
-                        <small class="form-text text-muted">This image will be displayed on the festival page.</small>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="form-label">Festival Description</label>
-                        <div class="border rounded p-3" style="min-height: 200px;">
-                            <EditorContent :editor="festivalDescriptionEditor" />
-                        </div>
-                        <small class="form-text text-muted">This description will be displayed on the festival page.</small>
+                        <small class="form-text text-muted">This will be used as the background image in the hero banner.</small>
                     </div>
                     
                     <div class="row align-items-center">
                         <div class="col-md-6">
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save me-1"></i> Save Festival Details
+                                <i class="fas fa-save me-1"></i> Save Festival Header
                             </button>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">Current Festival Image:</div>
-                                <img 
-                                    v-if="props.festival.image_path" 
-                                    :src="`/storage/${props.festival.image_path}`" 
-                                    alt="Festival Image" 
-                                    class="img-thumbnail" 
-                                    style="height: 80px;"
-                                >
-                                <div v-else class="badge bg-secondary">No image available</div>
-                            </div>
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h3 class="mb-0">Hero Banner Preview</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="position-relative" style="height: 200px; overflow: hidden;">
+                    <div 
+                        class="w-100 h-100" 
+                        :style="`background-image: url('${imagePreviewUrl}'); background-size: cover; background-position: center;`"
+                    >
+                        <div style="background: rgba(0,0,0,0.3); position: absolute; inset: 0;"></div>
+                        <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(255,99,87,0.9); padding: 10px 40px; z-index: 2;">
+                            <h3 style="color: white; margin: 0;">{{ festivalForm.name }}</h3>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -15,14 +15,14 @@ const { showToast } = useToast();
 const selectedDay = ref(null);
 const festivalDays = [24, 25, 26, 27]; // July festival days
 
-// Compute ticket prices (these could be fetched from the backend)
+// Compute ticket prices
 const dayTicketPrice = 50; // Price for a single day ticket
 const fullTicketPrice = 150; // Price for a full festival ticket
 
 // Add day ticket to cart
-function addDayTicketToCart(day) {
+async function addDayTicketToCart(day) {
     const ticketName = `Day Pass - July ${day}`;
-    addToCart(-1, ticketName, dayTicketPrice, 1, 'day_pass', { day });
+    await addToCart(-1, ticketName, 1, 'day_pass', { day });
     showToast('Day ticket added to cart', 'success');
 }
 
@@ -34,8 +34,8 @@ function addDayTicketToWishlist(day) {
 }
 
 // Add full festival ticket to cart
-function addFullTicketToCart() {
-    addToCart(-2, 'Full Festival Pass', fullTicketPrice, 1, 'full_pass');
+async function addFullTicketToCart() {
+    await addToCart(-2, 'Full Festival Pass', 1, 'full_pass');
     showToast('Full festival ticket added to cart', 'success');
 }
 
