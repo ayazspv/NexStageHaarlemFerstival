@@ -80,11 +80,11 @@ class PaymentController
                     $festivalName = $festival->name ?? 'Festival Ticket';
                 } else if ($festivalId == -1) {
                     // Day pass
-                    $price = 50.00;
+                    $price = 35.00;
                     $festivalName = 'Day Pass';
                 } else if ($festivalId == -2) {
                     // Full pass
-                    $price = 150.00;
+                    $price = 80.00;
                     $festivalName = 'Full Pass';
                 } else {
                     $festivalName = 'Unknown Ticket';

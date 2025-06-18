@@ -16,8 +16,8 @@ const selectedDay = ref(null);
 const festivalDays = [24, 25, 26, 27]; // July festival days
 
 // Compute ticket prices
-const dayTicketPrice = 50; // Price for a single day ticket
-const fullTicketPrice = 150; // Price for a full festival ticket
+const dayTicketPrice = 35; // Price for a single day ticket
+const fullTicketPrice = 80; // Price for a full festival ticket
 
 // Add day ticket to cart
 async function addDayTicketToCart(day) {
@@ -169,39 +169,6 @@ function getFestivalTypeClass(type) {
                                 </button>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Festival Schedule -->
-            <div class="row mt-5">
-                <div class="col-12">
-                    <h2 class="mb-4">Festival Schedule</h2>
-                    <p class="text-muted mb-3">All festivals run from July 24-27, 2025. Each festival has its own venue and schedule.</p>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Festival</th>
-                                    <th>Daily Time Slot</th>
-                                    <th>Festival Days</th>
-                                    <th>Individual Ticket Price</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="festival in festivals" :key="festival.id" 
-                                    :class="getFestivalTypeClass(festival.festivalType)">
-                                    <td>{{ festival.name }}</td>
-                                    <td>{{ festival.time_slot || 'TBA' }}</td>
-                                    <td>July 24-27, 2025</td>
-                                    <td>€{{ festival.ticket_amount || '-' }}</td>
-                                </tr>
-                                <tr v-if="!festivals.length">
-                                    <td colspan="4" class="text-center py-3">No festivals found</td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>

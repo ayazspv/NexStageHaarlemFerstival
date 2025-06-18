@@ -6,6 +6,8 @@ import { ref, computed, onMounted } from 'vue';
 import { Festival } from "../../models";
 import {parseToUrl} from "../../utils";
 
+const festivalMonth = ref("JULY");
+
 const props = defineProps<{
     festivals: Festival[];
     heroUrl: string | null,
@@ -194,7 +196,7 @@ const stripHtmlTags = (html) => {
                     <h1 class="hero-title-festival mb-5">FESTIVAL</h1>
                     <div style="text-align: center;">
                         <h1 class="hero-title-info">
-                            24 - 27 JULY
+                            24 - 27 {{ festivalMonth }}
                         </h1>
                         <h1 class="hero-title-info">
                             HAARLEM, THE NETHERLANDS
@@ -295,7 +297,7 @@ const stripHtmlTags = (html) => {
                         <div v-for="day in ['24', '25', '26', '27']" :key="day" class="schedule-item">
                             <div class="schedule-day">
                                 <div class="day-number">
-                                    {{ day }}<span class="month-display">JULY</span>
+                                    {{ day }}<span class="month-display">{{ festivalMonth }}</span>
                                 </div>
                                 <div class="vertical-line"></div>
                                 <div class="schedule-content">

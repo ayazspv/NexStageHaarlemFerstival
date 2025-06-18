@@ -63,16 +63,16 @@ class FestivalController
     {
         try {
             return response()->json([
-                'day_pass' => 50.00,
-                'full_pass' => 150.00
+                'day_pass' => 35.00,
+                'full_pass' => 80.00
             ]);
         } catch (\Exception $e) {
             Log::error('Error in getSpecialTicketPrices: ' . $e->getMessage());
             
             return response()->json([
                 'error' => $e->getMessage(),
-                'day_pass' => 50.00,
-                'full_pass' => 150.00
+                'day_pass' => 35.00,
+                'full_pass' => 80.00
             ], 500);
         }
     }
