@@ -22,6 +22,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
 use App\Http\Controllers\PersonalProgramController;
+use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\Admin\JazzFestivalController;
 use App\Http\Controllers\TicketController;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -194,3 +195,5 @@ Route::prefix('api')->group(function () {
     Route::post('process-payment', [PaymentController::class, 'processPayment']);
     Route::get('jazz-events/{id}/price', [JazzFestivalController::class, 'getEventPrice']);
 });
+
+Route::get('/restaurant', [RestaurantController::class, 'show'])->name('restaurant.show');
