@@ -35,52 +35,54 @@ export const clearCart = () => {
     console.log('Cart cleared');
 };
 
-// Update item quantity in cart
-export const updateCartItem = (festivalId: number, newQuantity: number, eventId: number = null) => {
-    // Find the item with consistent criteria
-    const itemIndex = cart.value.findIndex(item => {
-        if (eventId && item.ticket_type === 'jazz_event') {
-            return item.event_id === eventId;
-        }
-        return item.festival_id === festivalId && !item.event_id;
-    });
-    
-    if (itemIndex !== -1) {
-        if (newQuantity <= 0) {
-            // Remove the item
-            cart.value.splice(itemIndex, 1);
-        } else if (newQuantity > 10) {
-            // Limit to maximum 10 tickets
-            cart.value[itemIndex].quantity = 10;
-        } else {
-            // Update quantity
-            cart.value[itemIndex].quantity = newQuantity;
-        }
-        saveCart();
-    }
-};
-
 // Add item to cart
-export const addToCart = async (festivalId: number, festivalName: string, festivalCost: number, quantity: number = 1, ticketType: string = 'standard') => {
+export const addToCart = async (festivalId: number, festivalName: string, quantity: number = 1, ticketType: string = 'standard', details: any = {}) => {
     try {
-        if (ticketType === 'standard' && festivalId > 0) {
+        let festivalCost = 0;
+
+        if (ticketType === 'day_pass') {
+            // Fixed price for day pass
+            festivalCost = 35.00;
+        } else if (ticketType === 'full_pass') {
+            // Fixed price for full festival pass
+            festivalCost = 80.00;
+        } else if (ticketType === 'standard' && festivalId > 0) {
             // Fetch price from API for standard festival tickets
-            const response = await fetch(`/api/festivals/${festivalId}/price`);
-            
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Price data from API:', data); // Debugging
+            try {
+                const response = await fetch(`/api/festivals/${festivalId}/price`);
                 
-                // Use nullish coalescing instead of logical OR
-                festivalCost = data.price ?? 25.00; 
-            } else {
-                console.error('Error fetching price:', response.status);
-                festivalCost = 25.00; // Default price if API fails
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Price data from API:', data);
+                    
+                    // Use nullish coalescing instead of logical OR
+                    festivalCost = data.price ?? 25.00;
+                } else {
+                    console.error('Error fetching price:', response.status);
+                    festivalCost = 25.00; // Default price if API fails
+                }
+            } catch (error) {
+                console.error('Error fetching price:', error);
+                festivalCost = 25.00; // Default price if fetch throws
+            }
+        } else if (festivalId <= 0) {
+            // For special tickets with negative IDs
+            if (festivalId === -1) {
+                festivalCost = 35.00; // Day pass
+            } else if (festivalId === -2) {
+                festivalCost = 80.00; // Full pass
             }
         }
 
         // Check if item already exists
-        const existingItem = cart.value.find(item => item.festival_id === festivalId);
+        const existingItem = cart.value.find(item => {
+            if (ticketType === 'standard') {
+                return item.festival_id === festivalId;
+            } else {
+                // For special tickets, check festival_id and ticket_type
+                return item.festival_id === festivalId && item.ticket_type === ticketType;
+            }
+        });
 
         if (existingItem) {
             // Update quantity (max 10 per festival)
@@ -96,7 +98,9 @@ export const addToCart = async (festivalId: number, festivalName: string, festiv
                 festival_id: festivalId,
                 festival_name: festivalName,
                 festival_cost: festivalCost,
-                quantity: quantity
+                quantity: quantity,
+                ticket_type: ticketType,
+                details: details
             });
         }
 
@@ -232,3 +236,29 @@ export function prepareCheckoutData() {
         items,
     };
 }
+
+// Update cart item quantity
+export const updateCartItem = (festivalId: number, newQuantity: number, eventId?: number | null, ticketType?: string) => {
+    const itemIndex = cart.value.findIndex(item => {
+        if (eventId && item.ticket_type === 'jazz_event') {
+            return item.event_id === eventId;
+        } else if (ticketType && (ticketType === 'day_pass' || ticketType === 'full_pass')) {
+            return item.festival_id === festivalId && item.ticket_type === ticketType;
+        }
+        return item.festival_id === festivalId && !item.event_id;
+    });
+    
+    if (itemIndex !== -1) {
+        if (newQuantity <= 0) {
+            // Remove the item
+            cart.value.splice(itemIndex, 1);
+        } else if (newQuantity > 10) {
+            // Limit to maximum 10 tickets
+            cart.value[itemIndex].quantity = 10;
+        } else {
+            // Update quantity
+            cart.value[itemIndex].quantity = newQuantity;
+        }
+        saveCart();
+    }
+};

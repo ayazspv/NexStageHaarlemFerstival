@@ -231,14 +231,14 @@ onMounted(() => {
                                                         <label class="quantity-label">Quantity</label>
                                                         <div class="quantity-controls">
                                                             <button
-                                                                @click="updateItemQuantity(item.festival_id, item.quantity - 1, item.event_id)"
+                                                                @click="updateItemQuantity(item.festival_id, item.quantity - 1, item.event_id, item.ticket_type)"
                                                                 class="btn btn-outline-secondary btn-sm quantity-btn"
                                                                 :disabled="item.quantity <= 1">
                                                                 <i class="fas fa-minus"></i>
                                                             </button>
                                                             <span class="quantity-display">{{ item.quantity }}</span>
                                                             <button
-                                                                @click="updateItemQuantity(item.festival_id, item.quantity + 1, item.event_id)"
+                                                                @click="updateItemQuantity(item.festival_id, item.quantity + 1, item.event_id, item.ticket_type)"
                                                                 class="btn btn-outline-secondary btn-sm quantity-btn">
                                                                 <i class="fas fa-plus"></i>
                                                             </button>

@@ -14,15 +14,26 @@ export function addToWishlist(
     ticketType: string = 'standard', 
     details: any = {}
 ) {
+    // Set the correct price based on ticket type
+    let price = 0;
+    if (ticketType === 'day_pass') {
+        price = 35.00;
+    } else if (ticketType === 'full_pass') {
+        price = 80.00;
+    }
+    
     // Generate a unique ID for special tickets
-    const itemId = festivalId > 0 ? festivalId : `${ticketType}_${JSON.stringify(details)}`;
+    const uniqueKey = `${festivalId}-${ticketType}-${JSON.stringify(details)}`; 
     
     const existingItem = wishlist.value.find(item => {
         if (ticketType === 'standard') {
             return item.festival_id === festivalId;
+        } else if (ticketType === 'jazz_event' && item.event_id) {
+            return item.festival_id === festivalId && item.event_id === details.event_id;
         } else {
             // For special tickets, compare the type and details
-            return item.ticket_type === ticketType && 
+            return item.festival_id === festivalId && 
+                   item.ticket_type === ticketType && 
                    JSON.stringify(item.details) === JSON.stringify(details);
         }
     });
@@ -32,7 +43,8 @@ export function addToWishlist(
             festival_id: festivalId, 
             name: festivalName,
             ticket_type: ticketType,
-            details: details 
+            details: details,
+            price: price
         });
         localStorage.setItem('wishlist', JSON.stringify(wishlist.value));
         wishlist.value = [...wishlist.value]; // Trigger reactivity update

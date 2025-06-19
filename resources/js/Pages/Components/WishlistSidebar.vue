@@ -21,13 +21,19 @@ function addItemToCart(item) {
       1
     );
     
-    // Remove this specific jazz event, using both festival_id and event_id
+    // Remove this specific jazz event
     removeFromWishlist(item.festival_id, item.event_id);
+  } else if (item.ticket_type === 'day_pass') {
+    // For day passes
+    addToCart(-1, item.name, 1, 'day_pass', item.details);
+    removeFromWishlist(item.festival_id);
+  } else if (item.ticket_type === 'full_pass') {
+    // For full passes
+    addToCart(-2, item.name, 1, 'full_pass');
+    removeFromWishlist(item.festival_id);
   } else {
     // For regular events
     addToCart(item.festival_id, item.name, 1);
-    
-    // Remove only this specific item
     removeFromWishlist(item.festival_id);
   }
 }
@@ -58,9 +64,23 @@ function addAllToCart() {
       </div>
       
       <div v-else>
-        <div v-for="item in wishlist" :key="item.festival_id" class="wishlist-item">
+        <div v-for="item in wishlist" :key="`${item.festival_id}-${item.ticket_type}`" class="wishlist-item">
           <div class="item-details">
-            <h4>{{ item.artist_name || item.name }}</h4>
+            <!-- Display with appropriate icon based on ticket type -->
+            <h4>
+              <span v-if="item.ticket_type === 'jazz_event'">
+                <i class="fas fa-music text-primary me-2"></i>{{ item.artist_name || item.name }}
+              </span>
+              <span v-else-if="item.ticket_type === 'day_pass'">
+                <i class="fas fa-calendar-day text-warning me-2"></i>{{ item.name }}
+                <span class="badge bg-light text-dark">€35.00</span>
+              </span>
+              <span v-else-if="item.ticket_type === 'full_pass'">
+                <i class="fas fa-ticket-alt text-success me-2"></i>{{ item.name }}
+                <span class="badge bg-light text-dark">€80.00</span>
+              </span>
+              <span v-else>{{ item.name }}</span>
+            </h4>
           </div>
           
           <div class="item-actions">

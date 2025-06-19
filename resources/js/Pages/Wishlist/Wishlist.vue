@@ -13,12 +13,26 @@
                 <thead>
                     <tr>
                         <th scope="col">Festival Name</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Price</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in wishlist" :key="item.festival_id">
+                    <tr v-for="item in wishlist" :key="`${item.festival_id}-${item.ticket_type}`">
                         <td>{{ item.artist_name || item.name }}</td>
+                        <td>
+                            <span v-if="item.ticket_type === 'jazz_event'" class="badge bg-primary">Jazz Event</span>
+                            <span v-else-if="item.ticket_type === 'day_pass'" class="badge bg-warning text-dark">Day Pass</span>
+                            <span v-else-if="item.ticket_type === 'full_pass'" class="badge bg-success">Full Pass</span>
+                            <span v-else class="badge bg-secondary">Standard</span>
+                        </td>
+                        <td>
+                            <span v-if="item.ticket_type === 'day_pass'">€35.00</span>
+                            <span v-else-if="item.ticket_type === 'full_pass'">€80.00</span>
+                            <span v-else-if="item.price">€{{ item.price.toFixed(2) }}</span>
+                            <span v-else>Price unavailable</span>
+                        </td>
                         <td>
                             <!-- Remove from Wishlist and Add to Cart buttons -->
                             <button @click="item.event_id ? removeFromWishlist(item.festival_id, item.event_id) : removeFromWishlist(item.festival_id)"
@@ -70,6 +84,14 @@ function handleAddToCart(item) {
         
         // Remove only this specific jazz event
         removeFromWishlist(item.festival_id, item.event_id);
+    } else if (item.ticket_type === 'day_pass') {
+        // For day passes
+        addToCart(-1, item.name, 1, 'day_pass', item.details);
+        removeFromWishlist(item.festival_id);
+    } else if (item.ticket_type === 'full_pass') {
+        // For full passes
+        addToCart(-2, item.name, 1, 'full_pass');
+        removeFromWishlist(item.festival_id);
     } else {
         // For regular events
         addToCart(item.festival_id, item.name, 1);
