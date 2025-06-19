@@ -14,12 +14,14 @@ export function addToWishlist(
     ticketType: string = 'standard', 
     details: any = {}
 ) {
+    // Generate a unique ID for special tickets
     const itemId = festivalId > 0 ? festivalId : `${ticketType}_${JSON.stringify(details)}`;
     
     const existingItem = wishlist.value.find(item => {
         if (ticketType === 'standard') {
             return item.festival_id === festivalId;
         } else {
+            // For special tickets, compare the type and details
             return item.ticket_type === ticketType && 
                    JSON.stringify(item.details) === JSON.stringify(details);
         }
@@ -37,8 +39,46 @@ export function addToWishlist(
     }
 }
 
-export function removeFromWishlist(festivalId: number) {
-    wishlist.value = wishlist.value.filter(item => item.festival_id !== festivalId);
+// Standardized addJazzEventToWishlist function
+export function addJazzEventToWishlist(
+    festivalId: number,
+    eventId: number, 
+    artistName: string,
+    performanceDay: number,
+    performanceTime: string
+) {
+    // Check if this event is already in the wishlist
+    const isAlreadyInWishlist = wishlist.value.some(
+        item => item.event_id === eventId && item.ticket_type === 'jazz_event'
+    );
+
+    if (!isAlreadyInWishlist) {
+        wishlist.value.push({
+            festival_id: festivalId,
+            event_id: eventId,
+            ticket_type: 'jazz_event',
+            artist_name: artistName,
+            performance_day: performanceDay,
+            performance_time: performanceTime
+        });
+        
+        localStorage.setItem('wishlist', JSON.stringify(wishlist.value));
+    }
+}
+
+export function removeFromWishlist(festivalId: number, eventId?: number) {
+    if (eventId) {
+        // For jazz events or other events with specific IDs, remove by both festival and event ID
+        wishlist.value = wishlist.value.filter(item => 
+            !(item.festival_id === festivalId && item.event_id === eventId)
+        );
+    } else {
+        // For regular festival tickets, remove by festival ID only
+        wishlist.value = wishlist.value.filter(item => 
+            !(item.festival_id === festivalId && !item.event_id)
+        );
+    }
+    
     localStorage.setItem('wishlist', JSON.stringify(wishlist.value));
     wishlist.value = [...wishlist.value]; // Trigger reactivity update
 }

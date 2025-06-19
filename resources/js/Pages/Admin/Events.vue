@@ -20,6 +20,7 @@ const form = useForm({
     isGame: false,
     ticket_amount: 0,
     time_slot: '',
+    price: 0,
     _method: 'PUT'
 });
 
@@ -40,8 +41,9 @@ const submit = () => {
         formData.append('isGame', form.isGame ? '1' : '0');
         formData.append('ticket_amount', form.ticket_amount.toString());
         formData.append('time_slot', form.time_slot || '');
+        formData.append('price', form.price.toString());
         formData.append('_token', csrfToken);
-        
+
         router.post(`/admin/festivals/${editingFestival.value.id}`, formData, {
             forceFormData: true,
             onSuccess: () => {
@@ -64,6 +66,7 @@ const editFestival = (festival: Festival) => {
     form.isGame = festival.isGame || false;
     form.ticket_amount = festival.ticket_amount || 0;
     form.time_slot = festival.time_slot || '';
+    form.price = festival.price || 0;
     form.clearErrors();
     showEditForm.value = true;
 };
@@ -81,10 +84,15 @@ const deleteFestival = (id: number) => {
 const manageEvent = (festivalId: number) => {
     router.get(`/admin/festivals/cms/manage/${festivalId}`);
 };
+
+const formatPrice = (price) => {
+    if (price === undefined || price === null) return '0.00';
+    return typeof price === 'number' ? price.toFixed(2) : (Number(price) || 0).toFixed(2);
+};
 </script>
 
 <template>
-    <AdminAppLayout :title="'Manage Events'">
+    <AdminAppLayout title="Manage Events">
         <div class="container-fluid p-4">
             <div class="mb-4">
                 <h2>Manage Events</h2>
@@ -97,7 +105,7 @@ const manageEvent = (festivalId: number) => {
                     <form @submit.prevent="submit">
                         <input type="hidden" name="_token" :value="csrfToken">
                         <input type="hidden" name="_method" value="PUT">
-                        
+
                         <div class="mb-3">
                             <label for="name" class="form-label">Name</label>
                             <input v-model="form.name"
@@ -140,6 +148,20 @@ const manageEvent = (festivalId: number) => {
                             <small class="form-text text-muted">Enter the time slot for this event (e.g. 10:00 - 16:00)</small>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price (€)</label>
+                            <input 
+                                type="number" 
+                                class="form-control" 
+                                id="price" 
+                                v-model="form.price" 
+                                step="0.01" 
+                                min="0" 
+                                required
+                            >
+                            <div v-if="form.errors.price" class="text-danger">{{ form.errors.price }}</div>
+                        </div>
+
                         <div class="d-flex gap-2">
                             <button type="submit"
                                     class="btn btn-primary"
@@ -166,8 +188,9 @@ const manageEvent = (festivalId: number) => {
                                     <th>Name</th>
                                     <th>Image</th>
                                     <th>Game</th>
-                                    <th>Time Slot</th> 
+                                    <th>Time Slot</th>
                                     <th>Available Tickets</th>
+                                    <th>Price</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -175,7 +198,7 @@ const manageEvent = (festivalId: number) => {
                                 <tr v-for="festival in festivals" :key="festival.id">
                                     <td>{{ festival.name }}</td>
                                     <td>
-                                        <img v-if="festival.image_path" 
+                                        <img v-if="festival.image_path"
                                              :src="`/storage/${festival.image_path}`"
                                              :alt="festival.name"
                                              class="img-thumbnail"
@@ -189,6 +212,7 @@ const manageEvent = (festivalId: number) => {
                                     </td>
                                     <td>{{ festival.time_slot || 'Not specified' }}</td>
                                     <td>{{ festival.ticket_amount }}</td>
+                                    <td>{{ formatPrice(festival.price) }} €</td>
                                     <td>
                                         <div class="btn-group gap-2">
                                             <button @click="manageEvent(festival.id)"

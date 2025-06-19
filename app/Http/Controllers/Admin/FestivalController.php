@@ -21,12 +21,6 @@ class FestivalController
         ]);
     }
 
-    public function getFestivals(Request $request): JsonResponse
-    {
-        $festivals = Festival::all();
-        return response()->json($festivals);
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -34,6 +28,7 @@ class FestivalController
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'isGame' => 'boolean',
             'ticket_amount' => 'nullable|integer|min:0',
+            'price' => 'required|numeric|min:0',
             'time_slot' => 'nullable|string|max:255',
         ]);
 
@@ -44,6 +39,7 @@ class FestivalController
             'image_path' => $imagePath,
             'isGame' => $request->has('isGame') ? $request->isGame : false,
             'ticket_amount' => $request->ticket_amount ?? 0,
+            'price' => $request->price,
             'time_slot' => $request->time_slot ?? null,
         ]);
 
@@ -66,6 +62,7 @@ class FestivalController
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'isGame' => 'boolean',
             'ticket_amount' => 'nullable|integer|min:0',
+            'price' => 'required|numeric|min:0',
             'time_slot' => 'nullable|string|max:255',
         ]);
 
@@ -78,6 +75,7 @@ class FestivalController
             'name' => $validated['name'],
             'isGame' => $request->has('isGame') ? $request->isGame : false,
             'ticket_amount' => $request->ticket_amount ?? 0,
+            'price' => $request->price,
             'time_slot' => $request->time_slot ?? $festival->time_slot,
         ]);
 

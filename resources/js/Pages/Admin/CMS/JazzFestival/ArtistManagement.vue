@@ -67,12 +67,21 @@ const handleFormSubmitted = () => {
 // Delete an artist
 const deleteArtist = (bandId: number) => {
     if (confirm('Are you sure you want to delete this artist? This action cannot be undone.')) {
-        Inertia.delete(`/admin/festivals/${props.festival.id}/jazz-festival/${bandId}`, {
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            onSuccess: () => {
-                alert('Artist deleted successfully!');
+        // Use axios instead of Inertia for the delete request
+        axios.delete(`/admin/festivals/${props.festival.id}/jazz-festival/${bandId}`, {
+            headers: { 'X-CSRF-TOKEN': csrfToken }
+        })
+        .then(() => {
+            alert('Artist deleted successfully!');
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error deleting artist:', error);
+            if (error.response && error.response.status === 404) {
+                // Still reload if it's a 404 but the item was likely deleted
+                alert('Artist was deleted, but encountered a response error.');
                 window.location.reload();
-            },
+            }
         });
     }
 };

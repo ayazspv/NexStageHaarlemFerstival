@@ -109,7 +109,23 @@ class JazzFestivalController
 
         $band->delete();
 
-        // Refresh the page by redirecting back
-        return redirect()->back()->with('success', 'Jazz Festival has been deleted.');
+        // Return a proper response instead of redirecting
+        return response()->json(['success' => true], 200);
+    }
+
+    public function getEventPrice($id)
+    {
+        try {
+            $event = JazzFestival::findOrFail($id);
+            return response()->json([
+                'price' => (float)$event->ticket_price
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting jazz event price: ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage(),
+                'price' => 25.00 // Default price on error
+            ], 500);
+        }
     }
 }

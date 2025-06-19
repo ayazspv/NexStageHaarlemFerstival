@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { addJazzEventToCart } from '@/composables/cart';
 import { addToWishlist } from '@/composables/wishlist';
 
 const props = defineProps<{
@@ -21,6 +22,19 @@ const formatPrice = (price) => {
     if (price === undefined || price === null) return '0.00';
     return typeof price === 'number' ? price.toFixed(2) : Number(price).toFixed(2);
 };
+
+// Add function to book jazz event
+function bookJazzEvent() {
+    addJazzEventToCart(
+        props.band.festival_id,
+        'Jazz Festival',
+        props.band.id,
+        props.band.band_name,
+        props.band.performance_day,
+        props.band.start_time || formatTime(props.band.performance_datetime),
+        1
+    );
+}
 </script>
 
 <template>
@@ -76,8 +90,10 @@ const formatPrice = (price) => {
                             <div class="artist-details-full-info" v-html="band.band_details"></div>
                             
                             <div class="artist-details-actions">
-                                <!-- Wishlist button atm -->
-                                <button class="btn btn-primary" @click.prevent="addToWishlist(band.id)">
+                                <button class="btn btn-primary me-2" @click.prevent="bookJazzEvent">
+                                    <i class="fas fa-ticket-alt me-1"></i> Book Tickets
+                                </button>
+                                <button class="btn btn-outline-warning" @click.prevent="addToWishlist(band.id, band.band_name)">
                                     <i class="fas fa-heart me-1"></i> Add to Wishlist
                                 </button>
                             </div>

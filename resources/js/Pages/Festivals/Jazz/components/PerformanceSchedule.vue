@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { addToCart } from '@/composables/cart';
+import { addJazzEventToCart } from '@/composables/cart';
 
 const props = defineProps<{
     festivalDays: number[];
@@ -21,6 +21,19 @@ const formatTime = (dateString: string) => {
         minute: '2-digit',
     });
 };
+
+// Add this function to book jazz event from schedule
+function bookJazzEvent(band) {
+    addJazzEventToCart(
+        band.festival_id,
+        'Jazz Festival',
+        band.id,
+        band.band_name,
+        band.performance_day,
+        band.start_time || formatTime(band.performance_datetime),
+        1
+    );
+}
 </script>
 
 <template>
@@ -56,7 +69,7 @@ const formatTime = (dateString: string) => {
                                     Details
                                 </button>
                                 <button class="btn btn-sm btn-primary" 
-                                        @click.prevent="addToCart(band.id)">
+                                        @click.prevent="bookJazzEvent(band)">
                                     <i class="fas fa-ticket-alt"></i> Book
                                 </button>
                             </div>

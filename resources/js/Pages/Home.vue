@@ -4,17 +4,13 @@ import { cart, fetchCartItems, addToCart } from '../composables/cart';
 import { wishlist, fetchWishlistItems, addToWishlist } from '../composables/wishlist';
 import { ref, computed, onMounted } from 'vue';
 import { Festival } from "../../models";
+import {parseToUrl} from "../../utils";
 
 const props = defineProps<{
     festivals: Festival[];
     heroUrl: string | null,
     homepageContent: string | null,
 }>();
-
-// URL-friendly
-const parseToUrl = (title: string) => {
-    return title.trim().toLowerCase().replace(/\s+/g, '-');
-};
 
 // Helper function to find festival by name (not in use)
 const findFestival = (name: string) => {
@@ -272,12 +268,15 @@ const stripHtmlTags = (html) => {
                                     <a :href="`/festivals/${parseToUrl(festival.name)}`" class="btn btn-outline-primary me-2">
                                         <i class="fas fa-info-circle me-1"></i> View Details
                                     </a>
-                                    <button class="btn btn-outline-secondary me-2" @click.prevent="addToCart(festival.id, festival.name, 20)">
-                                        <i class="fas fa-shopping-cart"></i> Add to Cart
-                                    </button>
-                                    <button class="btn btn-outline-warning" @click.prevent="addToWishlist(festival.id, festival.name)">
-                                        <i class="fas fa-heart"></i> Add to Wishlist
-                                    </button>
+                                    <!-- Only show these buttons for non-Jazz festivals -->
+                                    <template v-if="festival.festivalType !== 0 && festival.festivalType !== 3">
+                                        <button class="btn btn-outline-secondary me-2" @click.prevent="addToCart(festival.id, festival.name, 1)">
+                                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                                        </button>
+                                        <button class="btn btn-outline-warning" @click.prevent="addToWishlist(festival.id, festival.name)">
+                                            <i class="fas fa-heart"></i> Add to Wishlist
+                                        </button>
+                                    </template>
                                 </div>
                             </div>
                         </div>

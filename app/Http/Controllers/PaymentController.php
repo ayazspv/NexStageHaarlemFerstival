@@ -12,26 +12,120 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
+use Stripe\Exception\ApiErrorException;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
+use Illuminate\Support\Facades\Schema;
 
 class PaymentController
 {
     public function __construct()
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        try {
+            $stripeSecret = env('STRIPE_SECRET');
+            if (!$stripeSecret) {
+                Log::error('STRIPE_SECRET not found in environment variables');
+            } else {
+                Stripe::setApiKey($stripeSecret);
+                Log::info('Stripe initialized with API key');
+            }
+        } catch (\Exception $e) {
+            Log::error('Error initializing Stripe: ' . $e->getMessage());
+        }
     }
-
+    
     public function createPaymentIntent(Request $request)
     {
         $validated = $request->validate([
-            'totalAmount' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
+            'items.*.festival_id' => 'required|integer',
+            'items.*.quantity' => 'required|integer|min:1|max:10',
+            'items.*.ticket_type' => 'nullable|string',
+            'items.*.event_id' => 'nullable|integer',
+            'items.*.artist_name' => 'nullable|string',
+            'items.*.performance_day' => 'nullable|string',
+            'items.*.performance_time' => 'nullable|string',
         ]);
 
         try {
-            $amountInCents = (int) ($validated['totalAmount'] * 100);
+            $totalAmount = 0;
+            $calculatedItems = [];
+
+            // Calculate server-side prices for security
+            foreach ($validated['items'] as $item) {
+                $festivalId = $item['festival_id'];
+                $quantity = $item['quantity'];
+                $price = 0;
+
+                // Check if this is a jazz event ticket
+                if (isset($item['ticket_type']) && $item['ticket_type'] === 'jazz_event' && isset($item['event_id'])) {
+                    // Get jazz event price from database
+                    $jazzEvent = \App\Models\JazzFestival::where('id', $item['event_id'])->first();
+                    
+                    if ($jazzEvent) {
+                        // Use artist's specific ticket price
+                        $price = $jazzEvent->ticket_price ?? 20.00;
+                        $festivalName = $item['artist_name'] ?? $jazzEvent->artist_name ?? 'Jazz Artist';
+                    } else {
+                        // Fallback to festival price
+                        $festival = Festival::find($festivalId);
+                        $price = $festival->price ?? 20.00;
+                        $festivalName = $item['artist_name'] ?? 'Jazz Artist';
+                    }
+                } else if ($festivalId > 0) {
+                    // Standard festival ticket
+                    $festival = Festival::find($festivalId);
+                    $price = $festival->price ?? 20.00;
+                    $festivalName = $festival->name ?? 'Festival Ticket';
+                } else if ($festivalId == -1) {
+                    // Day pass
+                    $price = 50.00;
+                    $festivalName = 'Day Pass';
+                } else if ($festivalId == -2) {
+                    // Full pass
+                    $price = 150.00;
+                    $festivalName = 'Full Pass';
+                } else {
+                    $festivalName = 'Unknown Ticket';
+                }
+
+                $itemTotal = $price * $quantity;
+                $totalAmount += $itemTotal;
+
+                // Create item data with all necessary information
+                $itemData = [
+                    'festival_id' => $festivalId,
+                    'festival_name' => $festivalName,
+                    'quantity' => $quantity,
+                    'price_per_ticket' => $price,
+                    'item_total' => $itemTotal,
+                ];
+
+                // Add jazz event specific data if applicable
+                if (isset($item['ticket_type']) && $item['ticket_type'] === 'jazz_event') {
+                    $itemData['ticket_type'] = 'jazz_event';
+                    $itemData['event_id'] = $item['event_id'] ?? null;
+                    $itemData['artist_name'] = $item['artist_name'] ?? 'Jazz Artist';
+                    $itemData['performance_day'] = $item['performance_day'] ?? null;
+                    $itemData['performance_time'] = $item['performance_time'] ?? null;
+                }
+
+                $calculatedItems[] = $itemData;
+            }
+
+            // Validate total amount
+            if ($totalAmount <= 0 || $totalAmount > 10000) {
+                return response()->json(['error' => 'Invalid total amount calculated.'], 400);
+            }
+
+            $amountInCents = (int) ($totalAmount * 100);
+
+            Log::info('Creating payment intent', [
+                'user_id' => auth()->id(),
+                'total_amount' => $totalAmount,
+                'calculated_items' => $calculatedItems
+            ]);
 
             $paymentIntent = PaymentIntent::create([
                 'amount' => $amountInCents,
@@ -41,55 +135,93 @@ class PaymentController
                 ],
                 'metadata' => [
                     'user_id' => auth()->id(),
-                    'items_count' => count($validated['items']),
+                    'items_count' => count($calculatedItems),
+                    'calculated_total' => $totalAmount,
                 ],
             ]);
+
+            // Store validation data in session for later verification
+            session(['payment_validation_' . $paymentIntent->id => [
+                'calculated_items' => $calculatedItems,
+                'total_amount' => $totalAmount,
+                'user_id' => auth()->id(),
+                'created_at' => now()->toISOString(),
+            ]]);
 
             return response()->json([
                 'client_secret' => $paymentIntent->client_secret,
                 'payment_intent_id' => $paymentIntent->id,
+                'calculated_total' => $totalAmount,
+                'calculated_items' => $calculatedItems,
             ]);
+
         } catch (\Exception $e) {
             Log::error('Payment Intent Creation Failed: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Failed to create payment intent: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Failed to create payment intent. Please try again.'], 500);
         }
     }
-
+    
     public function processPayment(Request $request)
     {
         $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'required|email',
             'payment_intent_id' => 'required|string',
-            'totalAmount' => 'required|numeric|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.festivalID' => 'required|integer',
-            'items.*.festivalName' => 'required|string',
-            'items.*.festivalQuantity' => 'required|integer|min:1',
-            'items.*.festivalCost' => 'required|numeric|min:0',
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
         ]);
 
         try {
             Log::info('Starting payment processing for payment intent: ' . $validated['payment_intent_id']);
 
-            // Verify payment with Stripe
-            $paymentIntent = PaymentIntent::retrieve($validated['payment_intent_id']);
+            // Get stored validation data from session
+            $validationKey = 'payment_validation_' . $validated['payment_intent_id'];
+            $storedData = session($validationKey);
 
-            if ($paymentIntent->status !== 'succeeded') {
-                Log::error('Payment not completed. Status: ' . $paymentIntent->status);
+            if (!$storedData) {
+                Log::error('Payment validation data not found in session');
                 return response()->json([
                     'success' => false,
-                    'message' => 'Payment not completed. Status: ' . $paymentIntent->status
+                    'message' => 'Payment validation failed. Please try again.'
+                ], 400);
+            }
+
+            // Verify user owns this payment
+            if ($storedData['user_id'] !== auth()->id()) {
+                Log::error('User mismatch in payment processing');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized payment processing attempt.'
+                ], 403);
+            }
+
+            // Retrieve and verify the payment intent from Stripe
+            $paymentIntent = PaymentIntent::retrieve($validated['payment_intent_id']);
+            
+            // Verify payment was successful
+            if ($paymentIntent->status !== 'succeeded') {
+                Log::error('Payment intent status is not succeeded: ' . $paymentIntent->status);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment was not successful. Status: ' . $paymentIntent->status
+                ], 400);
+            }
+
+            // Verify payment amount matches what we calculated during intent creation
+            $expectedAmountInCents = (int) ($storedData['total_amount'] * 100);
+            if ($paymentIntent->amount !== $expectedAmountInCents) {
+                Log::error('Payment amount mismatch detected. Expected: ' . $expectedAmountInCents . ', Got: ' . $paymentIntent->amount);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment amount verification failed.'
                 ], 400);
             }
 
             Log::info('Payment verified successfully. Creating order...');
 
-            // Create order and send email
-            $order = $this->createOrderWithEmail($validated, $paymentIntent);
+            // Create order using stored validation data and customer info from request
+            $order = $this->createOrderWithEmail($validated, $paymentIntent, $storedData);
 
+            // Clear validation data from session
+            session()->forget($validationKey);
             Log::info('Order created successfully: ' . $order->id);
 
             return response()->json([
@@ -99,69 +231,127 @@ class PaymentController
 
         } catch (\Exception $e) {
             Log::error('Payment processing failed: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Payment processing stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred: ' . $e->getMessage()
+                'message' => 'An error occurred during payment processing. Please try again.'
             ], 500);
         }
     }
 
-    private function createOrderWithEmail($data, $paymentIntent)
+    private function createOrderWithEmail($validatedData, $paymentIntent, $storedData)
     {
         Log::info('Step 1: Creating order record in database');
 
-        // Step 1: Create order
+        // Create order using server-calculated amounts and customer info from validated request
         $order = Order::create([
             'user_id' => auth()->id(),
-            'total_price' => $data['totalAmount'],
+            'total_price' => $storedData['total_amount'],
             'status' => 'completed',
             'ordered_at' => now(),
             'payment_details' => [
                 'payment_intent_id' => $paymentIntent->id,
-                'customer_name' => $data['customer_name'],
-                'customer_email' => $data['customer_email'],
+                'stripe_amount' => $paymentIntent->amount,
+                'calculated_amount' => $storedData['total_amount'],
+                'customer_name' => $validatedData['customer_name'],
+                'customer_email' => $validatedData['customer_email'],
                 'payment_date' => now()->toISOString(),
             ],
         ]);
 
         Log::info('Order created with ID: ' . $order->id);
 
-        // Step 2: Create tickets
+        // Create tickets using stored validation data
         Log::info('Step 2: Creating tickets');
-        $this->createTickets($order, $data['items']);
+        $this->createTickets($order, $storedData['calculated_items']);
 
-        // Step 3: Send email with PDF
+        // Send email with PDF
         Log::info('Step 3: Sending confirmation email');
         $this->sendOrderConfirmationEmail($order);
 
         return $order;
     }
 
-    private function createTickets($order, $items)
+    private function createTickets($order, $calculatedItems)
     {
-        foreach ($items as $item) {
-            $festival = Festival::find($item['festivalID']);
+        foreach ($calculatedItems as $item) {
+            // Determine which type of ticket to create - safely check if ticket_type exists
+            if (isset($item['ticket_type']) && $item['ticket_type'] === 'jazz_event') {
+                // Create a specific jazz event ticket
+                for ($i = 0; $i < $item['quantity']; $i++) {
+                    $qrCode = 'TKT-' . strtoupper(Str::random(8));
+                    
+                    // Prepare ticket data - only include event_id if column exists
+                    $ticketData = [
+                        'order_id' => $order->id,
+                        'festival_id' => $item['festival_id'],
+                        'qr_code' => $qrCode,
+                        'quantity' => 1,
+                        'price_per_ticket' => $item['price_per_ticket'],
+                        'ticket_type' => 'jazz_event',
+                        'ticket_details' => json_encode([
+                            'event_id' => $item['event_id'] ?? null,
+                            'artist_name' => $item['artist_name'] ?? 'Jazz Artist',
+                            'performance_day' => $item['performance_day'] ?? null,
+                            'performance_time' => $item['performance_time'] ?? null
+                        ]),
+                    ];
 
-            if (!$festival) {
-                Log::warning('Festival not found: ' . $item['festivalID']);
-                continue;
-            }
+                    // Only add event_id if the column exists in the database
+                    if (Schema::hasColumn('tickets', 'event_id')) {
+                        $ticketData['event_id'] = $item['event_id'] ?? null;
+                    }
+                    
+                    Ticket::create($ticketData);
+                    
+                    Log::info('Jazz event ticket created: ' . $qrCode);
+                }
+            } else {
+                // Handle other ticket types (standard, day_pass, full_pass)
+                
+                // Handle special festival IDs (day pass, full pass)
+                if ($item['festival_id'] == -1 || $item['festival_id'] == -2) {
+                    // Day pass (-1) or Full pass (-2) - no actual festival record
+                    for ($i = 0; $i < $item['quantity']; $i++) {
+                        $qrCode = 'TKT-' . strtoupper(Str::random(8));
 
-            Log::info('Creating ' . $item['festivalQuantity'] . ' tickets for festival: ' . $festival->name);
+                        Ticket::create([
+                            'order_id' => $order->id,
+                            'festival_id' => $item['festival_id'], // Keep the special ID
+                            'qr_code' => $qrCode,
+                            'quantity' => 1,
+                            'price_per_ticket' => $item['price_per_ticket'],
+                            'ticket_type' => $item['festival_id'] == -1 ? 'day_pass' : 'full_pass',
+                        ]);
 
-            for ($i = 0; $i < $item['festivalQuantity']; $i++) {
-                $qrCode = 'TKT-' . strtoupper(Str::random(8));
+                        Log::info('Special ticket created: ' . $qrCode . ' for ' . $item['festival_name']);
+                    }
+                } else {
+                    // Standard festival ticket
+                    $festival = Festival::find($item['festival_id']);
 
-                Ticket::create([
-                    'order_id' => $order->id,
-                    'festival_id' => $festival->id,
-                    'qr_code' => $qrCode,
-                    'quantity' => 1,
-                    'price_per_ticket' => $item['festivalCost'],
-                ]);
+                    if (!$festival) {
+                        Log::warning('Festival not found during ticket creation: ' . $item['festival_id']);
+                        continue;
+                    }
 
-                Log::info('Ticket created: ' . $qrCode);
+                    Log::info('Creating ' . $item['quantity'] . ' tickets for festival: ' . $festival->name);
+
+                    for ($i = 0; $i < $item['quantity']; $i++) {
+                        $qrCode = 'TKT-' . strtoupper(Str::random(8));
+
+                        Ticket::create([
+                            'order_id' => $order->id,
+                            'festival_id' => $festival->id,
+                            'qr_code' => $qrCode,
+                            'quantity' => 1,
+                            'price_per_ticket' => $item['price_per_ticket'],
+                            'ticket_type' => 'standard',
+                        ]);
+
+                        Log::info('Ticket created: ' . $qrCode);
+                    }
+                }
             }
         }
     }
@@ -180,6 +370,7 @@ class PaymentController
             }
 
             Log::info('Order loaded with ' . $order->tickets->count() . ' tickets');
+            Log::info('Payment details: ' . json_encode($order->payment_details));
 
             // Generate PDF
             Log::info('Generating PDF...');
@@ -198,6 +389,7 @@ class PaymentController
         } catch (\Exception $e) {
             Log::error('Email sending failed for order ' . $order->id . ': ' . $e->getMessage());
             Log::error('Email error stack trace: ' . $e->getTraceAsString());
+            // Don't throw the exception, just log it so the order still completes
         }
     }
 
@@ -255,8 +447,16 @@ class PaymentController
     private function sendEmailWithPDF($order, $pdfContent)
     {
         try {
-            $customerEmail = $order->payment_details['customer_email'];
-            $customerName = $order->payment_details['customer_name'];
+            // Get customer details from payment_details array
+            $paymentDetails = $order->payment_details;
+            $customerEmail = $paymentDetails['customer_email'] ?? null;
+            $customerName = $paymentDetails['customer_name'] ?? null;
+
+            if (!$customerEmail) {
+                Log::error('Customer email not found in payment details for order: ' . $order->id);
+                Log::info('Payment details structure: ' . json_encode($paymentDetails));
+                return;
+            }
 
             Log::info('Sending email to: ' . $customerEmail);
 
@@ -269,11 +469,15 @@ class PaymentController
             // Send email using Mail::send
             Mail::send('emails.order-confirmation', ['order' => $order], function($message) use ($customerEmail, $customerName, $order, $tempPath) {
                 $message->to($customerEmail, $customerName)
-                    ->subject('🎪 Festival Tickets - Order #' . $order->id)
-                    ->attach($tempPath, [
+                    ->subject('🎪 Festival Tickets - Order #' . $order->id);
+
+                // Check if PDF file exists before attaching
+                if (file_exists($tempPath)) {
+                    $message->attach($tempPath, [
                         'as' => 'festival-tickets-order-' . $order->id . '.pdf',
                         'mime' => 'application/pdf'
                     ]);
+                }
             });
 
             // Clean up temporary file
@@ -286,7 +490,8 @@ class PaymentController
 
         } catch (\Exception $e) {
             Log::error('Failed to send email with PDF: ' . $e->getMessage());
-            throw $e;
+            Log::error('Email error stack trace: ' . $e->getTraceAsString());
+            // Don't throw the exception, just log it so the order still completes
         }
     }
 

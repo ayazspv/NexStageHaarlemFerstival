@@ -10,7 +10,7 @@ defineProps<{
 </script>
 
 <template>
-    <head :title="title" />
+    <Head :title="title" />
 
     <div class="container-scroller">
         <div class="layout-container">

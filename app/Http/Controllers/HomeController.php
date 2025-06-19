@@ -20,11 +20,12 @@ class HomeController
         // Then calculate ticket availability for each festival
         $festivals = $festivals->map(function ($festival) {
             // Get total tickets sold for this festival from confirmed/paid orders
+            // Let's try a different approach - count the number of tickets instead of summing quantity
             $ticketsSold = DB::table('tickets')
                 ->join('orders', 'tickets.order_id', '=', 'orders.id')
                 ->where('tickets.festival_id', $festival->id)
                 ->whereIn('orders.status', ['confirmed', 'paid', 'completed', 'processing'])
-                ->sum('tickets.quantity');
+                ->count(); // Count individual ticket records instead of summing quantity
 
             // Calculate availability
             $totalTickets = $festival->ticket_amount ?? 0;
