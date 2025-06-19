@@ -66,20 +66,34 @@ function addAllToCart() {
       <div v-else>
         <div v-for="item in wishlist" :key="`${item.festival_id}-${item.ticket_type}`" class="wishlist-item">
           <div class="item-details">
-            <!-- Display with appropriate icon based on ticket type -->
             <h4>
-              <span v-if="item.ticket_type === 'jazz_event'">
-                <i class="fas fa-music text-primary me-2"></i>{{ item.artist_name || item.name }}
+              <!-- Jazz Event -->
+              <span v-if="item.ticket_type === 'jazz_event'" class="ticket-label">
+                <i class="fas fa-music ticket-icon jazz"></i>
+                <span class="ticket-name">{{ item.artist_name || item.name }}</span>
+                <span class="ticket-badge">Jazz</span>
               </span>
-              <span v-else-if="item.ticket_type === 'day_pass'">
-                <i class="fas fa-calendar-day text-warning me-2"></i>{{ item.name }}
-                <span class="badge bg-light text-dark">€35.00</span>
+              
+              <!-- Day Pass -->
+              <span v-else-if="item.ticket_type === 'day_pass'" class="ticket-label">
+                <i class="fas fa-calendar-day ticket-icon day-pass"></i>
+                <span class="ticket-name">{{ item.name }}</span>
+                <span class="ticket-badge day-pass">€35.00</span>
               </span>
-              <span v-else-if="item.ticket_type === 'full_pass'">
-                <i class="fas fa-ticket-alt text-success me-2"></i>{{ item.name }}
-                <span class="badge bg-light text-dark">€80.00</span>
+              
+              <!-- Full Pass -->
+              <span v-else-if="item.ticket_type === 'full_pass'" class="ticket-label">
+                <i class="fas fa-ticket-alt ticket-icon full-pass"></i>
+                <span class="ticket-name">{{ item.name }}</span>
+                <span class="ticket-badge full-pass">€80.00</span>
               </span>
-              <span v-else>{{ item.name }}</span>
+              
+              <!-- Standard Ticket -->
+              <span v-else class="ticket-label">
+                <i class="fas fa-ticket-alt ticket-icon standard"></i>
+                <span class="ticket-name">{{ item.name }}</span>
+                <span v-if="item.price" class="ticket-badge standard">€{{ typeof item.price === 'number' ? item.price.toFixed(2) : item.price }}</span>
+              </span>
             </h4>
           </div>
           
@@ -263,5 +277,75 @@ function addAllToCart() {
 
 .btn-action:hover {
   opacity: 0.9;
+}
+
+/* Add these new styles to your existing styles */
+.ticket-label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ticket-icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: white;
+  flex-shrink: 0;
+}
+
+.ticket-icon.jazz {
+  background-color: #2196f3;
+}
+
+.ticket-icon.day-pass {
+  background-color: #ff9800;
+}
+
+.ticket-icon.full-pass {
+  background-color: #4caf50;
+}
+
+.ticket-icon.standard {
+  background-color: #607d8b;
+}
+
+.ticket-name {
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.ticket-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.ticket-badge.jazz {
+  background-color: #e3f2fd;
+  color: #0d6efd;
+}
+
+.ticket-badge.day-pass {
+  background-color: #fff3e0;
+  color: #fd7e14;
+}
+
+.ticket-badge.full-pass {
+  background-color: #e8f5e9;
+  color: #198754;
+}
+
+.ticket-badge.standard {
+  background-color: #eceff1;
+  color: #495057;
 }
 </style>
