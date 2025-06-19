@@ -117,6 +117,7 @@ class DatabaseSeeder extends Seeder
             'cta_text' => 'Reserve a table',
             'subheader_1' => 'Authentic Italian Pizzas',
             'subheader_2' => 'Fresh ingredients, traditional recipes',
+            'description' => 'De Pizzabakkers is a renowned restaurant in Haarlem, known for its authentic Italian pizzas made with fresh ingredients and traditional recipes. Enjoy a cozy atmosphere and friendly service while indulging in our delicious offerings.',
             'accessibility' => true,
             'vegan' => false,
             'gluten_free' => true,
@@ -125,12 +126,14 @@ class DatabaseSeeder extends Seeder
             'children_price' => 10.00,
             'location' => 'Grote Markt 1, Haarlem',
             'contact_number' => '+31 23 123 4567',
-            'picture_1' => 'restaurants/pizza1.jpg',
+            'picture_1' => 'top-view-table-full-food.jpg',
             'picture_2' => 'restaurants/pizza2.jpg',
             'picture_3' => 'restaurants/pizza3.jpg',
+            'picture_4' => 'restaurants/pizza4.jpg',
             'session_1_time' => '18:00:00',
             'session_2_time' => null,
             'session_3_time' => null,
+            'seats' => 50,
         ]);
 
         $types = FoodType::whereIn('name', ['Italian', 'Vegan'])->pluck('id');

@@ -1,5 +1,11 @@
 <script lang="ts" setup>
 
+import { defineProps, computed } from 'vue';
+
+const props = defineProps({
+    restaurant: Object
+});
+
 </script>
 <template>
     <div class="container timetables d-flex justify-content-end align-items-center gap-5 align-self-stretch">
@@ -14,9 +20,9 @@
                     <p>24 - 27 July</p>
                     <div class="line"></div>
                     <div class="times">
-                        <p>time 1</p>
-                        <p>time 2</p>
-                        <p>time 3</p>
+                        <p v-if="restaurant.session_1_time">{{ restaurant.session_1_time }}</p>
+                        <p v-if="restaurant.session_2_time">{{ restaurant.session_2_time }}</p>
+                        <p v-if="restaurant.session_3_time">{{ restaurant.session_3_time }}</p>
                     </div>
                     <div class="line"></div>
                     <div class="sessions">
@@ -38,10 +44,8 @@
             <div class="prices">
                 <p>🏷️ prices</p>
                 <ul class="price d-flex flex-column align-itmes-center">
-                    <li>Food item 1: 10,00</li>
-                    <li>Food item 2: 12,50</li>
-                    <li>Food item 3: 15,00</li>
-                    <li>Food item 4: 8,00</li>
+                    <li>Adult: €{{ restaurant.adult_price }}</li>
+                    <li>Childeren (under12): €{{ restaurant.children_price }}</li>
                 </ul>
             </div>
             <p class="caution align-self-stretch">CAUTION: Reservation is mandatory. A reservation fee of 10,00 per

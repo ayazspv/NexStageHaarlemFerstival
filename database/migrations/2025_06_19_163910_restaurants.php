@@ -17,6 +17,9 @@ return new class extends Migration {
             $table->text('cta_text');
             $table->text('subheader_1')->nullable();
             $table->text('subheader_2')->nullable();
+            $table->text('description');
+
+            $table->integer('seats');
 
             $table->boolean('accessibility')->default(false);
             $table->boolean('vegan')->default(false);
@@ -32,6 +35,7 @@ return new class extends Migration {
             $table->string('picture_1');
             $table->string('picture_2')->nullable();
             $table->string('picture_3')->nullable();
+            $table->string('picture_4')->nullable();
 
             $table->time('session_1_time');
             $table->time('session_2_time')->nullable();

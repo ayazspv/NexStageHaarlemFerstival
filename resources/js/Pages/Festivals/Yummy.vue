@@ -2,35 +2,124 @@
 import { Festival } from '../../../models';
 import Navbar from '../Components/Navbar.vue';
 import Footer from '../Festivals/Restaurants/Components/Footer.vue';
+import { ref, onMounted, computed } from 'vue';
 
-const props = defineProps<{
-    festival: Festival;
-    bands?: any[];
-}>();
+interface YummyData {
+    header_text_1: string;
+    header_text_2: string;
+    line_1: string;
+    line_2: string;
+    button_text: string;
+    header_image: string;
+    description: string;
+}
+
+const yummyData = ref<YummyData | null>(null);
+const error = ref<string | null>(null);
+const foodTypes = ref<{ id: number; name: string }[]>([]);
+const filter = ref<'all' | number>('all'); // 'all' or foodType id
+const restaurants = ref<any[]>([]);
+
+onMounted(async () => {
+    try {
+        const response = await fetch('/api/yummy-homepage');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: YummyData = await response.json();
+        yummyData.value = data;
+        if (!yummyData.value) {
+            throw new Error('No yummy data found');
+        }
+        console.log('Yummy data fetched successfully:', yummyData.value);
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            error.value = err.message;
+            console.error('Error fetching yummy data:', err);
+        } else {
+            error.value = String(err);
+        }
+    }
+
+    try {
+        const response = await fetch('/api/food-types');
+        if (response.ok) {
+            const types = await response.json();
+            foodTypes.value = types;
+        }
+    } catch (err) {
+        if (err instanceof Error) {
+            error.value = err.message;
+            console.error('Error fetching data:', err);
+        } else {
+            error.value = String(err);
+        }
+    }
+
+    try {
+        const response = await fetch('/api/restaurants');
+        if (response.ok) {
+            const data = await response.json();
+            restaurants.value = data;
+        } else {
+            throw new Error(`Failed to fetch restaurants: ${response.status}`);
+        }
+    } catch (err) {
+        if (err instanceof Error) {
+            error.value = err.message;
+            console.error('Error fetching restaurants:', err);
+        } else {
+            error.value = String(err);
+        }
+    }
+});
+
+function splitHeaderText(text?: string) {
+    if (!text) return { first: '', rest: '' };
+    const words = text.split(' ');
+    return {
+        first: words.slice(0, 2).join(' '),
+        rest: words.slice(2).join(' ')
+    };
+}
+
+const backgroundStyle = computed(() => {
+    const imageUrl = yummyData.value?.header_image
+        ? `/storage/main/yummy/${yummyData.value.header_image}`
+        : '/storage/main/yummy/top-view-table-full-food.jpg';
+    return {
+        background: `linear-gradient(0deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.60) 100%), url('${imageUrl}') lightgray 50% / cover no-repeat`
+    };
+});
+
+function selectFilter(value: 'all' | number) {
+    filter.value = value;
+}
+
+function getStarArray(rate?: number) {
+    const rounded = Math.round(rate ?? 0);
+    return Array.from({ length: 5 }, (_, i) => i < rounded);
+}
 
 </script>
 <template>
-    <div class="header">
+    <div class="header" :style="backgroundStyle">
         <Navbar class="yummy-navbar" />
         <div class="hero-content">
-            <h1 class="element-1">YUMMY!</h1>
+            <h1 class="element-1">{{ yummyData?.header_text_1 }}</h1>
             <div class="hero-title">
-                <h1 class="element-2-1">FOOD FESTIVAL</h1>
-                <h1 class="element-2-2">HAARLEM 2025</h1>
+                <h1 class="element-2-1">{{ splitHeaderText(yummyData?.header_text_2).first }}</h1>
+                <h1 class="element-2-2">{{ splitHeaderText(yummyData?.header_text_2).rest }}</h1>
             </div>
-            <p>🗓️ Thursday 24 July - Sunday 27 July</p>
-            <p>📍 Haarlem, The Netherlands</p>
-            <button class="btn btn-primary">Check the restaurants</button>
+            <p>{{ yummyData?.line_1 }}</p>
+            <p>{{ yummyData?.line_2 }}</p>
+            <button class="btn btn-primary">{{ yummyData?.button_text }}</button>
         </div>
     </div>
     <div class="info-banner">
         <div class="info-content">
             <h2>How does it work?</h2>
-            <p>
-                Curious about the dining options available at Haarlem Culinary 2025? Explore the delectable offerings
-                from a selection of renowned Haarlem restaurants this year. Indulge your palate in a culinary journey
-                with these exquisite dining experiences.
-            </p>
+            <p>{{ yummyData?.description }}</p>
         </div>
         <div class="info-process">
             <img src="../../../../storage/app/public/main/yummy/process.png" alt="process" class="process-shapes">
@@ -59,53 +148,64 @@ const props = defineProps<{
                 Restaurants Filter:
             </p>
             <div class="filter-items">
-                <button class="btn btn-primary">All</button>
-                <button class="btn btn-outline-primary">French</button>
+                <button class="btn" :class="filter === 'all' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="selectFilter('all')">
+                    All
+                </button>
+                <button v-for="type in foodTypes" :key="type.id" class="btn"
+                    :class="filter === type.id ? 'btn-primary' : 'btn-outline-primary'" @click="selectFilter(type.id)">
+                    {{ type.name }}
+                </button>
             </div>
         </div>
         <div class="restaurants">
-            <div class="restaurant">
-                <img src="../../../../storage/app/public/main/yummy/top-view-table-full-food.jpg" alt="">
-                <h1>Cafe de Roemer</h1>
+            <div v-for="restaurant in (filter === 'all' ? restaurants : restaurants.filter(r => r.food_types?.some(ft => ft.id === filter)))"
+                :key="restaurant.id" class="restaurant">
+                <img :src="restaurant.picture_1 ? `/storage/main/yummy/${restaurant.picture_1}` : '/storage/main/yummy/top-view-table-full-food.jpg'"
+                    :alt="restaurant.name">
+                <h1><a :href="`/restaurants/${restaurant.id}`" style="color: inherit; text-decoration: none;">
+            {{ restaurant.name }}
+        </a></h1>
                 <div class="stars">
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-solid fa-star"></i>
-                    <i class="fa-regular fa-star"></i>
+                    <i v-for="(solid, idx) in getStarArray(restaurant.rate)" :key="idx"
+                        :class="solid ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
                 </div>
                 <div class="line"></div>
                 <div class="food-type">
                     <p class="bold-part">food type:</p>
-                    <p class="normal-part">French</p>
+                    <p class="normal-part">{{restaurant.food_types?.map(ft => ft.name).join(', ') || '-'}}</p>
                 </div>
                 <div class="seats">
                     <p class="bold-part">seats:</p>
-                    <p class="normal-part">2</p>
+                    <p class="normal-part">{{ restaurant.seats }}</p>
                 </div>
                 <div class="line"></div>
                 <div class="features">
-                    <div class="feature-item">
+                    <div v-if="restaurant.accessibility" class="feature-item">
                         <i class="fa-brands fa-accessible-icon"></i>
-                        <p>Feature 1</p>
+                        <p>Disability Accessible</p>
                     </div>
-                    <div class="feature-item">
-                        <i class="fa-brands fa-accessible-icon"></i>
-                        <p>Feature 1</p>
+                    <div v-if="restaurant.vegan" class="feature-item">
+                        <i class="fa-solid fa-seedling"></i>
+                        <p>Vegan food available</p>
                     </div>
-                    <div class="feature-item">
-                        <i class="fa-brands fa-accessible-icon"></i>
-                        <p>Feature 1</p>
+                    <div v-if="restaurant.gluten_free" class="feature-item">
+                        <i class="fa-solid fa-wheat-awn-circle-exclamation"></i>
+                        <p>Gluten Free food available</p>
+                    </div>
+                    <div v-if="restaurant.halal" class="feature-item">
+                        <i class="fa-solid fa-star-and-crescent"></i>
+                        <p>Halal food available</p>
                     </div>
                 </div>
                 <div class="line"></div>
                 <div class="extra-information">
                     <p>📍</p>
-                    <p>Botermarkt 17, 2011 XL Haarlem</p>
+                    <p>{{ restaurant.location }}</p>
                 </div>
                 <div class="extra-information">
                     <p>🕕</p>
-                    <p>From 18:00</p>
+                    <p>From {{ restaurant.session_1_time }}</p>
                 </div>
             </div>
         </div>
@@ -130,7 +230,7 @@ h6 {
     align-items: center;
     gap: 100px;
     align-self: stretch;
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.60) 100%), url(../../../../storage/app/public/main/yummy/top-view-table-full-food.jpg) lightgray 50% / cover no-repeat;
+    /*background: linear-gradient(0deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.60) 100%), url(../../../../storage/app/public/main/yummy/top-view-table-full-food.jpg) lightgray 50% / cover no-repeat;*/
 }
 
 :deep(.yummy-navbar) {
@@ -335,6 +435,8 @@ h6 {
 
 .restaurant img {
     max-height: 250px;
+    min-height: 175px;
+    width: 100%;
     border-radius: 15px;
     border: 1px solid #000;
 }
@@ -344,6 +446,12 @@ h6 {
     font-family: Bayon;
     font-size: 30px;
     margin: 0;
+}
+
+.restaurant h1 a {
+    color: inherit;
+    text-decoration: none;
+    font-size: 30px !important;
 }
 
 .stars {

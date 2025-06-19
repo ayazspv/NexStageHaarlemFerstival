@@ -1,17 +1,50 @@
 <script lang="ts" setup>
 
+import { defineProps, computed } from 'vue';
+
+const props = defineProps({
+    restaurant: Object
+});
+
+const imageOne = computed(() => {
+    const imageUrl = props.restaurant?.picture_2
+        ? `/storage/main/yummy/${props.restaurant.picture_2}`
+        : '/storage/main/yummy/top-view-table-full-food.jpg';
+    return {
+        background: `url('${imageUrl}') lightgray 50% / cover no-repeat`
+    };
+});
+
+const imageTwo = computed(() => {
+    const imageUrl = props.restaurant?.picture_3
+        ? `/storage/main/yummy/${props.restaurant.picture_3}`
+        : '/storage/main/yummy/top-view-table-full-food.jpg';
+    return {
+        background: `url('${imageUrl}') lightgray 50% / cover no-repeat`
+    };
+});
+
+const imageThree = computed(() => {
+    const imageUrl = props.restaurant?.picture_4
+        ? `/storage/main/yummy/${props.restaurant.picture_4}`
+        : '/storage/main/yummy/top-view-table-full-food.jpg';
+    return {
+        background: `url('${imageUrl}') lightgray 50% / cover no-repeat`
+    };
+});
+
 </script>
 <template>
     <div class="gallery d-flex flex-column align-items-center gap-2 align-self-center p-5 w-100">
         <h2 class="align-self-stretch">Gallery</h2>
         <div class="content container d-flex justify-content-end align-items-center gap-5 align-self-stretch">
-            <div class="picture">
+            <div class="picture" :style="imageOne">
 
             </div>
-            <div class="picture">
+            <div class="picture" :style="imageTwo">
 
             </div>
-            <div class="picture">
+            <div class="picture" :style="imageThree">
 
             </div>
         </div>

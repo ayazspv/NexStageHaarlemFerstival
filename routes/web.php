@@ -196,4 +196,13 @@ Route::prefix('api')->group(function () {
     Route::get('jazz-events/{id}/price', [JazzFestivalController::class, 'getEventPrice']);
 });
 
-Route::get('/restaurant', [RestaurantController::class, 'show'])->name('restaurant.show');
+
+
+Route::get('/api/yummy-homepage', [RestaurantController::class, 'getYummyHomepageContent'])
+    ->name('restaurant.yummy-homepage');
+Route::get('/api/food-types', [RestaurantController::class, 'getFoodTypes'])
+    ->name('restaurant.food-types');
+Route::get('/api/restaurants', [RestaurantController::class, 'getAllRestaurants'])
+    ->name('restaurant.all-restaurants');
+
+Route::get('/restaurants/{id}', [RestaurantController::class, 'show'])->name('restaurant.show');
