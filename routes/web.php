@@ -22,9 +22,13 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\ForgetPasswordController;
 use App\Http\Controllers\PersonalProgramController;
+use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\Admin\JazzFestivalController;
+use App\Http\Controllers\Admin\YummyCMSController;
 use App\Http\Controllers\TicketController;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Http\Middleware\QrReaderAccess;
+use App\Http\Controllers\ReservationController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -79,6 +83,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         Route::resource('jazz-festival', \App\Http\Controllers\Admin\JazzFestivalController::class)
             ->names('admin.jazz-festival');
     });
+
+    
 
     //GAMES
     Route::put('/festivals/{festival}/game/{game}', [GameCMSController::class, 'updateGame'])
@@ -168,3 +174,26 @@ Route::prefix('api')->group(function () {
     Route::post('process-payment', [PaymentController::class, 'processPayment']);
     Route::get('jazz-events/{id}/price', [JazzFestivalController::class, 'getEventPrice']);
 });
+
+
+
+Route::get('/api/yummy-homepage', [RestaurantController::class, 'getYummyHomepageContent'])
+    ->name('restaurant.yummy-homepage');
+Route::get('/api/food-types', [RestaurantController::class, 'getFoodTypes'])
+    ->name('restaurant.food-types');
+Route::get('/api/restaurants', [RestaurantController::class, 'getAllRestaurants'])
+    ->name('restaurant.all-restaurants');
+
+Route::get('/restaurants/{id}', [RestaurantController::class, 'show'])->name('restaurant.show');
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('api/cms/yummy/update', [YummyCMSController::class, 'update'])->name('admin.cms.yummy.update');
+    Route::post('/api/restaurants', [RestaurantController::class, 'store']);
+Route::put('/api/restaurants/{id}', [RestaurantController::class, 'update']);
+Route::delete('/api/restaurants/{id}', [RestaurantController::class, 'destroy']);
+});
+
+Route::post('/api/reservations', [ReservationController::class, 'store']);
+
+
+

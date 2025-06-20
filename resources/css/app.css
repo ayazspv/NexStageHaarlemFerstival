@@ -4,6 +4,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+    font-family: 'Bayon';
+    src: url(../fonts/Bayon/Bayon-Regular.ttf) format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'NotoSansTamil';
+    src: url(../fonts/Noto_Sans_Tamil/static/NotoSansTamil-Regular.ttf) format('truetype');
+}
+
 a {
     text-decoration: none!important;
     font-size: 20px!important;
