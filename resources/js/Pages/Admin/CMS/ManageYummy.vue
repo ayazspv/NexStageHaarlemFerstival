@@ -28,7 +28,7 @@ const activeTab = ref('festival-homepage');
                     <button class="btn"
                         :class="activeTab === 'restaurants' ? 'btn-primary' : 'btn-outline-primary'"
                         @click="activeTab = 'restaurants'">
-                        <i class="fas fa-music me-1"></i> Manage Restaurants
+                        <i class="fa-solid fa-utensils"></i> Manage Restaurants
                     </button>
                 </div>
             </div>

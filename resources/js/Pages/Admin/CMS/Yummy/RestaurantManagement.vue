@@ -106,7 +106,7 @@ async function deleteRestaurant(id: number) {
                 <!-- Empty State -->
                 <div v-else class="text-center py-5">
                     <div class="empty-state">
-                        <i class="fas fa-music mb-3" style="font-size: 4rem;"></i>
+                        <i class="fa-solid fa-utensils" style="font-size: 4rem;"></i>
                         <h3>No Available Restaurants</h3>
                         <p class="text-muted">Click on the button below to add restaurants.</p>
                         <button class="btn btn-primary mt-2" @click="createNewRestaurant">Add a Restaurant</button>
