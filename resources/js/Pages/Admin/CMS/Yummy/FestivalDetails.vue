@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { usePage } from '@inertiajs/vue3';
 
-const page = usePage();
-const csrfToken = page.props.csrf_token as string || "";
+const props = defineProps<{
+    festival: any,
+    csrfToken: string
+}>();
+
+const csrfToken = props.csrfToken;
 
 const festivalForm = ref({
     header_text_1: '',

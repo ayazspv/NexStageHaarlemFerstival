@@ -1,18 +1,17 @@
 <script setup lang="ts">
-
 import { ref } from 'vue';
 import AdminAppLayout from "@/Pages/Layouts/AdminAppLayout.vue";
 import FestivalDetails from './Yummy/FestivalDetails.vue';
 import RestaurantManagement from './Yummy/RestaurantManagement.vue';
-import { Festival, JazzFestival } from '../../../../models';
+import { useCsrf } from '@/composables/csrf';
+
+const { csrfToken } = useCsrf();
 
 const props = defineProps<{
-    festival: Festival,
+    festival: any,
 }>();
 
-// Active tab default on home page
 const activeTab = ref('festival-homepage');
-
 </script>
 
 <template>
@@ -26,7 +25,7 @@ const activeTab = ref('festival-homepage');
                         @click="activeTab = 'festival-homepage'">
                         <i class="fas fa-info-circle me-1"></i> Festival Home Page
                     </button>
-                    <button class="btn" 
+                    <button class="btn"
                         :class="activeTab === 'restaurants' ? 'btn-primary' : 'btn-outline-primary'"
                         @click="activeTab = 'restaurants'">
                         <i class="fas fa-music me-1"></i> Manage Restaurants
@@ -34,14 +33,16 @@ const activeTab = ref('festival-homepage');
                 </div>
             </div>
 
-            <FestivalDetails 
-                v-if="activeTab === 'festival-homepage'" 
-                :festival="festival" 
+            <FestivalDetails
+                v-if="activeTab === 'festival-homepage'"
+                :festival="festival"
+                :csrf-token="csrfToken"
             />
-            
-            <RestaurantManagement 
-                v-if="activeTab === 'restaurants'" 
-                :festival="festival" 
+
+            <RestaurantManagement
+                v-if="activeTab === 'restaurants'"
+                :festival="festival"
+                :csrf-token="csrfToken"
             />
         </div>
     </AdminAppLayout>
