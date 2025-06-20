@@ -13,31 +13,25 @@ return new class extends Migration {
         Schema::create('restaurants', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->float('rate');
-            $table->text('cta_text');
-            $table->text('subheader_1')->nullable();
-            $table->text('subheader_2')->nullable();
-            $table->text('description');
-
-            $table->integer('seats');
-
+            $table->float('rate')->default(3);
+            $table->string('cta_text')->default('Click the button');
+            $table->string('subheader_1')->nullable();
+            $table->string('subheader_2')->nullable();
+            $table->text('description')->nullable();
+            $table->integer('seats')->default(10);
             $table->boolean('accessibility')->default(false);
             $table->boolean('vegan')->default(false);
             $table->boolean('gluten_free')->default(false);
             $table->boolean('halal')->default(false);
-
-            $table->decimal('adult_price', 8, 2);
-            $table->decimal('children_price', 8, 2);
-
-            $table->text('location');
-            $table->string('contact_number');
-
-            $table->string('picture_1');
+            $table->decimal('adult_price', 8, 2)->default(10);
+            $table->decimal('children_price', 8, 2)->default(10);
+            $table->string('location')->default('Amsterdam');
+            $table->string('contact_number')->default('+3166884558');
+            $table->string('picture_1')->default('default.jpg');
             $table->string('picture_2')->nullable();
             $table->string('picture_3')->nullable();
             $table->string('picture_4')->nullable();
-
-            $table->time('session_1_time');
+            $table->time('session_1_time')->default('14:00:00');
             $table->time('session_2_time')->nullable();
             $table->time('session_3_time')->nullable();
 

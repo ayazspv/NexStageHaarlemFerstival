@@ -9,7 +9,7 @@ const props = defineProps({
 const imageOne = computed(() => {
     const imageUrl = props.restaurant?.picture_2
         ? `/storage/main/yummy/${props.restaurant.picture_2}`
-        : '/storage/main/yummy/top-view-table-full-food.jpg';
+        : '/storage/main/yummy/2.jpg';
     return {
         background: `url('${imageUrl}') lightgray 50% / cover no-repeat`
     };
@@ -18,7 +18,7 @@ const imageOne = computed(() => {
 const imageTwo = computed(() => {
     const imageUrl = props.restaurant?.picture_3
         ? `/storage/main/yummy/${props.restaurant.picture_3}`
-        : '/storage/main/yummy/top-view-table-full-food.jpg';
+        : '/storage/main/yummy/3.jpg';
     return {
         background: `url('${imageUrl}') lightgray 50% / cover no-repeat`
     };
@@ -27,7 +27,7 @@ const imageTwo = computed(() => {
 const imageThree = computed(() => {
     const imageUrl = props.restaurant?.picture_4
         ? `/storage/main/yummy/${props.restaurant.picture_4}`
-        : '/storage/main/yummy/top-view-table-full-food.jpg';
+        : '/storage/main/yummy/4.jpg';
     return {
         background: `url('${imageUrl}') lightgray 50% / cover no-repeat`
     };

@@ -6,10 +6,19 @@ const props = defineProps({
     restaurant: Object
 });
 
+const backgroundStyle = computed(() => {
+    const imageUrl = props.restaurant?.picture_2
+        ? `/storage/main/yummy/${props.restaurant.picture_2}`
+        : '/storage/main/yummy/p2.jpg';
+    return {
+        background: `url('${imageUrl}')  lightgray 50% / cover no-repeat`
+    };
+});
+
 </script>
 <template>
     <div class="container timetables d-flex justify-content-end align-items-center gap-5 align-self-stretch">
-        <div class="picture me-5">
+        <div class="picture me-5" :style="backgroundStyle">
 
         </div>
         <div class="content d-flex flex-column align-items-start
@@ -26,19 +35,17 @@ const props = defineProps({
                     </div>
                     <div class="line"></div>
                     <div class="sessions">
-                        <p>session 1</p>
-                        <p>session 2</p>
-                        <p>session 3</p>
+                        <p v-if="restaurant.session_1_time">Session 1</p>
+                        <p v-if="restaurant.session_2_time">Session 2</p>
+                        <p v-if="restaurant.session_3_time">Session 3</p>
                     </div>
                 </div>
             </div>
             <div class="foods d-flex flex-column align-items-start gap-1">
                 <p>✅ Available foods</p>
                 <ul class="available-foods d-flex flex-column align-itmes-center">
-                    <li>Food item 1</li>
-                    <li>Food item 2</li>
-                    <li>Food item 3</li>
-                    <li>Food item 4</li>
+                    <li v-for="food in restaurant.food_types" :key="food.id">• {{ food.name }}</li>
+                    <li v-if="!restaurant.food_types || restaurant.food_types.length === 0" class="text-muted">No food types listed</li>
                 </ul>
             </div>
             <div class="prices">

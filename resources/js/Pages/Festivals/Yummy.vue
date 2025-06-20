@@ -86,7 +86,7 @@ function splitHeaderText(text?: string) {
 const backgroundStyle = computed(() => {
     const imageUrl = yummyData.value?.header_image
         ? `/storage/main/yummy/${yummyData.value.header_image}`
-        : '/storage/main/yummy/top-view-table-full-food.jpg';
+        : '/storage/main/yummy/hero-banner.jpg';
     return {
         background: `linear-gradient(0deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.60) 100%), url('${imageUrl}') lightgray 50% / cover no-repeat`
     };
@@ -183,19 +183,19 @@ function getStarArray(rate?: number) {
                 <div class="features">
                     <div v-if="restaurant.accessibility" class="feature-item">
                         <i class="fa-brands fa-accessible-icon"></i>
-                        <p>Disability Accessible</p>
+                        <p>Accessibility Features</p>
                     </div>
                     <div v-if="restaurant.vegan" class="feature-item">
                         <i class="fa-solid fa-seedling"></i>
-                        <p>Vegan food available</p>
+                        <p>Vegetarian</p>
                     </div>
                     <div v-if="restaurant.gluten_free" class="feature-item">
                         <i class="fa-solid fa-wheat-awn-circle-exclamation"></i>
-                        <p>Gluten Free food available</p>
+                        <p>Gluten-free Food</p>
                     </div>
                     <div v-if="restaurant.halal" class="feature-item">
                         <i class="fa-solid fa-star-and-crescent"></i>
-                        <p>Halal food available</p>
+                        <p>Halal Food</p>
                     </div>
                 </div>
                 <div class="line"></div>

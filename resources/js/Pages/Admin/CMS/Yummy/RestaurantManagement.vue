@@ -1,105 +1,72 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Festival, JazzFestival } from '../../../../../models';
-// import ArtistForm from './ArtistForm.vue';
-// import ArtistCard from './ArtistCard.vue';
 import { useCsrf } from '@/composables/csrf';
 import { Inertia } from '@inertiajs/inertia';
+import RestaurantCardForm from './RestaurantCardForm.vue';
 
 const { csrfToken } = useCsrf();
 
 const props = defineProps<{
     festival: Festival,
-    bands?: JazzFestival[],
 }>();
 
-// Artist management state
-const showArtistForm = ref(false);
-const artistFormMode = ref<'create' | 'edit'>('create');
-const editingBandId = ref<number | null>(null);
-const selectedDay = ref(24);
+const restaurants = ref<any[]>([]);
+const error = ref<string | null>(null);
+const showForm = ref(false);
+const editingRestaurant = ref<any | null>(null);
 
-// Days for the performance
-const festivalDays = [24, 25, 26, 27];
-
-//Organize bands by day for easier filtering
-const bandsByDay = computed(() => {
-    const result = {};
-    festivalDays.forEach(day => {
-        result[day] = props.bands?.filter(band => band.performance_day === day) || [];
-    });
-    return result;
+onMounted(async () => {
+    await reloadRestaurants();
 });
 
-// Get current editing band
-const currentBand = computed(() => {
-    if (artistFormMode.value === 'edit' && props.bands && editingBandId.value) {
-        return props.bands.find(b => b.id === editingBandId.value);
+function createNewRestaurant() {
+    editingRestaurant.value = null;
+    showForm.value = true;
+}
+
+function editRestaurant(restaurant: any) {
+    editingRestaurant.value = restaurant;
+    showForm.value = true;
+}
+
+async function reloadRestaurants() {
+    try {
+        const response = await fetch('/api/restaurants');
+        if (!response.ok) throw new Error('Failed to fetch restaurants');
+        restaurants.value = await response.json();
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : String(err);
     }
-    return null;
-});
+}
 
-// Start creating a new artist
-const createNewArtist = () => {
-    artistFormMode.value = 'create';
-    editingBandId.value = null;
-    showArtistForm.value = true;
-};
-
-// Edit an existing artist
-const editArtist = (band: JazzFestival) => {
-    artistFormMode.value = 'edit';
-    editingBandId.value = band.id || null;
-    showArtistForm.value = true;
-};
-
-// Close artist form
-const closeArtistForm = () => {
-    showArtistForm.value = false;
-};
-
-// Handle form submission result
-const handleFormSubmitted = () => {
-    closeArtistForm();
-    window.location.reload();
-};
-
-// Delete an artist
-const deleteArtist = (bandId: number) => {
-    if (confirm('Are you sure you want to delete this artist? This action cannot be undone.')) {
-        // Use axios instead of Inertia for the delete request
-        axios.delete(`/admin/festivals/${props.festival.id}/jazz-festival/${bandId}`, {
-            headers: { 'X-CSRF-TOKEN': csrfToken }
-        })
-        .then(() => {
-            alert('Artist deleted successfully!');
-            window.location.reload();
-        })
-        .catch(error => {
-            console.error('Error deleting artist:', error);
-            if (error.response && error.response.status === 404) {
-                // Still reload if it's a 404 but the item was likely deleted
-                alert('Artist was deleted, but encountered a response error.');
-                window.location.reload();
-            }
+async function deleteRestaurant(id: number) {
+    if (!confirm('Are you sure you want to delete this restaurant?')) return;
+    try {
+        const response = await fetch(`/api/restaurants/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+            },
         });
+        if (!response.ok) throw new Error('Failed to delete restaurant');
+        await reloadRestaurants();
+    } catch (err) {
+        alert('Error deleting restaurant: ' + (err instanceof Error ? err.message : String(err)));
     }
-};
+}
 </script>
 
 <template>
     <div class="restaurants-tab">
-        <!-- Artist Form Modal -->
-        <!-- <ArtistForm
-            v-if="showArtistForm"
-            :festival-id="props.festival.id"
-            :mode="artistFormMode"
-            :editing-band-id="editingBandId"
-            :current-band="currentBand"
-            :selected-day="selectedDay"
-            @close="closeArtistForm"
-            @submitted="handleFormSubmitted"
-        /> -->
+        <!-- Restaurant Form Modal -->
+        <RestaurantCardForm
+            :show="showForm"
+            :restaurant="editingRestaurant"
+            :csrf-token="csrfToken"
+            @close="showForm = false"
+            @saved="showForm = false; reloadRestaurants()"
+        />
         
         <!-- Restaurants Management Interface -->
         <div class="card">
@@ -112,12 +79,27 @@ const deleteArtist = (bandId: number) => {
             <div class="card-body">          
                 <!-- Restaurants' Cards -->
                 <div v-if="restaurants?.length" class="row">
-                    <div v-for="band in restaurants" :key="restaurant.id" class="col-lg-6 col-xl-4 mb-4">
-                        <ArtistCard 
-                            :band="band" 
-                            @edit="editRestaurant(band)" 
-                            @delete="deleteRestaurant(band.id)" 
-                        />
+                    <div v-for="restaurant in restaurants" :key="restaurant.id" class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card h-100">
+                            <img
+                                :src="restaurant.picture_1 ? `/storage/main/yummy/${restaurant.picture_1}` : '/storage/main/yummy/top-view-table-full-food.jpg'"
+                                :alt="restaurant.name"
+                                class="card-img-top"
+                                style="height: 200px; object-fit: cover;"
+                            />
+                            <div class="card-body">
+                                <h5 class="card-title">{{ restaurant.name }}</h5>
+                                <p class="card-text">{{ restaurant.location }}</p>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between">
+                                <button class="btn btn-primary" @click="editRestaurant(restaurant)">
+                                    <i class="fas fa-edit me-1"></i> Edit
+                                </button>
+                                <button class="btn btn-danger" @click="deleteRestaurant(restaurant.id)">
+                                    <i class="fas fa-trash me-1"></i> Delete
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -155,5 +137,12 @@ const deleteArtist = (bandId: number) => {
 .nav-tabs .nav-link.active {
     border-bottom: 2px solid #2565c7;
     background-color: #f0f8ff;
+}
+
+.restaurants-list {
+    padding: 2rem;
+}
+.card {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
 }
 </style>
