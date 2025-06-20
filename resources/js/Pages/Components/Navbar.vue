@@ -116,7 +116,7 @@ fetchFestivals();
 </script>
 
 <template>
-    <div class="navbar-container">
+    <div :class="['navbar-container', $attrs.class]">
         <div class="navbar-options">
             <!-- Left section - Logo -->
             <div class="navbar-section logo-section">
@@ -381,7 +381,7 @@ fetchFestivals();
     display: flex;
     align-items: center;
     gap: 8px;
-    background-color: white;
+    background-color: transparent;
     color: #2565c7;
     padding: 8px 16px;
     border: 1.5px solid #2565c7;

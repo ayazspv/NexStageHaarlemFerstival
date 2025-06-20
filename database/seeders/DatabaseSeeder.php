@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Festival;
+use App\Models\Restaurant;
+use App\Models\FoodType;
 use App\Models\HomepageContent;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -100,5 +102,36 @@ class DatabaseSeeder extends Seeder
             'content' => '<h1>What is Haarlem Festival?</h1><p>Join the Haarlem Festival and experience four unforgettable days celebrating everything that makes Haarlem unique! From mouth-watering food and rich history to vibrant music, enjoy the very best this city has to offer all in one festival. Scroll down to discover the exciting events waiting for you!</p>',
             'hero_image_path' => 'festivals/hero.png'
         ]);
+
+
+        
+
+        $restaurant = Restaurant::create([
+            'name' => 'De Pizzabakkers',
+            'rate' => 4.5,
+            'cta_text' => 'Reserve a table',
+            'subheader_1' => 'Authentic Italian Pizzas',
+            'subheader_2' => 'Fresh ingredients, traditional recipes',
+            'description' => 'De Pizzabakkers is a renowned restaurant in Haarlem, known for its authentic Italian pizzas made with fresh ingredients and traditional recipes. Enjoy a cozy atmosphere and friendly service while indulging in our delicious offerings.',
+            'seats' => 50,
+            'accessibility' => true,
+            'vegan' => false,
+            'gluten_free' => true,
+            'halal' => false,
+            'adult_price' => 15.00,
+            'children_price' => 10.00,
+            'location' => 'Grote Markt 1, Haarlem',
+            'contact_number' => '+31 23 123 4567',
+            'picture_1' => 'p1.jpg',
+            'picture_2' => 'p2.jpg',
+            'picture_3' => 'p3.jpg',
+            'picture_4' => 'p4.jpg',
+            'session_1_time' => '18:00:00',
+            'session_2_time' => null,
+            'session_3_time' => null,
+        ]);
+
+        $types = FoodType::whereIn('name', ['Italian', 'Vegan'])->pluck('id');
+        $restaurant->foodTypes()->sync($types);
     }
 }

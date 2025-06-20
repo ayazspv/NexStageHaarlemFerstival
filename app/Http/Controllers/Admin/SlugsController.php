@@ -35,6 +35,12 @@ class SlugsController
             ]);
         }
 
+        if($festival->festivalType == 1) {
+            return Inertia::render('Festivals/Yummy', [
+                'festival' => $festival,
+            ]);
+        }
+
         abort(404);
     }
 }
