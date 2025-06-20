@@ -94,18 +94,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/festivals/{gameId}/game', [GameCMSController::class, 'deleteGame']);
 });
 
-Route::get('/api/styles', [StyleController::class, 'index'])
-    ->name('styles.index');
-
 Route::get('festivals/{festivalSlug}/{path?}', [SlugsController::class, 'show'])
     ->where('path', '.*')
     ->name('festivals.show');
 
-Route::post('/api/send-mail', [MailController::class, 'sendMail']);
-
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
 
-Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
 
 Route::post('/api/send-reset-mail', [\App\Http\Controllers\ForgetPasswordController::class, 'sendResetMail'])
     ->name('send-reset-mail');
@@ -114,29 +108,10 @@ Route::get('/reset-password', [ForgetPasswordController::class, 'showResetForm']
 Route::post('/api/reset-password', [ForgetPasswordController::class, 'resetPassword'])
     ->name('reset-password');
 
-Route::post('/api/fetch-ticket-details', [\App\Http\Controllers\QrReaderController::class, 'fetchTicketDetails']);
-
-Route::get('/events', [EventController::class, 'index']);
-Route::get('/api/events/jazz', [EventController::class, 'getJazzEvent']);
-Route::get('/api/events/food', [EventController::class, 'getFoodEvent']);
-Route::get('/api/events/dance', [EventController::class, 'getDanceEvent']);
-Route::get('/api/events/history', [EventController::class, 'getHistoryEvent']);
-Route::post('/api/events', [EventController::class, 'store']);
-Route::get('/api/events/{id}', [EventController::class, 'show']);
-Route::put('/api/events/{id}', [EventController::class, 'update']);
-Route::delete('/api/events/{id}', [EventController::class, 'destroy']);
-
-
 // Payment routes
 Route::middleware(['auth'])->group(function () {
     Route::post('/api/process-payment', [PaymentController::class, 'processPayment'])->name('payment.process');
     Route::get('/payment/form', [PaymentController::class, 'showPaymentForm'])->name('payment.form');
-});
-
-// Order routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 });
 
 // API routes for cart operations

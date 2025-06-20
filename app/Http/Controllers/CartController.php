@@ -11,9 +11,6 @@ use Inertia\Controller;
 
 class CartController extends Controller
 {
-
-
-
     public function getCartItems(Request $request)
     {
         $cartItems = CartItem::with('festival')->where('cart_id', $request->session()->get('cart_id'))->get();

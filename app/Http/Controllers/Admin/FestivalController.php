@@ -21,12 +21,6 @@ class FestivalController
         ]);
     }
 
-    public function getFestivals(Request $request): JsonResponse
-    {
-        $festivals = Festival::all();
-        return response()->json($festivals);
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
