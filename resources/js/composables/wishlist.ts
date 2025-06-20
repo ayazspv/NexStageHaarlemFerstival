@@ -22,16 +22,13 @@ export function addToWishlist(
         price = 80.00;
     }
     
-    // Generate a unique ID for special tickets
-    const uniqueKey = `${festivalId}-${ticketType}-${JSON.stringify(details)}`; 
-    
+    // Prevent adding duplicates
     const existingItem = wishlist.value.find(item => {
         if (ticketType === 'standard') {
             return item.festival_id === festivalId;
         } else if (ticketType === 'jazz_event' && item.event_id) {
             return item.festival_id === festivalId && item.event_id === details.event_id;
         } else {
-            // For special tickets, compare the type and details
             return item.festival_id === festivalId && 
                    item.ticket_type === ticketType && 
                    JSON.stringify(item.details) === JSON.stringify(details);

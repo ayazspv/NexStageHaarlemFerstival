@@ -14,11 +14,6 @@ const props = defineProps<{
     homepageContent: string | null,
 }>();
 
-// Helper function to find festival by name (not in use)
-const findFestival = (name: string) => {
-    return props.festivals.find((f: Festival) => f.name === name);
-};
-
 // Festival Type Classes by type ID
 const festivalTypeClassMap = {
     0: 'jazz-event',     // Jazz
@@ -26,56 +21,6 @@ const festivalTypeClassMap = {
     2: 'history-event',  // History
     3: 'teylers-event'   // Night@Teylers
 };
-
-// Helper function to get availability status class
-const getAvailabilityStatusClass = (status: string) => {
-    switch (status) {
-        case 'critical': return 'ticket-badge-critical';
-        case 'warning': return 'ticket-badge-warning';
-        case 'available': return 'ticket-badge-available';
-        default: return 'ticket-badge-default';
-    }
-};
-
-// Helper function to get availability text
-const getAvailabilityText = (festival: Festival) => {
-    if (!festival.total_tickets || festival.total_tickets <= 0) {
-        return 'Unlimited tickets available';
-    }
-
-    if (festival.is_sold_out) {
-        return 'SOLD OUT';
-    }
-
-    if (festival.tickets_available === 1) {
-        return '1 ticket left';
-    }
-
-    if (festival.availability_percentage <= 10) {
-        return `Only ${festival.tickets_available} tickets left!`;
-    }
-
-    if (festival.availability_percentage <= 50) {
-        return `${festival.tickets_available} tickets remaining`;
-    }
-
-    return `${festival.tickets_available} tickets available`;
-};
-
-// Schedule data
-const days = ['24', '25', '26', '27'];
-
-const scheduleEvents = computed(() => {
-    return props.festivals.map(festival => {
-        const type = festivalTypeClassMap[festival.festivalType] || 'default-event';
-        return {
-            type,
-            time: festival.time_slot || '(Time not specified)',
-            name: festival.name,
-            eventId: festival.id
-        };
-    });
-});
 
 // Map data for Haarlem festival locations
 const festivalLocations = [
@@ -121,7 +66,6 @@ const initMap = () => {
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
     }).addTo(map);
 

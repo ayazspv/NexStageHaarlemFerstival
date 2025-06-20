@@ -85,8 +85,7 @@ const extractTimeFromDateTime = (dateTimeStr: string) => {
 // Calculate performance_datetime from day and start_time
 const createPerformanceDateTime = (day: number, timeStr: string) => {
     if (!timeStr) return '';
-    // Create a date for July [day], 2024
-    const date = new Date(2024, 6, day); // July is 6 
+    const date = new Date(2024, 6, day); 
     const [hours, minutes] = timeStr.split(':').map(Number);
     date.setHours(hours, minutes);
     return date.toISOString().substring(0, 16); // Format as YYYY-MM-DDTHH:MM

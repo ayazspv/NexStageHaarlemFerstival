@@ -1,6 +1,5 @@
 import { ref, computed } from 'vue';
 
-// Simple localStorage-based cart (no database)
 export const cart = ref([]);
 
 // Load cart from localStorage
@@ -54,8 +53,6 @@ export const addToCart = async (festivalId: number, festivalName: string, quanti
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Price data from API:', data);
-                    
-                    // Use nullish coalescing instead of logical OR
                     festivalCost = data.price ?? 25.00;
                 } else {
                     console.error('Error fetching price:', response.status);
@@ -144,16 +141,16 @@ export const addJazzEventToCart = async (
             const newQuantity = existingItem.quantity + quantity;
             existingItem.quantity = Math.min(newQuantity, 10);
         } else {
-            // Add new item with standardized structure
+            // Add new item
             cart.value.push({
                 festival_id: festivalId,
-                festival_name: artistName, // Use artist name instead of 'Jazz Festival'
+                festival_name: artistName,
                 event_id: eventId,
                 ticket_type: 'jazz_event',
                 artist_name: artistName,
                 performance_day: performanceDay,
                 performance_time: performanceTime,
-                festival_cost: ticketPrice, // Use the fetched price
+                festival_cost: ticketPrice,
                 quantity: quantity
             });
         }

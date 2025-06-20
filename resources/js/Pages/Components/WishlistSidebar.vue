@@ -42,7 +42,6 @@ function addAllToCart() {
   wishlist.value.forEach(item => {
     addItemToCart(item);
   });
-  // Don't clear the wishlist here - each item is removed individually
 }
 </script>
 
@@ -114,9 +113,6 @@ function addAllToCart() {
           <button class="btn-action clear-all" @click="clearWishlist">
             Clear Wishlist
           </button>
-          <Link href="/wishlist" class="btn-action view-all">
-            View Details
-          </Link>
         </div>
       </div>
     </div>
